@@ -23,18 +23,55 @@ def buy(userId, stockSymbol, amount):
 def commitBuy(userId):
 	return 'Committing buy for user %s.' % (userId)
 
-'''
-COMMIT_BUY: userid
-CANCEL_BUY: userid
-SELL: userid, StockSymbol, amount
-COMMIT_SELL: userid
-CANCEL_SELL: userid
-SET_BUY_AMOUNT: userid, StockSymbol, amount
-CANCEL_SET_BUY: userid, StockSymbol
-SET_BUY_TRIGGER: userid, StockSymbol, amount
-SET_SELL_AMOUNT: userid, StockSymbol, amount
-SET_SELL_TRIGGER: userid, StockSymbol, amount
-CANCEL_SET_SELL: userid, StockSymbol
-DUMPLOG: filename
-DISPLAY_SUMMARY: userid
-'''
+@app.route('/cancel-buy/<string:userId')
+def cancelBuy(userId):
+	return 'Cancelling buy for user %s.' % (userId)
+
+@app.route('/sell/<string:userId>/<string:stockSymbol>/<float:amount>')
+@app.route('/sell/<string:userId>/<string:stockSymbol>/<int:amount>')
+def sell(userId, stockSymbol, amount):
+	return 'Selling %f of stock %s for user %s' % (amount, stockSymbol, userId)
+
+@app.route('/commit-sell/<string:userId>')
+def commitSell(userId):
+	return 'Committing sell for user %s.' % (userId)
+
+@app.route('/cancel-sell/<string:userId')
+def cancelSell(userId):
+	return 'Cancelling sell for user %s.' % (userId)
+
+@app.route('/set-buy-amount/<string:userId>/<string:stockSymbol>/<float:amount>')
+@app.route('/set-buy-amount/<string:userId>/<string:stockSymbol>/<int:amount>')
+def setBuyAmount(userId, stockSymbol, amount):
+	return 'Setting buy of $%f on stock %s for user %s.' % (amount, stockSymbol, userId)
+
+@app.route('/cancel-set-buy/<string:userId>/<string:stockSymbol>')
+def cancelSetBuy(userId, stockSymbol):
+	return 'Cancelling set buy for user %s on stock %s.' % (userId, stockSymbol)
+
+@app.route('/set-buy-trigger/<string:userId>/<string:stockSymbol>/<float:amount>')
+@app.route('/set-buy-trigger/<string:userId>/<string:stockSymbol>/<int:amount>')
+def setBuyTrigger(userId, stockSymbol, amount):
+	return 'Setting a buy trigger for user %s on stock %s for amount %f.' % (userId, stockSymbol, amount)
+
+@app.route('/set-sell-amount/<string:userId>/<string:stockSymbol>/<float:amount>')
+@app.route('/set-sell-amount/<string:userId>/<string:stockSymbol>/<int:amount>')
+def setSellAmount(userId, stockSymbol, amount):
+	return 'Setting a sell for user %s on stock %s for amount %f.' % (userId, stockSymbol, amount)
+
+@app.route('/set-sell-trigger/<string:userId>/<string:stockSymbol>/<float:amount>')
+@app.route('/set-sell-trigger/<string:userId>/<string:stockSymbol>/<int:amount>')
+def setSellTrigger(userId, stockSymbol, amount):
+	return 'Setting a sell trigger for user %s on stock %s for amount %f.' % (userId, stockSymbol, amount)
+
+@app.route('/cancel-set-sell/<string:userId>/<string:stockSymbol>')
+def cancelSetSell(userId, stockSymbol):
+	return 'Cancelling set sell for user %s on stock %s.' % (userId, stockSymbol)
+
+@app.route('/dumplog/<string:fileName>')
+def dumpLog(fileName):
+	return 'Dumping log into file: %s.' % (fileName)
+
+@app.route('/display-summary/<string:userId>')
+def displaySummary(userId):
+	return 'Displaying summary for user %s.' % (userId)
