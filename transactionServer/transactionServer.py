@@ -42,9 +42,9 @@ class httpsServer(HTTPServer):
         ctx = SSL.Context(SSL.SSLv23_METHOD)
         # server.pem's location (containing the server private key and
         # the server certificate).
-        # fpem = "pathToCert\cert.pem"
-        # ctx.use_privatekey_file(fpem)
-        # ctx.use_certificate_file(fpem)
+        fpem = "cert.pem"
+        ctx.use_privatekey_file(fpem)
+        ctx.use_certificate_file(fpem)
         self.socket = SSL.Connection(ctx, socket.socket(self.address_family,
                                                         self.socket_type))
         self.server_bind()
@@ -70,8 +70,7 @@ def main():
       doCommand()
 
 def spoolUpServer(handlerClass = httpsRequestHandler,serverClass = httpsServer):
-    print "test"
-    serverAddr = ('' , 443) #our address and port
+    serverAddr = ('' , 4443) #our address and port
     httpd = serverClass(serverAddr, handlerClass)
     socketName = httpd.socket.getsockname()
     print "serving HTTPS on" , socketName[0], "port number:", socketName[1],
@@ -89,15 +88,14 @@ def checkUser(userID):
 def doCommand():
     # if quote hit the quote server and add sym to cache
     # if cmd == quote:
-        if sym not in cache:
-            data = quote(str(sym+userID+"\n"))
+    if sym not in cache:
+       data = quote(str(sym+userID+"\n"))
         #     add data to cache
         #     this data is good for 60sec
-        else:
-            return cache[sym]
+    else:
+       return cache[sym]
 
     # currently just send a quote for "abc" for user steave.
-
     sym = "abc , "
     userID = "steave\n"
 
