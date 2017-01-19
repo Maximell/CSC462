@@ -1,10 +1,11 @@
 
 # demonstrate talking to the quote server
 import socket, sys
-import ssl
+from OpenSSL import SSL
 from SimpleHTTPServer import SimpleHTTPRequestHandler
 from BaseHTTPServer import HTTPServer
 from SocketServer import BaseServer
+import pprint
 
 
 # COMMANDS NEEDED
@@ -32,16 +33,51 @@ from SocketServer import BaseServer
 
 # Dictionary for users and database
 dict = {}
+cache = {}
+
+
+class httpsServer(HTTPServer):
+    def __init__(self, serverAddr, handlerClass ):
+        BaseServer.__init__(self, serverAddr, handlerClass)
+        ctx = SSL.Context(SSL.SSLv23_METHOD)
+        # server.pem's location (containing the server private key and
+        # the server certificate).
+        # fpem = "pathToCert\cert.pem"
+        # ctx.use_privatekey_file(fpem)
+        # ctx.use_certificate_file(fpem)
+        self.socket = SSL.Connection(ctx, socket.socket(self.address_family,
+                                                        self.socket_type))
+        self.server_bind()
+        self.server_activate()
+
+class httpsRequestHandler(SimpleHTTPRequestHandler):
+    def __init__(self):
+        self.connection = self.request
+        self.wfile = socket._fileobject(self.request, "wb", self.wbufsize)
+        self.rfile = socket._fileobject(self.request, "rb", self.wbufsize)
 
 
 def main():
+      spoolUpServer()
 #     httpserver waiting for input
 #     once we have input figure out what it is.
-      userID = "steave"
+
+
+      # once we have userID check to see if in the dict
       checkUser(userID)
 
       # depending on what happens hit the quote server
-      sendCommandToQS()
+      doCommand()
+
+def spoolUpServer(handlerClass = httpsRequestHandler,serverClass = httpsServer):
+    print "test"
+    serverAddr = ('' , 443) #our address and port
+    httpd = serverClass(serverAddr, handlerClass)
+    socketName = httpd.socket.getsockname()
+    print "serving HTTPS on" , socketName[0], "port number:", socketName[1],
+    print "waiting for request..."
+    httpd.serve_forever()
+
 
 def checkUser(userID):
     # adding user to DB
@@ -50,7 +86,16 @@ def checkUser(userID):
         dict[userID] = 0
         print "adding user"
 
-def sendCommandToQS():
+def doCommand():
+    # if quote hit the quote server and add sym to cache
+    # if cmd == quote:
+        if sym not in cache:
+            data = quote(str(sym+userID+"\n"))
+        #     add data to cache
+        #     this data is good for 60sec
+        else:
+            return cache[sym]
+
     # currently just send a quote for "abc" for user steave.
 
     sym = "abc , "
@@ -82,7 +127,10 @@ def sendCommandToQS():
     s.close()
 
 def quote(socket , input):
+    socket.send(input)
+    data = s.recv(1024)
     print "sending quote"
+    return  data
 
 
 
