@@ -124,9 +124,14 @@ class httpsRequestHandler(SimpleHTTPRequestHandler):
     def do_GET(self):
         print self.command
     def do_POST(self):
-        print self.command
-        print self.connection
-        doCommand()
+        if self.request != None:
+            print self.command
+            print self.request
+            self.send_response(200)
+            doCommand()
+        else:
+            self.send_response(403)
+
         # print self.rfile
         # self.send_response("gott yea")
 
@@ -145,7 +150,7 @@ def main():
     # doCommand()
 
 def spoolUpServer(handlerClass = httpsRequestHandler, serverClass = httpsServer):
-    serverAddr = ('' , 4441) #our address and port
+    serverAddr = ('' , 4442) #our address and port
     httpd = serverClass(serverAddr, handlerClass)
     socketName = httpd.socket.getsockname()
     # print "type: " + type(httpd)
