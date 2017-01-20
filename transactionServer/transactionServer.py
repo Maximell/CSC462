@@ -34,63 +34,63 @@ import pprint
 # Dictionary for users and database
 # Users are stored:
 #   {
+#       userId: 'abc123',
 #       cash: 0,
 #       reserve: 0
 #   }
-class databaseServer():
+class databaseServer:
 
     def __init__(self):
         self.database = {}
 
     # returns user object for success
-    # returns null for user not existing
+    # returns None for user not existing
     def getUser(self, userId):
         return self.database.get(userId)
 
     # returns user object for success
-    # returns null for failure
+    # returns None for failure
     def addUser(self, userId):
         user = { 'userId': userId, 'cash': 0, 'reserve': 0 }
         self.database[userId] = user
         return self.database.get(userId)
 
     # returns user object for success
-    # returns null for failure
+    # returns None for failure
     def addCash(self, userId, amount):
         user = self.database.get(userId)
         if user:
-            user.cash = user.cash + amount
+            user['cash'] = user.get('cash') + amount
         else:
             user = { 'userId': userId, 'cash': amount, 'reserve': 0 }
         self.database[userId] = user
         return self.database.get(userId)
 
     # returns user object for success
-    # returns null for failure
-    def reserveCash(userId, amount):
+    # returns None for failure
+    def reserveCash(self, userId, amount):
         user = self.database.get(userId)
         if not user:
             return 0
-        if amount > user.cash:
+        if amount > user.get('cash'):
             return 0
         else:
-            user.cash = user.cash - amount
-            user.reserve = amount
+            user['cash'] = user.get('cash') - amount
+            user['reserve'] = amount
             self.database[userId] = user
             return self.database.get(userId)
 
-
     # returns user object for success
-    # returns null for failure
-    def releaseCash(userId, amount):
+    # returns None for failure
+    def releaseCash(self, userId, amount):
         user = self.database.get(userId)
         if not user:
             return 0
-        if amount > user.reserve:
+        if amount > user.get('reserve'):
             return 0
         else:
-            user.reserve = user.reserve - amount
-            user.cash = user.cash + amount
+            user['reserve'] = user.get('reserve') - amount
+            user['cash'] = user.get('cash') + amount
             self.database[userId] = user
             return self.database.get(userId)
 
