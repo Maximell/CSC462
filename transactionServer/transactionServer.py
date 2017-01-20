@@ -5,6 +5,7 @@ from OpenSSL import SSL
 from SimpleHTTPServer import SimpleHTTPRequestHandler
 from BaseHTTPServer import HTTPServer
 from SocketServer import BaseServer
+import os
 import pprint
 
 
@@ -112,31 +113,45 @@ class httpsServer(HTTPServer):
         self.server_bind()
         self.server_activate()
 
+    def shutdown_request(self, request):
+        request.shutdown()
+
 class httpsRequestHandler(SimpleHTTPRequestHandler):
-    def __init__(self):
+    def setup(self):
         self.connection = self.request
         self.wfile = socket._fileobject(self.request, "wb", self.wbufsize)
         self.rfile = socket._fileobject(self.request, "rb", self.wbufsize)
+    def do_GET(self):
+        print self.command
+    def do_POST(self):
+        print self.command
+        print self.connection
+        doCommand()
+        # print self.rfile
+        # self.send_response("gott yea")
+
+
 
 
 def main():
-      spoolUpServer()
-#     httpserver waiting for input
+#   starting httpserver and waiting for input
+    spoolUpServer()
 #     once we have input figure out what it is.
 
-
       # once we have userID check to see if in the dict
-      checkUser(userID)
+      # checkUser(userID)
 
       # depending on what happens hit the quote server
-      doCommand()
+    # doCommand()
 
-def spoolUpServer(handlerClass = httpsRequestHandler,serverClass = httpsServer):
-    serverAddr = ('' , 4443) #our address and port
+def spoolUpServer(handlerClass = httpsRequestHandler, serverClass = httpsServer):
+    serverAddr = ('' , 4441) #our address and port
     httpd = serverClass(serverAddr, handlerClass)
     socketName = httpd.socket.getsockname()
+    # print "type: " + type(httpd)
     print "serving HTTPS on" , socketName[0], "port number:", socketName[1],
     print "waiting for request..."
+    # this idles the server waiting for requests
     httpd.serve_forever()
 
 
@@ -149,15 +164,7 @@ def checkUser(userID):
 
 def doCommand():
     # if quote hit the quote server and add sym to cache
-    # if cmd == quote:
-    if sym not in cache:
-       data = quote(str(sym+userID+"\n"))
-        #     add data to cache
-        #     this data is good for 60sec
-    else:
-       return cache[sym]
 
-    # currently just send a quote for "abc" for user steave.
     sym = "abc , "
     userID = "steave\n"
 
@@ -179,16 +186,14 @@ def doCommand():
     # s.send(fromUser)
 
     # Read and print up to 1k of data.
-    quote(s, fromUser)
-    s.send(fromUser)
-    data = s.recv(1024)
+    data =  quote(s, fromUser)
     print data
     # close the connection, and the socket
     s.close()
 
 def quote(socket , input):
     socket.send(input)
-    data = s.recv(1024)
+    data = socket.recv(1024)
     print "sending quote"
     return  data
 
