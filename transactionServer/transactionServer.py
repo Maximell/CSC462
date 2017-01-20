@@ -40,23 +40,35 @@ import pprint
 class databaseServer():
 
     def __init__(self):
-        database = {}
+        self.database = {}
 
-    def getUser(userId):
-        return database.get(userId)
+    # returns user object for success
+    # returns null for user not existing
+    def getUser(self, userId):
+        return self.database.get(userId)
 
-    def addCash(userId, amount):
-        user = database.get(userId)
+    # returns user object for success
+    # returns null for failure
+    def addUser(self, userId):
+        user = { 'userId': userId, 'cash': 0, 'reserve': 0 }
+        self.database[userId] = user
+        return self.database.get(userId)
+
+    # returns user object for success
+    # returns null for failure
+    def addCash(self, userId, amount):
+        user = self.database.get(userId)
         if user:
             user.cash = user.cash + amount
         else:
-            user = { 'cash': amount, 'reserve': 0 }
-        database[userId] = user
+            user = { 'userId': userId, 'cash': amount, 'reserve': 0 }
+        self.database[userId] = user
+        return self.database.get(userId)
 
-    # returns 1 for success
-    # returns 0 for failure
+    # returns user object for success
+    # returns null for failure
     def reserveCash(userId, amount):
-        user = database.get(userId)
+        user = self.database.get(userId)
         if not user:
             return 0
         if amount > user.cash:
@@ -64,14 +76,14 @@ class databaseServer():
         else:
             user.cash = user.cash - amount
             user.reserve = amount
-            database[userId] = user
-            return 1
+            self.database[userId] = user
+            return self.database.get(userId)
 
 
-    # returns 1 for success
-    # returns 0 for failure
+    # returns user object for success
+    # returns null for failure
     def releaseCash(userId, amount):
-        user = database.get(userId)
+        user = self.database.get(userId)
         if not user:
             return 0
         if amount > user.reserve:
@@ -79,8 +91,8 @@ class databaseServer():
         else:
             user.reserve = user.reserve - amount
             user.cash = user.cash + amount
-            database[userId] = user
-            return 1
+            self.database[userId] = user
+            return self.database.get(userId)
 
 
 # quote shape: {symbol: string, accessed: epoch time}
