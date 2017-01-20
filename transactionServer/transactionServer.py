@@ -7,6 +7,7 @@ from BaseHTTPServer import HTTPServer
 from SocketServer import BaseServer
 import os
 import pprint
+import time
 
 
 # COMMANDS NEEDED
@@ -96,8 +97,45 @@ class databaseServer:
             return self.database.get(userId)
 
 
-# quote shape: {symbol: string, accessed: epoch time}
-quoteCache = {}
+# quote shape: symbol: {value: string, retrieved: epoch time, user: string}
+class quotes():
+    def __init__(self, cacheExpire = 60):
+        self.cacheExpire = cacheExpire
+        self.quoteCache = {}
+
+    def getQuote(self, symbol, user):
+        cache = self.quoteCache.get(symbol)
+        if cache:
+            if self._cacheIsActive(cache):
+                return cache
+            else:
+                return self._hitQuoteServerAndCache(symbol, user)
+
+        return self._hitQuoteServerAndCache(symbol, user)
+
+    def _hitQuoteServerAndCache(self, symbol, user):
+        # Create the socket
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        # Connect the socket
+        s.connect(('quoteserve.seng.uvic.ca', 4442))
+
+        request = symbol + user + "\n"
+        socket.send(request)
+        data = socket.recv(1024)
+
+        s.close()
+
+        newQuote = self._quoteStringToDictionary(data)
+        self.quoteCache[symbol] = newQuote
+        return newQuote
+
+    def _quoteStringToDictionary(self, quoteString):
+        # "quote, sym, userid, timestamp, cryptokey\n"
+        split = quoteString.split(",")
+        return {'value': split[0], 'retrieved': split[3], 'user': split[2]}
+
+    def _cacheIsActive(self, quote):
+        return (quote.get('retreived', 0) + self.cacheExpire) > int(time.time())
 
 
 
