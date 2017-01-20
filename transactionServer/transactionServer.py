@@ -31,7 +31,68 @@ import pprint
 # display_summary
 #
 
-# Dictionary for users and database
+# Class for a logging 'server'
+# In general, an event takes the form of:
+#   event = {
+#       'type': 'someType',
+#       'timestamp': seconds since the epoch,
+#       'server': 'where the server originated from',
+#       'transactionNum': the transaction number the event is associated with
+#       'args': {} Some dictionary - specific for the individual event.
+#   }
+#   Valid 'type' values:
+#       userCommand
+#           Args: {
+#               'command': 'string representing the user's command',
+#               'username': 'userId',
+#               'funds': amount of cash in the users account.
+#           }
+#       accountTransaction
+#       systemEvent
+#       quoteServer
+#       accountTransaction
+#       errorEvent
+#
+class loggerServer:
+
+    def __init__(self):
+        self.logFile = []
+
+    def log(action):
+        print 'Logging an action: ' + action + '.'
+
+    def logUserCommand():
+    def logQuoteServerHit():
+    def logAccountChange():
+    def logSystemEvent():
+    def logErrorMessage():
+    def logDebugMessage(server, timestamp, transactionNum, command, userId, stockSymbol, fileName, funds, debugMessage):
+
+    def writeLogs(fileName):
+        print 'trying to print contents to file: %s.' % (fileName)
+
+    # writes a single line to the log file
+    def _writeLineToLogFile(line):
+        self.logFile.append(line)
+        return
+
+    # writes a list of lines to the log file
+    def _writeLinesToLogFile(lines):
+        self.logFile.extend(lines)
+        return
+
+    # dumps the logs to a given file
+    def _dumpIntoFile(fileName):
+        try:
+            file = open(fileName, 'w')
+        except IOError:
+            print 'Attempted to save into file %s but couldn\'t open file for writing.' % (fileName)
+        for line in self.logFile:
+            file.write(line)
+        file.close()
+
+
+# Class for users and database
 # Users are stored:
 #   {
 #       userId: 'abc123',
