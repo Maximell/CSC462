@@ -32,9 +32,55 @@ import pprint
 #
 
 # Dictionary for users and database
-dict = {}
+# Users are stored:
+#   {
+#       cash: 0,
+#       reserve: 0
+#   }
+class databaseServer():
+
+    def __init__(self):
+        database = {}
+
+    def getUser(userId):
+        return database.get(userId)
+
+    def addCash(userId, amount):
+        user = database.get(userId)
+        if user:
+            user.cash = user.cash + amount
+        else:
+            user = { 'cash': amount, 'reserve': 0 }
+        database[userId] = user
+
+    # returns 1 for success
+    # returns 0 for failure
+    def reserveCash(userId, amount):
+        user = database.get(userId)
+        if not user:
+            return 0
+        if amount > user.cash:
+            return 0
+        else:
+            user.cash = user.cash - amount
+            user.reserve = amount
+            database[userId] = user
+            return 1
 
 
+    # returns 1 for success
+    # returns 0 for failure
+    def releaseCash(userId, amount):
+        user = database.get(userId)
+        if not user:
+            return 0
+        if amount > user.reserve:
+            return 0
+        else:
+            user.reserve = user.reserve - amount
+            user.cash = user.cash + amount
+            database[userId] = user
+            return 1
 
 
 # quote shape: {symbol: string, accessed: epoch time}
