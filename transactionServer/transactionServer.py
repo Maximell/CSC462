@@ -33,8 +33,12 @@ import pprint
 
 # Dictionary for users and database
 dict = {}
-cache = {}
 
+
+
+
+# quote shape: {symbol: string, accessed: epoch time}
+quoteCache = {}
 
 class httpsServer(HTTPServer):
     def __init__(self, serverAddr, handlerClass ):
