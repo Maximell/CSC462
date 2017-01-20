@@ -99,6 +99,13 @@ class databaseServer:
 # quote shape: {symbol: string, accessed: epoch time}
 quoteCache = {}
 
+
+
+
+
+
+
+
 class httpsServer(HTTPServer):
     def __init__(self, serverAddr, handlerClass ):
         BaseServer.__init__(self, serverAddr, handlerClass)
