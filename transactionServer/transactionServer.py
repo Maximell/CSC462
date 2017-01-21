@@ -49,7 +49,7 @@ class databaseServer:
 
     def __init__(self, transactionExpire=60):
         self.database = {}
-        self.transactionExpire = transactionExpire
+        self.transactionExpire = transactionExpire # for testing
 
     # returns user object for success
     # returns None for user not existing
@@ -110,7 +110,6 @@ class databaseServer:
             self.database[userId] = user
             return self.database.get(userId)
 
-    #TODO: test in databaseServerTester.py
     def pushBuy(self, userId, symbol, number):
         user = self.database.get(userId)
         if not user:
@@ -120,7 +119,6 @@ class databaseServer:
         user.get('pendingBuys').append(newBuy)
         return newBuy
 
-    # TODO: test in databaseServerTester.py
     def popBuy(self, userId):
         user = self.database.get(userId)
         if not user:
@@ -130,7 +128,6 @@ class databaseServer:
             return 0
         return pendingBuys.pop()
 
-    # TODO: test in databaseServerTester.py
     def pushSell(self, userId, symbol, number):
         user = self.database.get(userId)
         if not user:
@@ -140,7 +137,6 @@ class databaseServer:
         user.get('pendingSells').append(newSell)
         return newSell
 
-    # TODO: test in databaseServerTester.py
     def popSell(self, userId):
         user = self.database.get(userId)
         if not user:
@@ -150,9 +146,19 @@ class databaseServer:
             return 0
         return pendingSells.pop()
 
+    # for testing purposes
+    def _checkBuys(self, userId):
+        user = self.database.get(userId)
+        return user.get('pendingBuys')
+
+    # for testing purposes
+    def _checkSells(self, userId):
+        user = self.database.get(userId)
+        return user.get('pendingSells')
+
     # TODO: test in databaseServerTester.py
-    def isBuySellActive(self, buyOrSell):
-        return (int(buyOrSell.get('timestamp', 0)) + self.transactionExpire) > int(time.time())
+    def isBuySellActive(self, buyOrSellObject):
+        return (int(buyOrSellObject.get('timestamp', 0)) + self.transactionExpire) > int(time.time())
 
 
 
