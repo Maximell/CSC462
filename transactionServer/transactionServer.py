@@ -35,24 +35,77 @@ import pprint
 # In general, an event takes the form of:
 #   event = {
 #       'type': 'someType',
+#           userCommand
+#           accountTransaction
+#           systemEvent
+#           quoteServer
+#           errorEvent            
 #       'timestamp': seconds since the epoch,
 #       'server': 'where the server originated from',
-#       'transactionNum': the transaction number the event is associated with
-#       'args': {} Some dictionary - specific for the individual event.
+#       'transactionNum': the transaction number the event is associated with,
+#       'username': 'userId of the user who triggered the event'
+#       'args': {} Some dictionary - specific for the type of event.
 #   }
-#   Valid 'type' values:
+#   Valid 'type's and their arg values:
 #       userCommand
-#           Args: {
+#           args: {
 #               'command': 'string representing the user's command',
-#               'username': 'userId',
-#               'funds': amount of cash in the users account.
+#                   add
+#                   commit_buy
+#                   cancel_buy
+#                   commit_sell
+#                   cancel_sell
+#                   display_summary
+#                       no additional args
+#
+#                   quote
+#                   buy
+#                   sell
+#                   set_buy_amount
+#                   cancel_set_buy
+#                   set_buy_trigger
+#                   set_sell_amount
+#                   set_sell_trigger
+#                   cancel_set_sell
+#                       need stockSymbol
+#
+#                   dumplog
+#                       fileName
+#                    
+#                   add
+#                   buy
+#                   sell
+#                   set_buy_amount
+#                   set_buy_trigger
+#                   set_sell_amount
+#                   set_sell_trigger
+#                       funds
 #           }
 #       accountTransaction
+#           args: {
+#               'action': string corresponding to type of account transaction
+#                   add
+#                   remove
+#                   reserve
+#                   free                      
+#               'funds': amount of money being moved    
+#           }
 #       systemEvent
+#           args: {
+#               'command': same as in userCommand
+#           }
 #       quoteServer
-#       accountTransaction
+#           args: {
+#               'quoteServerTime': time the quote was received from the quote server,
+#               'stockSymbol': 'stcksymbl',
+#               'price': price of the stock at the time the server quoted it,
+#               'cryptokey': 'cryptographic key the server returns'
+#           }
 #       errorEvent
-#
+#           args: {
+#               'command': same as in userCommand,
+#               'errorMessage': message associated with the error
+#           }
 class loggerServer:
 
     def __init__(self):
