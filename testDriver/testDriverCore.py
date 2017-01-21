@@ -3,9 +3,9 @@ import sys
 
 def send(command, args, lineNum):
 	print args
-	params = urllib.urlencode({'params': args})
+	params = urllib.urlencode({'command': command, 'args':args , 'lineNum': lineNum })
 	headers = {"Content-type": "application/x-www-form-urlencoded", "Accept": "text/plain"}
-	conn = httplib.HTTPConnection(url, port)
+	conn = httplib.HTTPSConnection(url, port)
 	conn.request("POST", "/", params, headers)
 	response = conn.getresponse()
 	print response.status, response.reason
