@@ -1,18 +1,15 @@
 
 # demonstrate talking to the quote server
-import socket, sys
-from OpenSSL import SSL
-from SimpleHTTPServer import SimpleHTTPRequestHandler
-from BaseHTTPServer import HTTPServer
-from SocketServer import BaseServer
-import os
-import json
-import pprint
+import socket
 import time
+from BaseHTTPServer import HTTPServer
+from SimpleHTTPServer import SimpleHTTPRequestHandler
+from SocketServer import BaseServer
 from random import randint
-
-# imports for our own stuff
-from events import Event
+# import urllib
+import urlparse
+from OpenSSL import SSL
+# from events import Event
 
 # COMMANDS NEEDED
 #
@@ -37,15 +34,15 @@ from events import Event
 # dumplog    (x2)
 # display_summary
 #
-class event:
-    systemEvent
-    accountTransaction
-    commandEvent - this adds a method for each type of command
-        userCommand
-        quoteServer
-        errorEvent
-
-method add arguments
+# class events:
+#     systemEvent
+#     accountTransaction
+#     commandEvent - this adds a method for each type of command
+#         userCommand
+#         quoteServer
+#         errorEvent
+#
+# method add arguments
 
 # Class for a logging 'server'
 # In general, an event takes the form of:
@@ -130,29 +127,29 @@ class loggerServer:
 
     def log(action):
         print 'Logging an action: ' + action + '.'
-'''
-    def logUserCommand():
-    def logQuoteServerHit():
-    def logAccountChange():
-    def logSystemEvent():
-    def logErrorMessage():
-    def logDebugMessage(server, timestamp, transactionNum, command, userId, stockSymbol, fileName, funds, debugMessage):
-'''
+# '''
+#     def logUserCommand():
+#     def logQuoteServerHit():
+#     def logAccountChange():
+#     def logSystemEvent():
+#     def logErrorMessage():
+#     def logDebugMessage(server, timestamp, transactionNum, command, userId, stockSymbol, fileName, funds, debugMessage):
+# '''
     def writeLogs(fileName):
         print 'trying to print contents to file: %s.' % (fileName)
 
     # writes a single line to the log file
-    def _writeLineToLogFile(line):
+    def _writeLineToLogFile(self,line):
         self.logFile.append(line)
         return
 
     # writes a list of lines to the log file
-    def _writeLinesToLogFile(lines):
+    def _writeLinesToLogFile(self,lines):
         self.logFile.extend(lines)
         return
 
     # dumps the logs to a given file
-    def _dumpIntoFile(fileName):
+    def _dumpIntoFile(self,fileName):
         try:
             file = open(fileName, 'w')
         except IOError:
@@ -449,36 +446,116 @@ class httpsRequestHandler(SimpleHTTPRequestHandler):
     def handle(self):
         # self.request is the TCP socket connected to the client
         self.data = self.request.recv(1024).strip()
-        print("%s wrote:" % self.client_address[0])
-
         # just send back the same data, but upper-cased
         self.request.send(self.data.upper())
         extractData(self.data)
 
 def extractData(data):
     # extracting data and splitting properly
-    list = data.split('\n')
-    for x in range(0,len(list)):
-        list[x] = list[x].strip('\r')
-    # request is the actual args we need
-    # lineNum , userID , CMD
-    # ------------------------------------
-    # NOTE: not sure where the sym is???
-    # ------------------------------------
 
-    request = list[-1]
-    requestlist = request.split('&')
+    args = urlparse.parse_qs(data)
+    # print args
+    splitInfo = args['args'][0].split()
+    sanitized = []
+    # removing chars to make args easier to deal with
+    # in the future
+    for x in splitInfo:
+        x = x.strip('[')
+        x = x.strip(']')
+        x = x.strip('\'')
+        x = x.strip(',')
+        x = x.strip('\'')
+        sanitized.append(x)
 
-    for x in range(0,len(requestlist)):
-        requestlist[x] = requestlist[x].split('=')
-    print requestlist
-    deligate(requestlist)
+    args['userID'] = sanitized[0]
+    args['command'] = args['command'][0]
+    # extracting the line number
+    for key, value in args.iteritems():
+        string = str(key[0]) + str(key[1]) + str(key[2]) + str(key[3])
+        if string == "POST":
+            args['lineNum'] = value[0]
+            del args[key]
+            break
+    # print args
+
+
+    #   depending on what command we have
+    if len(sanitized) == 2:
+        # 2 case: 1 where userID and sym
+        #         2 where userID and cash
+        if args['command'] == 'ADD':
+            args['cash'] = sanitized[1]
+        else:
+            args['sym'] = sanitized[1]
+    if len(sanitized) == 3:
+        args['sym'] = sanitized[1]
+        args['cash'] = sanitized[2]
+
+    del args['args']
+    # args now has userID , sym , lineNUM , command , cash
+    #
+    # {'userID': 'oY01WVirLr', 'cash': '63511.53',
+    # 'lineNum': '1', 'command': 'ADD'}
+    # print args
+    deligate(args)
 
 def deligate(args):
     # this is where we will figure what CMD we are dealing with
     # and deligate from here to whatever function is needed
     # to handle the request
-    pass
+    # ----------------------------
+    # add
+    # quote
+    # buy
+    # commit_buy
+    # cancel_buy
+    # sell
+    # commit_sell
+    # cancel_sell
+    #
+    # set_buy_amount
+    # cancel_set_buy
+    # set_buy_trigger
+    #
+    # set_sell_amount
+    # cancel_set_sell
+    # set_sell_trigger
+    # ----------------------------
+
+    # Call Quote
+    if args["command"] == "QUOTE":
+        # print args['sym'] + " "+ args['userID']
+        # Quotes.getQuote(args['sym'] , args['userID'])
+        pass
+    elif args["command"] == "ADD":
+        pass
+    elif args["command"] == "BUY":
+        pass
+    elif args["command"] == "COMMIT_BUY":
+        pass
+    elif args["command"] == "CANCEL_BUY":
+        pass
+    elif args["command"] == "SELL":
+        pass
+    elif args["command"] == "COMMIT_SELL":
+        pass
+    elif args["command"] == "CANCEL_SELL":
+        pass
+    # triggers
+    elif args["command"] == "SET_BUY_AMOUNT":
+        pass
+    elif args["command"] == "CANCEL_BUY_AMOUNT":
+        pass
+    elif args["command"] == "SET_BUY_TRIGGER":
+        pass
+
+    elif args["command"] == "SET_SELL_AMOUNT":
+        pass
+    elif args["command"] == "CANCEL_SELL_AMOUNT":
+        pass
+    elif args["command"] == "SET_SELL_TRIGGER":
+        pass
+
 
 
 
