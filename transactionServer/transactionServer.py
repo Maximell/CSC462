@@ -160,25 +160,48 @@ class httpsServer(HTTPServer):
 
     def shutdown_request(self, request):
         request.shutdown()
+    # def parse_request(self , request):
+    #     print "servicing"
 
 class httpsRequestHandler(SimpleHTTPRequestHandler):
     def setup(self):
         self.connection = self.request
         self.wfile = socket._fileobject(self.request, "wb", self.wbufsize)
         self.rfile = socket._fileobject(self.request, "rb", self.wbufsize)
+
     def do_GET(self):
         print self.command
-    def do_POST(self):
-        if self.request != None:
-            print self.command
-            print self.request
-            self.send_response(200)
-            doCommand()
-        else:
-            self.send_response(403)
+        self.send_response(200)
 
-        # print self.rfile
-        # self.send_response("gott yea")
+    def do_POST(self):
+        try:
+            if self.request != None:
+
+                print self.command
+                print self.request
+                self.send_response(200)
+                self.handle()
+                # print self.request.params
+            else:
+                self.send_response(400)
+        except:
+            self.handle_error()
+
+    def handle(self):
+        # self.request is the TCP socket connected to the client
+        self.data = self.request.recv(1024).strip()
+        print("%s wrote:" % self.client_address[0])
+        print(self.data)
+        # just send back the same data, but upper-cased
+        self.request.send(self.data.upper())
+
+        # def parse_request(self):
+    #
+    #     print "serving request"
+    #     print self.request
+                #     print self.date_time_string()i
+                #     print self.request.text
+            # print self.rfile
 
 
 
@@ -188,21 +211,36 @@ def main():
     spoolUpServer()
 #     once we have input figure out what it is.
 
-      # once we have userID check to see if in the dict
-      # checkUser(userID)
+# once we have userID check to see if in the dict
+# checkUser(userID)
 
-      # depending on what happens hit the quote server
-    # doCommand()
+# depending on what happens hit the quote server
+# doCommand()
 
 def spoolUpServer(handlerClass = httpsRequestHandler, serverClass = httpsServer):
-    serverAddr = ('' , 4442) #our address and port
-    httpd = serverClass(serverAddr, handlerClass)
+    socknum = 4442
+
+    try:
+        serverAddr = ('', socknum)  # our address and port
+        httpd = serverClass(serverAddr, handlerClass)
+    except socket.error:
+        print "socket:" + str(socknum) + " busy."
+        socknum = incrementSocketNum(socknum)
+        serverAddr = ('', socknum)  # our address and port
+        httpd = serverClass(serverAddr, handlerClass)
+
     socketName = httpd.socket.getsockname()
     # print "type: " + type(httpd)
     print "serving HTTPS on" , socketName[0], "port number:", socketName[1],
     print "waiting for request..."
     # this idles the server waiting for requests
     httpd.serve_forever()
+
+def incrementSocketNum(socketNum):
+    socketNum += 1
+    return socketNum
+
+
 
 
 def checkUser(userID):
