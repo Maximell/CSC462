@@ -6,6 +6,7 @@ from SimpleHTTPServer import SimpleHTTPRequestHandler
 from BaseHTTPServer import HTTPServer
 from SocketServer import BaseServer
 import os
+import json
 import pprint
 import time
 from random import randint
@@ -224,11 +225,6 @@ class Quotes():
                 print
 
 
-
-
-
-
-
 class httpsServer(HTTPServer):
     def __init__(self, serverAddr, handlerClass ):
         BaseServer.__init__(self, serverAddr, handlerClass)
@@ -261,12 +257,10 @@ class httpsRequestHandler(SimpleHTTPRequestHandler):
     def do_POST(self):
         try:
             if self.request != None:
-
-                print self.command
-                print self.request
+                # print self.command
+                # print self.request
                 self.send_response(200)
                 self.handle()
-                # print self.request.params
             else:
                 self.send_response(400)
         except:
@@ -276,31 +270,42 @@ class httpsRequestHandler(SimpleHTTPRequestHandler):
         # self.request is the TCP socket connected to the client
         self.data = self.request.recv(1024).strip()
         print("%s wrote:" % self.client_address[0])
-        print(self.data)
+
         # just send back the same data, but upper-cased
         self.request.send(self.data.upper())
+        extractData(self.data)
 
-        # def parse_request(self):
-    #
-    #     print "serving request"
-    #     print self.request
-                #     print self.date_time_string()i
-                #     print self.request.text
-            # print self.rfile
+def extractData(data):
+    # extracting data and splitting properly
+    list = data.split('\n')
+    for x in range(0,len(list)):
+        list[x] = list[x].strip('\r')
+    # request is the actual args we need
+    # lineNum , userID , CMD
+    # ------------------------------------
+    # NOTE: not sure where the sym is???
+    # ------------------------------------
 
+    request = list[-1]
+    requestlist = request.split('&')
+
+    for x in range(0,len(requestlist)):
+        requestlist[x] = requestlist[x].split('=')
+    print requestlist
+    deligate(requestlist)
+
+def deligate(args):
+    # this is where we will figure what CMD we are dealing with
+    # and deligate from here to whatever function is needed
+    # to handle the request
+    pass
 
 
 
 def main():
 #   starting httpserver and waiting for input
     spoolUpServer()
-#     once we have input figure out what it is.
 
-# once we have userID check to see if in the dict
-# checkUser(userID)
-
-# depending on what happens hit the quote server
-# doCommand()
 
 def spoolUpServer(handlerClass = httpsRequestHandler, serverClass = httpsServer):
     socknum = 4442
@@ -315,18 +320,15 @@ def spoolUpServer(handlerClass = httpsRequestHandler, serverClass = httpsServer)
         httpd = serverClass(serverAddr, handlerClass)
 
     socketName = httpd.socket.getsockname()
-    # print "type: " + type(httpd)
     print "serving HTTPS on" , socketName[0], "port number:", socketName[1],
     print "waiting for request..."
     # this idles the server waiting for requests
     httpd.serve_forever()
 
 def incrementSocketNum(socketNum):
+    # This is used to increment the socket incase ours is being used
     socketNum += 1
     return socketNum
-
-
-
 
 def checkUser(userID):
     # adding user to DB
@@ -334,10 +336,6 @@ def checkUser(userID):
     if userID not in dict:
         dict[userID] = 0
         print "adding user"
-
-
-
-
 
 
 
