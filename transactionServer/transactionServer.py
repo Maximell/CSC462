@@ -8,6 +8,7 @@ from SocketServer import BaseServer
 import os
 import pprint
 import time
+from random import randint
 
 
 # COMMANDS NEEDED
@@ -97,33 +98,48 @@ class databaseServer:
             return self.database.get(userId)
 
 
+
 # quote shape: symbol: {value: string, retrieved: epoch time, user: string}
 class quotes():
-    def __init__(self, cacheExpire = 60):
+    def __init__(self, cacheExpire=60, testing=False):
         self.cacheExpire = cacheExpire
         self.quoteCache = {}
+        self.testing = testing
 
     def getQuote(self, symbol, user):
+        self._testPrint(True, "current cache state: ", self.quoteCache)
+
         cache = self.quoteCache.get(symbol)
         if cache:
             if self._cacheIsActive(cache):
+                self._testPrint(False, "from cache")
                 return cache
-            else:
-                return self._hitQuoteServerAndCache(symbol, user)
+            self._testPrint(False, "expired cache")
 
         return self._hitQuoteServerAndCache(symbol, user)
 
+    '''
+        this can be used on buy commands
+        that way we can guarantee the 60 seconds for a commit
+        if we use cache, the quote could be 119 seconds old when they commit, and that breaks the requirements
+    '''
+    def getQuoteNoCache(self, symbol, user):
+        return self._hitQuoteServerAndCache(symbol, user)
+
     def _hitQuoteServerAndCache(self, symbol, user):
-        # Create the socket
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        # Connect the socket
-        s.connect(('quoteserve.seng.uvic.ca', 4442))
+        self._testPrint(False, "not from cache")
+        request = symbol + "," + user + "\n"
 
-        request = symbol + user + "\n"
-        socket.send(request)
-        data = socket.recv(1024)
+        if self.testing:
+            data = self._mockQuoteServer(request)
+        else:
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.connect(('quoteserve.seng.uvic.ca', 4442))
 
-        s.close()
+            socket.send(request)
+            data = socket.recv(1024)
+
+            s.close()
 
         newQuote = self._quoteStringToDictionary(data)
         self.quoteCache[symbol] = newQuote
@@ -135,7 +151,21 @@ class quotes():
         return {'value': split[0], 'retrieved': split[3], 'user': split[2]}
 
     def _cacheIsActive(self, quote):
-        return (quote.get('retreived', 0) + self.cacheExpire) > int(time.time())
+        return (int(quote.get('retrieved', 0)) + self.cacheExpire) > int(time.time())
+
+    def _mockQuoteServer(self, queryString):
+        query = queryString.split(",")
+        symbol = query[0]
+        user = query[1]
+        quoteArray = [randint(0,50), symbol, user, int(time.time()), "cryptokey"]
+        return ','.join(map(str, quoteArray))
+
+    def _testPrint(self, newLine, *args):
+        if self.testing:
+            for arg in args:
+                print arg,
+            if newLine:
+                print
 
 
 
