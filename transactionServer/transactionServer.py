@@ -9,11 +9,14 @@ import os
 import pprint
 import time
 
+# imports for our own stuff
+from events import Event
 
 # COMMANDS NEEDED
 #
 # add
-# quote
+#
+# quote j
 # buy
 # commit_buy
 # cancel_buy
@@ -32,6 +35,15 @@ import time
 # dumplog    (x2)
 # display_summary
 #
+class event:
+    systemEvent
+    accountTransaction
+    commandEvent - this adds a method for each type of command
+        userCommand
+        quoteServer
+        errorEvent
+
+method add arguments
 
 # Class for a logging 'server'
 # In general, an event takes the form of:
@@ -51,7 +63,8 @@ import time
 #   Valid 'type's and their arg values:
 #       userCommand
 #           args: {
-#               'command': 'string representing the user's command',
+#               'command': {'name': ,
+#                           args{}}'string representing the user's command',
 #                   add
 #                   commit_buy
 #                   cancel_buy
@@ -115,14 +128,14 @@ class loggerServer:
 
     def log(action):
         print 'Logging an action: ' + action + '.'
-
+'''
     def logUserCommand():
     def logQuoteServerHit():
     def logAccountChange():
     def logSystemEvent():
     def logErrorMessage():
     def logDebugMessage(server, timestamp, transactionNum, command, userId, stockSymbol, fileName, funds, debugMessage):
-
+'''
     def writeLogs(fileName):
         print 'trying to print contents to file: %s.' % (fileName)
 
