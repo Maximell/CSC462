@@ -39,12 +39,16 @@ from random import randint
 #   {
 #       userId: 'abc123',
 #       cash: 0,
-#       reserve: 0
+#       reserve: 0,
+#         pendingBuys: [{symbol, number, timestamp}],
+#         pendingSells: [{symbol, number, timestamp}],
+#         portfolio: {}
 #   }
 class databaseServer:
 
-    def __init__(self):
+    def __init__(self, transactionExpire=60):
         self.database = {}
+        self.transactionExpire = transactionExpire
 
     # returns user object for success
     # returns None for user not existing
@@ -54,9 +58,17 @@ class databaseServer:
     # returns user object for success
     # returns None for failure
     def addUser(self, userId):
-        user = { 'userId': userId, 'cash': 0, 'reserve': 0 }
+        user = { 'userId': userId, 'cash': 0, 'reserve': 0, 'pendingBuys': [], 'pendingSells': [], 'portfolio': {}}
         self.database[userId] = user
         return self.database.get(userId)
+
+    # returns user object for success
+    # returns None for failure
+    def getOrAddUser(self, userId):
+        user = self.getUser(userId)
+        if user:
+            return user
+        return self.addUser(userId)
 
     # returns user object for success
     # returns None for failure
@@ -97,10 +109,54 @@ class databaseServer:
             self.database[userId] = user
             return self.database.get(userId)
 
+    #TODO: test in databaseServerTester.py
+    def pushBuy(self, userId, symbol, number):
+        user = self.database.get(userId)
+        if not user:
+            return 0
+        # {symbol, number, timestamp}
+        newBuy = {'symbol': symbol, 'number': number, 'timestamp': int(time.time())}
+        user.get('pendingBuys').append(newBuy)
+        return newBuy
+
+    # TODO: test in databaseServerTester.py
+    def popBuy(self, userId):
+        user = self.database.get(userId)
+        if not user:
+            return 0
+        pendingBuys = user.get('pendingBuys')
+        if not len(pendingBuys):
+            return 0
+        return pendingBuys.pop()
+
+    # TODO: test in databaseServerTester.py
+    def pushSell(self, userId, symbol, number):
+        user = self.database.get(userId)
+        if not user:
+            return 0
+        # {symbol, number, timestamp}
+        newSell = {'symbol': symbol, 'number': number, 'timestamp': int(time.time())}
+        user.get('pendingSells').append(newSell)
+        return newSell
+
+    # TODO: test in databaseServerTester.py
+    def popSell(self, userId):
+        user = self.database.get(userId)
+        if not user:
+            return 0
+        pendingSells = user.get('pendingSells')
+        if not len(pendingSells):
+            return 0
+        return pendingSells.pop()
+
+    # TODO: test in databaseServerTester.py
+    def isBuySellActive(self, buyOrSell):
+        return (int(buyOrSell.get('timestamp', 0)) + self.transactionExpire) > int(time.time())
+
 
 
 # quote shape: symbol: {value: string, retrieved: epoch time, user: string}
-class quotes():
+class Quotes():
     def __init__(self, cacheExpire=60, testing=False):
         self.cacheExpire = cacheExpire
         self.quoteCache = {}
@@ -166,7 +222,6 @@ class quotes():
                 print arg,
             if newLine:
                 print
-
 
 
 
@@ -280,40 +335,7 @@ def checkUser(userID):
         dict[userID] = 0
         print "adding user"
 
-def doCommand():
-    # if quote hit the quote server and add sym to cache
 
-    sym = "abc , "
-    userID = "steave\n"
-
-    # Print info for the user
-    print("\nEnter: StockSYM , userid");
-    print("  Invalid entry will return 'NA' for userid.");
-    print("  Returns: quote,sym,userid,timestamp,cryptokey\n");
-    # Get a line of text from the user
-    # fromUser = sys.stdin.readline();
-    fromUser = sym + userID
-    print fromUser
-
-
-    # Create the socket
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    # Connect the socket
-    s.connect(('quoteserve.seng.uvic.ca', 4442))
-    # Send the user's query
-    # s.send(fromUser)
-
-    # Read and print up to 1k of data.
-    data =  quote(s, fromUser)
-    print data
-    # close the connection, and the socket
-    s.close()
-
-def quote(socket , input):
-    socket.send(input)
-    data = socket.recv(1024)
-    print "sending quote"
-    return  data
 
 
 
