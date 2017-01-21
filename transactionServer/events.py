@@ -14,6 +14,41 @@
 #       'username': 'userId of the user who triggered the event'
 #       'args': {} Some dictionary - specific for the type of event.
 #   }
+
+
+# NOT TO BE INSTANTIATED
+class baseEvent():
+	# possible event types
+	eventTypes = {
+		'userCommand': 'userCommand',
+		'accountTransaction': 'accountTransaction',
+		'systemEvent': 'systemEvent',
+		'quoteServer': 'quoteServer',
+		'errorEvent': 'errorEvent'
+	}
+
+	__init__(self, timeStamp, server, transactionNum, userId):
+		self.eventType = None
+		self.timeStamp = timeStamp
+		self.server = server
+		self.transactionNum = transactionNum
+		self.userId = userId
+
+class quoteServer(baseEvent):
+
+	__init__(self, timeStamp, server, transactionNum, userId, quoteServerTime, stockSymbol, price, cryptoKey):
+		super(quoteServer, self).__init__(timeStamp, server, transactionNum, userId)
+		self.eventType = self.eventTypes['quoteServer']
+		self.quoteServerTime = quoteServerTime
+		self.stockSymbol = stockSymbol
+		self.price = price
+		self.cryptoKey = cryptoKey
+
+
+
+class errorEvent(baseEvent):
+
+	__init__(self, eventType, timeStamp, server, transactionNum, userId, )
 #   Valid 'type's and their arg values:
 #       userCommand
 #           args: {
@@ -76,8 +111,7 @@
 #               'errorMessage': message associated with the error
 #           }
 
-# NOT TO BE INSTANTIATED
-class Event:
+class errorEvent:
 	__init__(self, eventType, timeStamp, server, transactionNum, userid):
 		self.eventType: eventType,
 #   		userCommand
