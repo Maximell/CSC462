@@ -51,3 +51,14 @@ print "pushSell non existant user: ", database.pushSell('userNA', 'abc', 3)
 print "pushBuy non existant user: ", database.pushBuy('userNA', 'abc', 3)
 print "popSell non existant user: ", database.popSell('userNA')
 print "popBuy non existant user: ", database.popBuy('userNA')
+
+print "\nstarting portfolio functions:\n"
+print "shouldnt be able to remove from portfolio we dont have: ", database.removeFromPortfolio('user1', 'abc', 3)
+print "unfound user: ", database.removeFromPortfolio('userNA', 'abc', 3)
+
+print "cant add to portfolio of person we dont have: ", database.addToPortfolio('userNA', 'abc', 2)
+print "add 2 to portfolio: ", database.addToPortfolio('user1', 'abc', 4)
+print "cant remove more portfolio then we own: ", database.removeFromPortfolio('user1', 'abc', 5)
+print "successfully remove 1 (leaving 3): ", database.removeFromPortfolio('user1', 'abc', 1)
+database.addToPortfolio('user1', 'xyz', 7)
+print "should have 2 in portfolio: ", database.checkPortfolio('user1')

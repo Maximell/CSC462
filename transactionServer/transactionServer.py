@@ -43,8 +43,18 @@ from random import randint
 #       reserve: 0,
 #         pendingBuys: [{symbol, number, timestamp}],
 #         pendingSells: [{symbol, number, timestamp}],
-#         portfolio: {}
+#         portfolio: {symbol: amount, symbol2: amount}
 #   }
+# TODO: change strings to defined constants
+'''
+    TODO: consider throwing error instead of returning 0.
+    some functions return numbers, and 0 would be a valid number to return
+    like removing from portfolio
+
+    OR
+
+    change return of all functions to be the new user object, and 0 for failure
+'''
 class databaseServer:
 
     def __init__(self, transactionExpire=60):
@@ -110,17 +120,18 @@ class databaseServer:
             self.database[userId] = user
             return self.database.get(userId)
 
+    # returns {symbol, number, timestamp}
     def pushBuy(self, userId, symbol, number):
-        user = self.database.get(userId)
+        user = self.getUser(userId)
         if not user:
             return 0
-        # {symbol, number, timestamp}
         newBuy = {'symbol': symbol, 'number': number, 'timestamp': int(time.time())}
         user.get('pendingBuys').append(newBuy)
         return newBuy
 
+    # returns {symbol, number, timestamp}
     def popBuy(self, userId):
-        user = self.database.get(userId)
+        user = self.getUser(userId)
         if not user:
             return 0
         pendingBuys = user.get('pendingBuys')
@@ -128,17 +139,18 @@ class databaseServer:
             return 0
         return pendingBuys.pop()
 
+    # returns {symbol, number, timestamp}
     def pushSell(self, userId, symbol, number):
-        user = self.database.get(userId)
+        user = self.getUser(userId)
         if not user:
             return 0
-        # {symbol, number, timestamp}
         newSell = {'symbol': symbol, 'number': number, 'timestamp': int(time.time())}
         user.get('pendingSells').append(newSell)
         return newSell
 
+    # returns {symbol, number, timestamp}
     def popSell(self, userId):
-        user = self.database.get(userId)
+        user = self.getUser(userId)
         if not user:
             return 0
         pendingSells = user.get('pendingSells')
@@ -148,17 +160,52 @@ class databaseServer:
 
     # for testing purposes
     def _checkBuys(self, userId):
-        user = self.database.get(userId)
+        user = self.getUser(userId)
         return user.get('pendingBuys')
 
     # for testing purposes
     def _checkSells(self, userId):
-        user = self.database.get(userId)
+        user = self.getUser(userId)
         return user.get('pendingSells')
 
-    # TODO: test in databaseServerTester.py
+    # returns boolean
     def isBuySellActive(self, buyOrSellObject):
         return (int(buyOrSellObject.get('timestamp', 0)) + self.transactionExpire) > int(time.time())
+
+    # returns remaining amount
+    # returns False for error
+    def removeFromPortfolio(self, userId, symbol, amount):
+        user = self.getUser(userId)
+        if not user:
+            return False
+        portfolioAmount = user.get('portfolio').get(symbol)
+        # cant sell portfolio that doesnt exist
+        if portfolioAmount is None:
+            return False
+        # trying to sell more than they own
+        if portfolioAmount < amount:
+            return False
+
+        user['portfolio'][symbol] -= amount
+        return user['portfolio'][symbol]
+
+    # returns new amount
+    # returns False for error
+    def addToPortfolio(self, userId, symbol, amount):
+        user = self.getUser(userId)
+        if not user:
+            return False
+        portfolioAmount = user.get('portfolio').get(symbol)
+        if portfolioAmount is None:
+            user['portfolio'][symbol] = 0
+
+        user['portfolio'][symbol] = amount
+        return user['portfolio'][symbol]
+
+    def checkPortfolio(self, userId):
+        user = self.getUser(userId)
+        return user.get('portfolio')
+
 
 
 
