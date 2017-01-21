@@ -6,6 +6,7 @@ from SimpleHTTPServer import SimpleHTTPRequestHandler
 from BaseHTTPServer import HTTPServer
 from SocketServer import BaseServer
 import os
+import json
 import pprint
 import time
 from random import randint
@@ -166,12 +167,26 @@ class loggerServer:
 #   {
 #       userId: 'abc123',
 #       cash: 0,
-#       reserve: 0
+#       reserve: 0,
+#         pendingBuys: [{symbol, number, timestamp}],
+#         pendingSells: [{symbol, number, timestamp}],
+#         portfolio: {symbol: amount, symbol2: amount}
 #   }
+# TODO: change strings to defined constants
+'''
+    TODO: consider throwing error instead of returning 0.
+    some functions return numbers, and 0 would be a valid number to return
+    like removing from portfolio
+
+    OR
+
+    change return of all functions to be the new user object, and 0 for failure
+'''
 class databaseServer:
 
-    def __init__(self):
+    def __init__(self, transactionExpire=60):
         self.database = {}
+        self.transactionExpire = transactionExpire # for testing
 
     # returns user object for success
     # returns None for user not existing
@@ -181,9 +196,17 @@ class databaseServer:
     # returns user object for success
     # returns None for failure
     def addUser(self, userId):
-        user = { 'userId': userId, 'cash': 0, 'reserve': 0 }
+        user = { 'userId': userId, 'cash': 0, 'reserve': 0, 'pendingBuys': [], 'pendingSells': [], 'portfolio': {}}
         self.database[userId] = user
         return self.database.get(userId)
+
+    # returns user object for success
+    # returns None for failure
+    def getOrAddUser(self, userId):
+        user = self.getUser(userId)
+        if user:
+            return user
+        return self.addUser(userId)
 
     # returns user object for success
     # returns None for failure
@@ -224,10 +247,97 @@ class databaseServer:
             self.database[userId] = user
             return self.database.get(userId)
 
+    # returns {symbol, number, timestamp}
+    def pushBuy(self, userId, symbol, number):
+        user = self.getUser(userId)
+        if not user:
+            return 0
+        newBuy = {'symbol': symbol, 'number': number, 'timestamp': int(time.time())}
+        user.get('pendingBuys').append(newBuy)
+        return newBuy
+
+    # returns {symbol, number, timestamp}
+    def popBuy(self, userId):
+        user = self.getUser(userId)
+        if not user:
+            return 0
+        pendingBuys = user.get('pendingBuys')
+        if not len(pendingBuys):
+            return 0
+        return pendingBuys.pop()
+
+    # returns {symbol, number, timestamp}
+    def pushSell(self, userId, symbol, number):
+        user = self.getUser(userId)
+        if not user:
+            return 0
+        newSell = {'symbol': symbol, 'number': number, 'timestamp': int(time.time())}
+        user.get('pendingSells').append(newSell)
+        return newSell
+
+    # returns {symbol, number, timestamp}
+    def popSell(self, userId):
+        user = self.getUser(userId)
+        if not user:
+            return 0
+        pendingSells = user.get('pendingSells')
+        if not len(pendingSells):
+            return 0
+        return pendingSells.pop()
+
+    # for testing purposes
+    def _checkBuys(self, userId):
+        user = self.getUser(userId)
+        return user.get('pendingBuys')
+
+    # for testing purposes
+    def _checkSells(self, userId):
+        user = self.getUser(userId)
+        return user.get('pendingSells')
+
+    # returns boolean
+    def isBuySellActive(self, buyOrSellObject):
+        return (int(buyOrSellObject.get('timestamp', 0)) + self.transactionExpire) > int(time.time())
+
+    # returns remaining amount
+    # returns False for error
+    def removeFromPortfolio(self, userId, symbol, amount):
+        user = self.getUser(userId)
+        if not user:
+            return False
+        portfolioAmount = user.get('portfolio').get(symbol)
+        # cant sell portfolio that doesnt exist
+        if portfolioAmount is None:
+            return False
+        # trying to sell more than they own
+        if portfolioAmount < amount:
+            return False
+
+        user['portfolio'][symbol] -= amount
+        return user['portfolio'][symbol]
+
+    # returns new amount
+    # returns False for error
+    def addToPortfolio(self, userId, symbol, amount):
+        user = self.getUser(userId)
+        if not user:
+            return False
+        portfolioAmount = user.get('portfolio').get(symbol)
+        if portfolioAmount is None:
+            user['portfolio'][symbol] = 0
+
+        user['portfolio'][symbol] = amount
+        return user['portfolio'][symbol]
+
+    def checkPortfolio(self, userId):
+        user = self.getUser(userId)
+        return user.get('portfolio')
+
+
 
 
 # quote shape: symbol: {value: string, retrieved: epoch time, user: string}
-class quotes():
+class Quotes():
     def __init__(self, cacheExpire=60, testing=False):
         self.cacheExpire = cacheExpire
         self.quoteCache = {}
@@ -295,12 +405,6 @@ class quotes():
                 print
 
 
-
-
-
-
-
-
 class httpsServer(HTTPServer):
     def __init__(self, serverAddr, handlerClass ):
         BaseServer.__init__(self, serverAddr, handlerClass)
@@ -333,12 +437,10 @@ class httpsRequestHandler(SimpleHTTPRequestHandler):
     def do_POST(self):
         try:
             if self.request != None:
-
-                print self.command
-                print self.request
+                # print self.command
+                # print self.request
                 self.send_response(200)
                 self.handle()
-                # print self.request.params
             else:
                 self.send_response(400)
         except:
@@ -348,31 +450,42 @@ class httpsRequestHandler(SimpleHTTPRequestHandler):
         # self.request is the TCP socket connected to the client
         self.data = self.request.recv(1024).strip()
         print("%s wrote:" % self.client_address[0])
-        print(self.data)
+
         # just send back the same data, but upper-cased
         self.request.send(self.data.upper())
+        extractData(self.data)
 
-        # def parse_request(self):
-    #
-    #     print "serving request"
-    #     print self.request
-                #     print self.date_time_string()i
-                #     print self.request.text
-            # print self.rfile
+def extractData(data):
+    # extracting data and splitting properly
+    list = data.split('\n')
+    for x in range(0,len(list)):
+        list[x] = list[x].strip('\r')
+    # request is the actual args we need
+    # lineNum , userID , CMD
+    # ------------------------------------
+    # NOTE: not sure where the sym is???
+    # ------------------------------------
 
+    request = list[-1]
+    requestlist = request.split('&')
+
+    for x in range(0,len(requestlist)):
+        requestlist[x] = requestlist[x].split('=')
+    print requestlist
+    deligate(requestlist)
+
+def deligate(args):
+    # this is where we will figure what CMD we are dealing with
+    # and deligate from here to whatever function is needed
+    # to handle the request
+    pass
 
 
 
 def main():
 #   starting httpserver and waiting for input
     spoolUpServer()
-#     once we have input figure out what it is.
 
-# once we have userID check to see if in the dict
-# checkUser(userID)
-
-# depending on what happens hit the quote server
-# doCommand()
 
 def spoolUpServer(handlerClass = httpsRequestHandler, serverClass = httpsServer):
     socknum = 4442
@@ -387,18 +500,15 @@ def spoolUpServer(handlerClass = httpsRequestHandler, serverClass = httpsServer)
         httpd = serverClass(serverAddr, handlerClass)
 
     socketName = httpd.socket.getsockname()
-    # print "type: " + type(httpd)
     print "serving HTTPS on" , socketName[0], "port number:", socketName[1],
     print "waiting for request..."
     # this idles the server waiting for requests
     httpd.serve_forever()
 
 def incrementSocketNum(socketNum):
+    # This is used to increment the socket incase ours is being used
     socketNum += 1
     return socketNum
-
-
-
 
 def checkUser(userID):
     # adding user to DB
@@ -406,43 +516,6 @@ def checkUser(userID):
     if userID not in dict:
         dict[userID] = 0
         print "adding user"
-
-def doCommand():
-    # if quote hit the quote server and add sym to cache
-
-    sym = "abc , "
-    userID = "steave\n"
-
-    # Print info for the user
-    print("\nEnter: StockSYM , userid");
-    print("  Invalid entry will return 'NA' for userid.");
-    print("  Returns: quote,sym,userid,timestamp,cryptokey\n");
-    # Get a line of text from the user
-    # fromUser = sys.stdin.readline();
-    fromUser = sym + userID
-    print fromUser
-
-
-    # Create the socket
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    # Connect the socket
-    s.connect(('quoteserve.seng.uvic.ca', 4442))
-    # Send the user's query
-    # s.send(fromUser)
-
-    # Read and print up to 1k of data.
-    data =  quote(s, fromUser)
-    print data
-    # close the connection, and the socket
-    s.close()
-
-def quote(socket , input):
-    socket.send(input)
-    data = socket.recv(1024)
-    print "sending quote"
-    return  data
-
-
 
 
 
