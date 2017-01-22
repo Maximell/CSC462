@@ -35,6 +35,42 @@ from OpenSSL import SSL
 #
 # dumplog    (x2)
 # display_summary
+
+# general structure of endpoints
+# Add:
+#   databaseServer.getOrAddUser
+#
+# Quote:
+#   quotes.getQuote
+#
+# Buy:
+#   quotes.getQuote
+#   databaseServer.pushBuy
+#   databaseServer.reserveCash
+#
+# Cancel buy:
+#   databaseServer.popBuy
+#   databaseServer.releaseCash
+#
+# Commit buy:
+#   databaseServer.popBuy
+#   databaseServer.isBuySellActive
+#   databaseServer.addToPortfolio
+#   databaseServer.missingFunctionForTakeCash
+#
+# Sell:
+# quotes.getQuote
+#   databaseServer.pushSell
+#
+# Cancel Sell:
+#   databaseServer.popSell
+#
+# commit Sell:
+#   databaseServer.popSell
+#   databaseServer.isBuySellActive
+#   databaseServer.removeFromPortfolio
+#   databaseServer.addCash
+
 #
 # class events:
 #     systemEvent
@@ -237,6 +273,19 @@ class databaseServer:
 
     # returns user object for success
     # returns None for failure
+    def commitReserveCash(self, userId, amount):
+        user = self.database.get(userId)
+        if not user:
+            return 0
+        if amount > user.get('reserve'):
+            return 0
+        else:
+            user['reserve'] = user.get('reserve') - amount
+            self.database[userId] = user
+            return self.database.get(userId)
+
+    # returns user object for success
+    # returns None for failure
     def releaseCash(self, userId, amount):
         user = self.database.get(userId)
         if not user:
@@ -249,16 +298,16 @@ class databaseServer:
             self.database[userId] = user
             return self.database.get(userId)
 
-    # returns {symbol, number, timestamp}
-    def pushBuy(self, userId, symbol, number):
+    # returns {symbol, number, costPer, timestamp}
+    def pushBuy(self, userId, symbol, number, costPer):
         user = self.getUser(userId)
         if not user:
             return 0
-        newBuy = {'symbol': symbol, 'number': number, 'timestamp': int(time.time())}
+        newBuy = {'symbol': symbol, 'number': number, 'costPer': costPer, 'timestamp': int(time.time())}
         user.get('pendingBuys').append(newBuy)
         return newBuy
 
-    # returns {symbol, number, timestamp}
+    # returns {symbol, number, costPer, timestamp}
     def popBuy(self, userId):
         user = self.getUser(userId)
         if not user:
@@ -268,16 +317,16 @@ class databaseServer:
             return 0
         return pendingBuys.pop()
 
-    # returns {symbol, number, timestamp}
-    def pushSell(self, userId, symbol, number):
+    # returns {symbol, number, costPer, timestamp}
+    def pushSell(self, userId, symbol, number, costPer):
         user = self.getUser(userId)
         if not user:
             return 0
-        newSell = {'symbol': symbol, 'number': number, 'timestamp': int(time.time())}
+        newSell = {'symbol': symbol, 'number': number, 'costPer': costPer, 'timestamp': int(time.time())}
         user.get('pendingSells').append(newSell)
         return newSell
 
-    # returns {symbol, number, timestamp}
+    # returns {symbol, number, costPer, timestamp}
     def popSell(self, userId):
         user = self.getUser(userId)
         if not user:
@@ -535,30 +584,23 @@ def delegate(args):
         quoteObj.getQuote( args["sym"] , args["userID"])
         pass
     elif args["command"] == "ADD":
-        print "adding Cash"
-        action = localDB.addCash( args["userID"] , args["cash"])
-        pass
+        handleCommandAdd(args)
+
     elif args["command"] == "BUY":
-        print "placing buy"
-        action = localDB.pushBuy(args["userID"] , args["sym"] , args["cash"])
-        pass
+        handleCommandBuy(args)
+
     elif args["command"] == "COMMIT_BUY":
-        print "commiting Buy"
-        action = localDB.popBuy(args["userID"])
-        pass
+        handleCommandCommitBuy(args)
+
     elif args["command"] == "CANCEL_BUY":
-        # action = localDB.
-        pass
+        handleCommandCancelBuy(args)
+
     elif args["command"] == "SELL":
-        print "placing sell"
-        action = localDB.pushSell(args["userID"], args["sym"], args["cash"])
-        pass
+        handleCommandSell(args)
     elif args["command"] == "COMMIT_SELL":
-        print "commiting Sell"
-        action = localDB.popSell(args["userID"])
-        pass
+        handleCommandCommitSell(args)
     elif args["command"] == "CANCEL_SELL":
-        pass
+        handleCommandCancelSell(args)
     # triggers
     elif args["command"] == "SET_BUY_AMOUNT":
         pass
@@ -575,7 +617,83 @@ def delegate(args):
         pass
     # quit()
 
+def handleCommandAdd(args):
+    localDB.addCash(args["userID"], args["cash"])
 
+def handleCommandBuy(args):
+    symbol = args.get("sym")
+    cash = args.get("cash")
+    userId = args.get("userID")
+
+    if localDB.getUser(userId).get("cash") >= cash:
+        quote = quoteObj.getQuoteNoCache(symbol, args["userID"])
+
+        costPer = quote.get('value')
+        amount = int(cash / costPer)
+
+        localDB.pushBuy(userId, symbol, amount, costPer)
+        localDB.reserveCash(userId, amount * costPer)
+    else:
+        return "not enough available cash"
+
+def handleCommandCommitBuy(args):
+    userId = args.get("userID")
+    buy = localDB.popBuy(userId)
+    if buy:
+        symbol = buy.get('symbol')
+        number = buy.get('number')
+        costPer = buy.get('costPer')
+        if localDB.isBuySellActive(buy):
+            localDB.addToPortfolio(userId, symbol, number)
+            localDB.commitReserveCash(userId, number * costPer)
+        else:
+            localDB.releaseCash(userId, number * costPer)
+            return "inactive"
+    else:
+        return "no buys"
+
+def handleCommandCancelBuy(args):
+    userId = args.get("userID")
+    buy = localDB.popBuy(userId)
+    if buy:
+        number = buy.get('number')
+        costPer = buy.get('costPer')
+        localDB.releaseCash(userId, number * costPer)
+    else:
+        return "no buys"
+
+def handleCommandSell(args):
+    symbol = args.get("sym")
+    cash = args.get("cash")
+    userId = args.get("userID")
+
+    quote = quoteObj.getQuoteNoCache(symbol, args["userID"])
+
+    costPer = quote.get('value')
+    amount = int(cash / costPer)
+
+    localDB.pushSell(userId, symbol, amount, costPer)
+
+def handleCommandCommitSell(args):
+    userId = args.get("userID")
+    sell = localDB.popSell(userId)
+    if sell:
+        symbol = sell.get('symbol')
+        number = sell.get('number')
+        costPer = sell.get('costPer')
+        if localDB.isBuySellActive(sell):
+            localDB.removeFromPortfolio(userId, symbol, number)
+            localDB.addCash(userId, number * costPer)
+        else:
+            return "inactive"
+    else:
+        return "no sells"
+
+def handleCommandCancelSell(args):
+    userId = args.get("userID")
+    sell = localDB.popSell(userId)
+    if not sell:
+        return "no sells"
 
 
 def main():
