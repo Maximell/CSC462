@@ -6,9 +6,11 @@ from BaseHTTPServer import HTTPServer
 from SimpleHTTPServer import SimpleHTTPRequestHandler
 from SocketServer import BaseServer
 from random import randint
+import math
 # import urllib
 import urlparse
 from OpenSSL import SSL
+import sched, time
 # from events import Event
 
 
@@ -217,6 +219,44 @@ class loggerServer:
 
     change return of all functions to be the new user object, and 0 for failure
 '''
+
+
+# class trigger:
+#     def __init__(self, userID, sym, price, ):
+#         self.userID = userID
+#         self.sym = sym
+#         self.price = price
+#         self.active = False
+#     def activate(self):
+#         self.active = True
+
+class triggerHandler:
+    def __init__(self):
+        buyTriggers = {}
+        sellTriggers = {}
+
+    def addBuyTrigger(self, userId, sym, price):
+        if userId not in self.buyTriggers:
+            self.buyTriggers[userId] = {}
+        self.buyTriggers[userId][sym] = {"price":price, "active":False}
+
+    def addSellTrigger(self, userId, sym, price):
+        if userId not in self.sellTriggers:
+            self.sellTriggers[userId] = {}
+        self.sellTriggers[userId][sym] = {"price":price, "active":False}
+
+    def setBuyActive(self, userId, sym):
+        self.buyTriggers.get(userId).get(sym)["active"] = True
+
+    def setSellActive(self , userId , sym):
+        self.sellTriggers.get(userId).get(sym)["active"] = True
+
+
+
+
+
+
+
 class databaseServer:
 
     def __init__(self, transactionExpire=60):
@@ -398,11 +438,14 @@ class Quotes():
 
         cache = self.quoteCache.get(symbol)
         if cache:
+            # print "in cache"
             if self._cacheIsActive(cache):
+                # print "is active and using cache"
                 self._testPrint(False, "from cache")
                 return cache
             self._testPrint(False, "expired cache")
-
+            # print "not active"
+        # print "not from cache"
         return self._hitQuoteServerAndCache(symbol, user)
 
     '''
@@ -422,10 +465,10 @@ class Quotes():
         else:
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             s.connect(('quoteserve.seng.uvic.ca', 4445))
-
             s.send(request)
             data = s.recv(1024)
             # print data
+            # print "Hitting quoteServer"
             s.close()
 
         newQuote = self._quoteStringToDictionary(data)
@@ -435,7 +478,7 @@ class Quotes():
     def _quoteStringToDictionary(self, quoteString):
         # "quote, sym, userid, timestamp, cryptokey\n"
         split = quoteString.split(",")
-        return {'value': split[0], 'retrieved': split[3], 'user': split[2]}
+        return {'value': float(split[0]), 'retrieved': split[3], 'user': split[2]}
 
     def _cacheIsActive(self, quote):
         return (int(quote.get('retrieved', 0)) + self.cacheExpire) > int(time.time())
@@ -454,6 +497,8 @@ class Quotes():
             if newLine:
                 print
 
+    def _printQuoteCacheState(self):
+        print self.quoteCache
 
 class httpsServer(HTTPServer):
     def __init__(self, serverAddr, handlerClass ):
@@ -487,8 +532,9 @@ class httpsRequestHandler(SimpleHTTPRequestHandler):
     def do_POST(self):
         try:
             if self.request != None:
-                self.send_response(200)
                 self.handle()
+                self.send_response(200)
+
             else:
                 self.send_response(400)
         except:
@@ -522,7 +568,7 @@ def extractData(data):
         x = x.strip('\'')
         sanitized.append(x)
 
-    args["userID"] = sanitized[0]
+    args["userId"] = sanitized[0]
     args["command"] = args["command"][0]
     # extracting the line number
     for key, value in args.iteritems():
@@ -531,25 +577,23 @@ def extractData(data):
             args["lineNum"] = value[0]
             del args[key]
             break
-    # print args
-
 
     #   depending on what command we have
     if len(sanitized) == 2:
-        # 2 case: 1 where userID and sym
-        #         2 where userID and cash
+        # 2 case: 1 where userId and sym
+        #         2 where userId and cash
         if args["command"] == 'ADD':
             args["cash"] = sanitized[1]
         else:
             args["sym"] = sanitized[1]
     if len(sanitized) == 3:
         args["sym"] = sanitized[1]
-        args["cash"] = sanitized[2]
+        args["cash"] = float(sanitized[2])
 
     del args["args"]
-    # args now has keys: userID , sym , lineNUM , command , cash
+    # args now has keys: userId , sym , lineNUM , command , cash
     #
-    # {'userID': 'oY01WVirLr', 'cash': '63511.53',
+    # {'userId': 'oY01WVirLr', 'cash': '63511.53',
     # 'lineNum': '1', 'command': 'ADD'}
     # print args
     delegate(args)
@@ -578,10 +622,11 @@ def delegate(args):
     # ----------------------------
 
     # Call Quote
-    localDB.addUser(args["userID"])
+    localDB.addUser(args["userId"])
     if args["command"] == "QUOTE":
         print "getting Quote"
-        quoteObj.getQuote( args["sym"] , args["userID"])
+        quoteObj.getQuote( args["sym"] , args["userId"])
+        quoteObj._printQuoteCacheState()
         pass
     elif args["command"] == "ADD":
         handleCommandAdd(args)
@@ -607,6 +652,7 @@ def delegate(args):
     elif args["command"] == "CANCEL_BUY_AMOUNT":
         pass
     elif args["command"] == "SET_BUY_TRIGGER":
+
         pass
 
     elif args["command"] == "SET_SELL_AMOUNT":
@@ -615,18 +661,19 @@ def delegate(args):
         pass
     elif args["command"] == "SET_SELL_TRIGGER":
         pass
-    # quit()
+
+
 
 def handleCommandAdd(args):
-    localDB.addCash(args["userID"], args["cash"])
+    localDB.addCash(args["userId"], args["cash"])
 
 def handleCommandBuy(args):
     symbol = args.get("sym")
     cash = args.get("cash")
-    userId = args.get("userID")
+    userId = args.get("userId")
 
     if localDB.getUser(userId).get("cash") >= cash:
-        quote = quoteObj.getQuoteNoCache(symbol, args["userID"])
+        quote = quoteObj.getQuoteNoCache(symbol, args["userId"])
 
         costPer = quote.get('value')
         amount = int(cash / costPer)
@@ -637,7 +684,7 @@ def handleCommandBuy(args):
         return "not enough available cash"
 
 def handleCommandCommitBuy(args):
-    userId = args.get("userID")
+    userId = args.get("userId")
     buy = localDB.popBuy(userId)
     if buy:
         symbol = buy.get('symbol')
@@ -653,7 +700,7 @@ def handleCommandCommitBuy(args):
         return "no buys"
 
 def handleCommandCancelBuy(args):
-    userId = args.get("userID")
+    userId = args.get("userId")
     buy = localDB.popBuy(userId)
     if buy:
         number = buy.get('number')
@@ -665,17 +712,18 @@ def handleCommandCancelBuy(args):
 def handleCommandSell(args):
     symbol = args.get("sym")
     cash = args.get("cash")
-    userId = args.get("userID")
+    userId = args.get("userId")
 
-    quote = quoteObj.getQuoteNoCache(symbol, args["userID"])
+    quote = quoteObj.getQuoteNoCache(symbol, args["userId"])
 
     costPer = quote.get('value')
-    amount = int(cash / costPer)
+    amount = math.floor(cash / costPer)
+
 
     localDB.pushSell(userId, symbol, amount, costPer)
 
 def handleCommandCommitSell(args):
-    userId = args.get("userID")
+    userId = args.get("userId")
     sell = localDB.popSell(userId)
     if sell:
         symbol = sell.get('symbol')
@@ -690,7 +738,7 @@ def handleCommandCommitSell(args):
         return "no sells"
 
 def handleCommandCancelSell(args):
-    userId = args.get("userID")
+    userId = args.get("userId")
     sell = localDB.popSell(userId)
     if not sell:
         return "no sells"
@@ -729,6 +777,7 @@ if __name__ == '__main__':
     # -----------------------
     quoteObj = Quotes()
     localDB = databaseServer()
+    localTriggers = triggerHandler()
     # -----------------------
 
     main()
