@@ -11,6 +11,8 @@ import urlparse
 from OpenSSL import SSL
 # from events import Event
 
+
+
 # COMMANDS NEEDED
 #
 # add
@@ -193,9 +195,12 @@ class databaseServer:
     # returns user object for success
     # returns None for failure
     def addUser(self, userId):
-        user = { 'userId': userId, 'cash': 0, 'reserve': 0, 'pendingBuys': [], 'pendingSells': [], 'portfolio': {}}
-        self.database[userId] = user
-        return self.database.get(userId)
+        if userId not in self.database:
+            user = { 'userId': userId, 'cash': 0, 'reserve': 0, 'pendingBuys': [], 'pendingSells': [], 'portfolio': {}}
+            self.database[userId] = user
+            return self.database.get(userId)
+        else:
+            pass
 
     # returns user object for success
     # returns None for failure
@@ -210,7 +215,7 @@ class databaseServer:
     def addCash(self, userId, amount):
         user = self.database.get(userId)
         if user:
-            user['cash'] = user.get('cash') + amount
+            user['cash'] = user.get('cash') + float(amount)
         else:
             user = { 'userId': userId, 'cash': amount, 'reserve': 0 }
         self.database[userId] = user
@@ -332,7 +337,6 @@ class databaseServer:
 
 
 
-
 # quote shape: symbol: {value: string, retrieved: epoch time, user: string}
 class Quotes():
     def __init__(self, cacheExpire=60, testing=False):
@@ -372,7 +376,7 @@ class Quotes():
 
             s.send(request)
             data = s.recv(1024)
-            print data
+            # print data
             s.close()
 
         newQuote = self._quoteStringToDictionary(data)
@@ -448,12 +452,16 @@ class httpsRequestHandler(SimpleHTTPRequestHandler):
         self.request.send(self.data.upper())
         extractData(self.data)
 
+
+
+
+
 def extractData(data):
     # extracting data and splitting properly
 
     args = urlparse.parse_qs(data)
     # print args
-    splitInfo = args['args'][0].split()
+    splitInfo = args["args"][0].split()
     sanitized = []
     # removing chars to make args easier to deal with
     # in the future
@@ -465,13 +473,13 @@ def extractData(data):
         x = x.strip('\'')
         sanitized.append(x)
 
-    args['userID'] = sanitized[0]
-    args['command'] = args['command'][0]
+    args["userID"] = sanitized[0]
+    args["command"] = args["command"][0]
     # extracting the line number
     for key, value in args.iteritems():
         string = str(key[0]) + str(key[1]) + str(key[2]) + str(key[3])
         if string == "POST":
-            args['lineNum'] = value[0]
+            args["lineNum"] = value[0]
             del args[key]
             break
     # print args
@@ -481,24 +489,24 @@ def extractData(data):
     if len(sanitized) == 2:
         # 2 case: 1 where userID and sym
         #         2 where userID and cash
-        if args['command'] == 'ADD':
-            args['cash'] = sanitized[1]
+        if args["command"] == 'ADD':
+            args["cash"] = sanitized[1]
         else:
-            args['sym'] = sanitized[1]
+            args["sym"] = sanitized[1]
     if len(sanitized) == 3:
-        args['sym'] = sanitized[1]
-        args['cash'] = sanitized[2]
+        args["sym"] = sanitized[1]
+        args["cash"] = sanitized[2]
 
-    del args['args']
-    # args now has userID , sym , lineNUM , command , cash
+    del args["args"]
+    # args now has keys: userID , sym , lineNUM , command , cash
     #
     # {'userID': 'oY01WVirLr', 'cash': '63511.53',
     # 'lineNum': '1', 'command': 'ADD'}
     # print args
-    deligate(args)
+    delegate(args)
 
-def deligate(args):
-    # this is where we will figure what CMD we are dealing with
+def delegate(args):
+    # this is where we will figure what command we are dealing with
     # and deligate from here to whatever function is needed
     # to handle the request
     # ----------------------------
@@ -521,23 +529,33 @@ def deligate(args):
     # ----------------------------
 
     # Call Quote
+    localDB.addUser(args["userID"])
     if args["command"] == "QUOTE":
-        # print args['sym'] + " "+ args['userID']
-        action = Quotes()
-        action.getQuote( args['sym'] , args['userID'])
+        print "getting Quote"
+        quoteObj.getQuote( args["sym"] , args["userID"])
         pass
     elif args["command"] == "ADD":
-        # action =
+        print "adding Cash"
+        action = localDB.addCash( args["userID"] , args["cash"])
         pass
     elif args["command"] == "BUY":
+        print "placing buy"
+        action = localDB.pushBuy(args["userID"] , args["sym"] , args["cash"])
         pass
     elif args["command"] == "COMMIT_BUY":
+        print "commiting Buy"
+        action = localDB.popBuy(args["userID"])
         pass
     elif args["command"] == "CANCEL_BUY":
+        # action = localDB.
         pass
     elif args["command"] == "SELL":
+        print "placing sell"
+        action = localDB.pushSell(args["userID"], args["sym"], args["cash"])
         pass
     elif args["command"] == "COMMIT_SELL":
+        print "commiting Sell"
+        action = localDB.popSell(args["userID"])
         pass
     elif args["command"] == "CANCEL_SELL":
         pass
@@ -555,6 +573,7 @@ def deligate(args):
         pass
     elif args["command"] == "SET_SELL_TRIGGER":
         pass
+    # quit()
 
 
 
@@ -588,4 +607,12 @@ def incrementSocketNum(socketNum):
     return socketNum
 
 if __name__ == '__main__':
+    # Global vars
+    # -----------------------
+    quoteObj = Quotes()
+    localDB = databaseServer()
+    # -----------------------
+
     main()
+    # send dumplog
+    #
