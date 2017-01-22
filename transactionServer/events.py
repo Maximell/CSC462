@@ -20,10 +20,10 @@
 class baseEvent():
 	# possible event types
 	eventTypes = {
-		'userCommand': 'userCommand',
-		'accountTransaction': 'accountTransaction',
+		'userCommandEvent': 'userCommandEvent',
+		'accountTransactionEvent': 'accountTransactionEvent',
 		'systemEvent': 'systemEvent',
-		'quoteServer': 'quoteServer',
+		'quoteServerEvent': 'quoteServerEvent',
 		'errorEvent': 'errorEvent'
 	}
 
@@ -34,21 +34,65 @@ class baseEvent():
 		self.transactionNum = transactionNum
 		self.userId = userId
 
-class quoteServer(baseEvent):
+	serialize(self):
+		return {
+			"eventType": self.eventType,
+			"timeStamp": self.timeStamp,
+			"server": self.server,
+			"transactionNum": self.transactionNum,
+			"userId": self.userId
+		}
+
+class quoteServerEvent(baseEvent):
 
 	__init__(self, timeStamp, server, transactionNum, userId, quoteServerTime, stockSymbol, price, cryptoKey):
-		super(quoteServer, self).__init__(timeStamp, server, transactionNum, userId)
-		self.eventType = self.eventTypes['quoteServer']
+		super(quoteServerEvent, self).__init__(timeStamp, server, transactionNum, userId)
+		self.eventType = self.eventTypes['quoteServerEvent']
 		self.quoteServerTime = quoteServerTime
 		self.stockSymbol = stockSymbol
 		self.price = price
 		self.cryptoKey = cryptoKey
 
+	serialize(self):
+		return super(self).update({
+			"quoteServerTime": self.quoteServerTime,
+			"stockSymbol": self.stockSymbol,
+			"price": self.price,
+			"cryptoKey": self.cryptoKey
+		})
 
+class accountTransactionEvent(baseEvent):
 
-class errorEvent(baseEvent):
+	accountTransactionEvents = {
+		'add': 'add',
+		'remove': 'remove',
+		'reserve': 'reserve',
+		'free': 'free'
+	}
 
-	__init__(self, eventType, timeStamp, server, transactionNum, userId, )
+	__init__(self, timeStamp, server, transactionNum, userId, accountTransactionEventType, funds):
+		super(accountTransactionEvent, self).__init__(timeStamp, server, transactionNum, userId)
+		self.eventType = self.eventTypes['accountTransactionEvent']
+		self.accountTransactionEventType = self.accountTransactionEvents[accountTransactionEventType]
+		self.funds = funds
+
+	serialize(self):
+		return super(self).update({
+			"accountTransactionEventType": self.accountTransactionEventType,
+			"funds": self.funds
+		})
+
+class commandEvent(baseEvent):
+
+	__init__(self, eventType, timeStamp, server, transactionNum, userId)
+		super(commandEvent, self).__init__(timeStamp, server, transactionNum, userId)
+
+class errorEvent(commandEvent):
+
+class systemEvent(commandEvent):
+
+class userCommand(commandEvent):
+
 #   Valid 'type's and their arg values:
 #       userCommand
 #           args: {
@@ -110,7 +154,7 @@ class errorEvent(baseEvent):
 #               'command': same as in userCommand,
 #               'errorMessage': message associated with the error
 #           }
-
+'''
 class errorEvent:
 	__init__(self, eventType, timeStamp, server, transactionNum, userid):
 		self.eventType: eventType,
@@ -138,3 +182,4 @@ class errorEvent:
         errorEvent
 
 method add arguments
+'''
