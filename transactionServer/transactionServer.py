@@ -368,11 +368,11 @@ class Quotes():
             data = self._mockQuoteServer(request)
         else:
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.connect(('quoteserve.seng.uvic.ca', 4442))
+            s.connect(('quoteserve.seng.uvic.ca', 4445))
 
-            socket.send(request)
-            data = socket.recv(1024)
-
+            s.send(request)
+            data = s.recv(1024)
+            print data
             s.close()
 
         newQuote = self._quoteStringToDictionary(data)
@@ -434,8 +434,6 @@ class httpsRequestHandler(SimpleHTTPRequestHandler):
     def do_POST(self):
         try:
             if self.request != None:
-                # print self.command
-                # print self.request
                 self.send_response(200)
                 self.handle()
             else:
@@ -525,9 +523,11 @@ def deligate(args):
     # Call Quote
     if args["command"] == "QUOTE":
         # print args['sym'] + " "+ args['userID']
-        # Quotes.getQuote(args['sym'] , args['userID'])
+        action = Quotes()
+        action.getQuote( args['sym'] , args['userID'])
         pass
     elif args["command"] == "ADD":
+        # action =
         pass
     elif args["command"] == "BUY":
         pass
@@ -586,15 +586,6 @@ def incrementSocketNum(socketNum):
     # This is used to increment the socket incase ours is being used
     socketNum += 1
     return socketNum
-
-def checkUser(userID):
-    # adding user to DB
-    # NOTE (usersnames need newline char to activate quoteserver)
-    if userID not in dict:
-        dict[userID] = 0
-        print "adding user"
-
-
 
 if __name__ == '__main__':
     main()
