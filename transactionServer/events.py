@@ -36,11 +36,11 @@ class baseEvent():
 
 	serialize(self):
 		return {
-			"eventType": self.eventType,
-			"timeStamp": self.timeStamp,
-			"server": self.server,
-			"transactionNum": self.transactionNum,
-			"userId": self.userId
+			'eventType': self.eventType,
+			'timeStamp': self.timeStamp,
+			'server': self.server,
+			'transactionNum': self.transactionNum,
+			'userId': self.userId
 		}
 
 class quoteServerEvent(baseEvent):
@@ -55,10 +55,10 @@ class quoteServerEvent(baseEvent):
 
 	serialize(self):
 		return super(self).update({
-			"quoteServerTime": self.quoteServerTime,
-			"stockSymbol": self.stockSymbol,
-			"price": self.price,
-			"cryptoKey": self.cryptoKey
+			'quoteServerTime': self.quoteServerTime,
+			'stockSymbol': self.stockSymbol,
+			'price': self.price,
+			'cryptoKey': self.cryptoKey
 		})
 
 class accountTransactionEvent(baseEvent):
@@ -78,14 +78,27 @@ class accountTransactionEvent(baseEvent):
 
 	serialize(self):
 		return super(self).update({
-			"accountTransactionEventType": self.accountTransactionEventType,
-			"funds": self.funds
+			'accountTransactionEventType': self.accountTransactionEventType,
+			'funds': self.funds
 		})
 
 class commandEvent(baseEvent):
 
 	__init__(self, eventType, timeStamp, server, transactionNum, userId)
 		super(commandEvent, self).__init__(timeStamp, server, transactionNum, userId)
+
+	command(**kwargs):
+		commandName = kwargs['name']
+		if commandName in ['commit_buy', 'cancel_buy', 'commit_sell', 'cancel_sell', 'display_summary']:
+			print 'handle the case where no additional args are needed'
+		if commandName in ['quote', 'cancel_set_buy', 'cancel_set_sell']:
+			print 'handle the case where stockSymbol is needed'
+		if commandName in ['dumplog']:
+			print 'handle the case where fileName is needed'
+		if commandName in ['add']:
+			print 'handle the case where amount is needed'
+		if commandName in ['buy', 'sell', 'set_buy_amount', 'set_sell_amount', 'set_buy_trigger', 'set_sell_trigger']:
+			print 'handle the case where both amount and stockSymbol are needed'
 
 class errorEvent(commandEvent):
 
@@ -98,7 +111,6 @@ class userCommand(commandEvent):
 #           args: {
 #               'command': {'name': ,
 #                           args{}}'string representing the user's command',
-#                   add
 #                   commit_buy
 #                   cancel_buy
 #                   commit_sell
@@ -107,27 +119,24 @@ class userCommand(commandEvent):
 #                       no additional args
 #
 #                   quote
-#                   buy
-#                   sell
-#                   set_buy_amount
 #                   cancel_set_buy
-#                   set_buy_trigger
-#                   set_sell_amount
-#                   set_sell_trigger
 #                   cancel_set_sell
-#                       need stockSymbol
+#                       stockSymbol
 #
 #                   dumplog
 #                       fileName
 #                    
 #                   add
-#                   buy
-#                   sell
-#                   set_buy_amount
-#                   set_buy_trigger
-#                   set_sell_amount
-#                   set_sell_trigger
 #                       funds
+#
+#					buy
+#					sell
+#					set_buy_amount
+#					set_sell_amount
+#					set_buy_trigger
+#					set_sell_trigger
+#						stockSymbol
+#						funds
 #           }
 #       accountTransaction
 #           args: {
