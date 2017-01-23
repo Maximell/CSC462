@@ -259,14 +259,6 @@ class AuditServer:
         }
         self.logFile.append(dictionary)
 
-# '''
-#     def logUserCommand():
-#     def logQuoteServer():
-#     def logAccountChange():
-#     def logSystemEvent():
-#     def logErrorMessage():
-#     def logDebugMessage(server, timestamp, transactionNum, command, userId, stockSymbol, fileName, funds, debugMessage):
-# '''
     def writeLogs(self, fileName):
         self._dumpIntoFile(fileName)
 
