@@ -1,10 +1,20 @@
-from Events import BaseEvent, QuoteServerEvent, AccountTransactionEvent
+from Events import Event
 
-#baseEvent = BaseEvent('123', 'testServer', '1', 'user1', testArg1='testArg1', testArg2='testArg2')
-#print baseEvent.serialize()
 
-quoteServerEvent = QuoteServerEvent('1234', 'testServer2', '2', 'user2', quoteServerTime='12345', stockSymbol='abc', price='45', cryptoKey='somecryptokey')
-print quoteServerEvent.serialize()
 
-accountTransactionEvent = AccountTransactionEvent
+# commit_buy
+testEvent = Event(
+				eventType=Event.eventTypes['errorEvent'],
+				timeStamp=1234,
+				server='testServ',
+				transactionNum=1,
+				userId='testUser',
+				commandName='commit_buy',
+				errorMessage='couldn\'t find testUser'
+			)
 
+print testEvent.serialize()
+
+secondEvent = Event(**testEvent.serialize())
+
+print secondEvent.serialize()
