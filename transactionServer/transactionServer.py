@@ -162,13 +162,20 @@ import threading
 #               'command': same as in userCommand,
 #               'errorMessage': message associated with the error
 #           }
-class loggerServer:
+class AuditServer:
 
     def __init__(self):
         self.logFile = []
 
-    def log(action):
-        print 'Logging an action: ' + action + '.'
+    def log(self, event):
+        print 'Logging an event: ' + event + '.'
+        self.logFile.append(event)
+
+    def logUserCommand(self, **kwargs):
+        self.logFile.append(dict(kwargs,
+            logType='userCommand'
+        ))
+
 # '''
 #     def logUserCommand():
 #     def logQuoteServerHit():
@@ -177,8 +184,9 @@ class loggerServer:
 #     def logErrorMessage():
 #     def logDebugMessage(server, timestamp, transactionNum, command, userId, stockSymbol, fileName, funds, debugMessage):
 # '''
-    def writeLogs(fileName):
+    def writeLogs(self, fileName):
         print 'trying to print contents to file: %s.' % (fileName)
+        self._dumpIntoFile(fileName)
 
     # writes a single line to the log file
     def _writeLineToLogFile(self,line):
@@ -196,8 +204,21 @@ class loggerServer:
             file = open(fileName, 'w')
         except IOError:
             print 'Attempted to save into file %s but couldn\'t open file for writing.' % (fileName)
-        for line in self.logFile:
-            file.write(line)
+        
+        file.write('<?xml version="1.0"?>\n')
+        file.write('<log>\n\n')
+        for log in self.logFile:
+            logType = log['logType']
+            file.write('\t<'+logType+'>\n')
+            file.write('\t\t<timestamp>'+args['timeStamp']+'</timestamp>\n')
+            file.write('\t\t<server>'+args['server']+'</server>\n')
+            file.write('\t\t<transactionNum>'+args['transactionNum']+'</transactionNum>')
+            file.write('\t\t<username>'+args['userId']+'</username>\n')
+            if logType == 'userCommand':
+                # stuff specific to userCommand
+                pass
+            file.write('\t</userCommand>\n')    
+        file.write('\n</log>\n')
         file.close()
 
 
@@ -931,6 +952,14 @@ def delegate(args):
 
 def handleCommandAdd(args):
     localDB.addCash(args["userId"], args["cash"])
+    auditServer.logUserCommand(
+        timeStamp=int(time.time()),
+        server='transactionServer1',
+        transactionNum=args['lineNum'],
+        command=args['command'],
+        userId=args['userId'],
+        funds=args['cash']
+    )
 
 def handleCommandBuy(args):
     symbol = args.get("sym")
@@ -1073,6 +1102,7 @@ if __name__ == '__main__':
     quoteObj = Quotes()
     localDB = databaseServer()
     localTriggers = Triggers()
+    auditServer = AuditServer()
     # -----------------------
 
     main()
