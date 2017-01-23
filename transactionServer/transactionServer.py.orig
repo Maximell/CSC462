@@ -213,7 +213,7 @@ class loggerServer:
 #     def activate(self):
 #         self.active = True
 
-
+<<<<<<< HEAD
 # Here we want our trigger's threads
 # hitting the quote server for quotes every 15sec
 class threadHandler:
@@ -278,7 +278,8 @@ class threadHandler:
             except:
                 print "broken.."
 
-
+=======
+>>>>>>> b77e8ded19d775a1dc0dc1c9311c248ea0b6a644
 class Triggers:
     def __init__(self):
         self.buyTriggers = {}
@@ -292,10 +293,10 @@ class Triggers:
     def getSellTriggers(self):
         return self.sellTriggers
 
-
+<<<<<<< HEAD
     def addBuyTrigger(self, userId, sym, cashReserved):
         print "adding buy trigger"
-
+=======
     def getBuyTriggers(self):
         return self.buyTriggers
 
@@ -303,7 +304,7 @@ class Triggers:
         return self.sellTriggers
 
     def addBuyTrigger(self, userId, sym, cashReserved):
-
+>>>>>>> b77e8ded19d775a1dc0dc1c9311c248ea0b6a644
         if userId not in self.buyTriggers:
             self.buyTriggers[userId] = {}
         self.buyTriggers[userId][sym] = {"cashReserved": cashReserved, "active": False, "buyAt": 0}
@@ -314,13 +315,16 @@ class Triggers:
         self.sellTriggers[userId][sym] = {"maxSellAmount": maxSellAmount, "active": False, "sellAt": 0}
 
     def setBuyActive(self, userId, symbol, buyAt):
-
+<<<<<<< HEAD
         print "starting buy thread"
+=======
+>>>>>>> b77e8ded19d775a1dc0dc1c9311c248ea0b6a644
         if self._triggerExists(userId, symbol, self.buyTriggers):
             trigger = self.buyTriggers.get(userId).get(symbol)
             if buyAt <= trigger.get('cashReserved'):
                 trigger["active"] = True
                 trigger["buyAt"] = buyAt
+<<<<<<< HEAD
                 # start cron job
                 bought = self.threadHandler.addBuyThread(symbol, buyAt)
                 print "bought: " + str(bought)
@@ -337,6 +341,7 @@ class Triggers:
                 # start cron job
                 sold = self.threadHandler.addSellThread(symbol , sellAt)
                 print "sold: " + str(sold)
+=======
                 return trigger
         return 0
 
@@ -346,6 +351,7 @@ class Triggers:
             if sellAt <= trigger.get('maxSellAmount'):
                 trigger["active"] = True
                 trigger["sellAt"] = sellAt
+>>>>>>> b77e8ded19d775a1dc0dc1c9311c248ea0b6a644
                 return trigger
         return 0
 
@@ -554,6 +560,7 @@ class databaseServer:
         portfolio = user.get('portfolio').get(symbol)
         if portfolio is None:
             user['portfolio'][symbol] = {'amount': 0, 'reserved': 0}
+<<<<<<< HEAD
 
         user['portfolio'][symbol]['amount'] = amount
         return user['portfolio'][symbol]
@@ -605,8 +612,9 @@ class databaseServer:
         if portfolioReserved < numberToCommit:
             return False
 
-        # Don't know what amount is
-        # user['portfolio'][symbol]['amount'] = amount
+=======
+
+        user['portfolio'][symbol]['amount'] = amount
         return user['portfolio'][symbol]
 
     def reserveFromPortfolio(self, userId, symbol, numberToReserve):
@@ -656,6 +664,7 @@ class databaseServer:
         if portfolioReserved < numberToCommit:
             return False
 
+>>>>>>> b77e8ded19d775a1dc0dc1c9311c248ea0b6a644
         user['portfolio'][symbol]['reserved'] -= numberToCommit
         return user['portfolio'][symbol]
 
@@ -670,12 +679,15 @@ class Quotes():
         self.cacheExpire = cacheExpire
         self.quoteCache = {}
         self.testing = testing
+<<<<<<< HEAD
         # if not testing:
         #     self.quoteServerConnection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         #     self.quoteServerConnection.connect(('quoteserve.seng.uvic.ca', 4445))
-        # if not testing:
-        #     self.quoteServerConnection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        #     self.quoteServerConnection.connect(('quoteserve.seng.uvic.ca', 4445))
+=======
+        if not testing:
+            self.quoteServerConnection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.quoteServerConnection.connect(('quoteserve.seng.uvic.ca', 4445))
+>>>>>>> b77e8ded19d775a1dc0dc1c9311c248ea0b6a644
 
 
     def getQuote(self, symbol, user):
@@ -708,6 +720,7 @@ class Quotes():
         if self.testing:
             data = self._mockQuoteServer(request)
         else:
+<<<<<<< HEAD
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             s.connect(('quoteserve.seng.uvic.ca', 4445))
             s.send(request)
@@ -717,9 +730,11 @@ class Quotes():
             s.close()
             # self.quoteServerConnection.send(request)
             # data = self.quoteServerConnection.recv(1024)
+=======
 
-            # self.quoteServerConnection.send(request)
-            # data = self.quoteServerConnection.recv(1024)
+            self.quoteServerConnection.send(request)
+            data = self.quoteServerConnection.recv(1024)
+>>>>>>> b77e8ded19d775a1dc0dc1c9311c248ea0b6a644
 
         newQuote = self._quoteStringToDictionary(data)
         self.quoteCache[symbol] = newQuote
