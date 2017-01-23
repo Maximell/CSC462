@@ -1,17 +1,18 @@
 
 # demonstrate talking to the quote server
+import math
 import socket
+import threading
+from threading import Thread
 import time
+import urlparse
 from BaseHTTPServer import HTTPServer
 from SimpleHTTPServer import SimpleHTTPRequestHandler
 from SocketServer import BaseServer
 from random import randint
-import math
-# import urllib
-import urlparse
+
 from OpenSSL import SSL
-import sched, time
-import threading
+
 
 # from events import Event
 
@@ -281,120 +282,125 @@ class AuditServer:
         for log in self.logFile:
             logType = log['logType']
             file.write('\t<'+logType+'>\n')
-            file.write('\t\t<timestamp>'+args['timeStamp']+'</timestamp>\n')
-            file.write('\t\t<server>'+args['server']+'</server>\n')
-            file.write('\t\t<transactionNum>'+args['transactionNum']+'</transactionNum>')
-            file.write('\t\t<username>'+args['userId']+'</username>\n')
+            file.write('\t\t<timestamp>'+log['timeStamp']+'</timestamp>\n')
+            file.write('\t\t<server>'+log['server']+'</server>\n')
+            file.write('\t\t<transactionNum>'+log['transactionNum']+'</transactionNum>')
+            file.write('\t\t<username>'+log['userId']+'</username>\n')
             if logType == 'userCommand':
-                file.write('\t\t<command>'+args['commandName']+'</command>\n')
-                if args.get('stockSymbol'):
-                    file.write('\t\t<stockSymbol>'+args['stockSymbol']+'</stockSymbol>\n')
-                if args.get('fileName'):
-                    file.write('\t\t<filename>'+args['fileName']+'</filename>\n')
-                if args.get('amount'):
-                    file.write('\t\t<funds>'+args['amount']+'</funds>\n')
+                file.write('\t\t<command>'+log['commandName']+'</command>\n')
+                if log.get('stockSymbol'):
+                    file.write('\t\t<stockSymbol>'+log['stockSymbol']+'</stockSymbol>\n')
+                if log.get('fileName'):
+                    file.write('\t\t<filename>'+log['fileName']+'</filename>\n')
+                if log.get('amount'):
+                    file.write('\t\t<funds>'+log['amount']+'</funds>\n')
             elif logType == 'quoteServer':
-                file.write('\t\t<quoteServerTime>'+args['quoteServerTime']+'</quoteServerTime>\n')
-                file.write('\t\t<stockSymbol>'+args['stockSymbol']+'</stockSymbol>\n')
-                file.write('\t\t<price>'+args['price']+'</price>\n')
-                file.write('\t\t<cryptokey>'+args['cryptoKey']+'</cryptokey>\n')
+                file.write('\t\t<quoteServerTime>'+log['quoteServerTime']+'</quoteServerTime>\n')
+                file.write('\t\t<stockSymbol>'+log['stockSymbol']+'</stockSymbol>\n')
+                file.write('\t\t<price>'+log['price']+'</price>\n')
+                file.write('\t\t<cryptokey>'+log['cryptoKey']+'</cryptokey>\n')
             elif logType == 'accountTransaction':
-                file.write('\t\t<action>'+args['action']+'</action>')
-                file.write('\t\t<funds>'+args['amount']+'</funds>')
+                file.write('\t\t<action>'+log['action']+'</action>')
+                file.write('\t\t<funds>'+log['amount']+'</funds>')
             elif logType == 'systemEvent':
-                file.write('\t\t<command>'+args['commandName']+'</command>\n')                
-                if args.get('stockSymbol'):
-                    file.write('\t\t<stockSymbol>'+args['stockSymbol']+'</stockSymbol>\n')
-                if args.get('fileName'):
-                    file.write('\t\t<filename>'+args['fileName']+'</filename>\n')
-                if args.get('amount'):
-                    file.write('\t\t<funds>'+args['amount']+'</funds>\n')
+                file.write('\t\t<command>'+log['commandName']+'</command>\n')
+                if log.get('stockSymbol'):
+                    file.write('\t\t<stockSymbol>'+log['stockSymbol']+'</stockSymbol>\n')
+                if log.get('fileName'):
+                    file.write('\t\t<filename>'+log['fileName']+'</filename>\n')
+                if log.get('amount'):
+                    file.write('\t\t<funds>'+log['amount']+'</funds>\n')
             elif logType == 'errorMessage':
-                file.write('\t\t<errorMessage>'+args['errorMessage']+'</errorMessage>\n')
+                file.write('\t\t<errorMessage>'+log['errorMessage']+'</errorMessage>\n')
             elif logType == 'debugMessage':
-                file.write('\t\t<debugMessage>'+args['debugMessage']+'</debugMessage>\n')
+                file.write('\t\t<debugMessage>'+log['debugMessage']+'</debugMessage>\n')
             file.write('\t</userCommand>\n')    
         file.write('\n</log>\n')
         file.close()
 
-# class trigger:
-#     def __init__(self, userID, sym, price, ):
-#         self.userID = userID
-#         self.sym = sym
-#         self.price = price
-#         self.active = False
-#     def activate(self):
-#         self.active = True
-
 # Here we want our trigger's threads
 # hitting the quote server for quotes every 15sec
-class threadHandler:
-    def __init__(self , userId):
-        self.userId = userId
-        self.threadBuyDict = {}
-        self.threadSellDict = {}
+
+class hammerQuoteServerToBuy(Thread):
+    def __init__(self):
+        Thread.__init__(self)
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
+        self.daemon = True
         self.quote = Quotes()
-
-        # s.send(request)
-        # data = s.recv(1024)
-        # print data
-        # print "Hitting quoteServer"
-        # s.close()
-
-    def addBuyThread(self, sym, price):
-        self.threadBuyDict[sym] = {"price": price, "thread": threading.Timer(0, self.hammerQuoteServer, (sym, price))}
-        # print self.threadBuyDict[sym]
-        ret = self.threadBuyDict[sym].get("thread").start()
-        return ret
-
-    def addSellThread(self, sym, price):
-        self.threadSellDict[sym] = {"price": price, "thread": threading.Timer(0, self.hammerQuoteServer, (sym, price))}
-        # print self.threadSellDict[sym]
-        ret = self.threadSellDict[sym].get("thread").start()
-        return ret
-
-    def hammerQuoteServerToBuy(self, sym, price):
-        request = sym + "," + self.userId + "\n"
-
+        self.start()
+    def run(self):
+        val = 0
+        breakval = False
         while True:
-            try:
-                self.socket.connect(('quoteserve.seng.uvic.ca', 4444))
-                self.socket.send(request)
-                data = self.socket.recv(1024)
-                vals = self.quote._quoteStringToDictionary(data)
-                self.socket.close()
-                if vals["value"] != None:
-                    return vals["value"]
-                else:
-                    # time.sleep(15)
-                    pass
-            except:
-                print "broken.."
-    def hammerQuoteServerToBuy(self, sym, price):
-        request = sym + "," + self.userId + "\n"
+            if localTriggers.buyTriggers != {}:
+                for userId in localTriggers.buyTriggers:
+                    symDict = localTriggers.buyTriggers[userId]
+                    symbols = symDict.keys()
+                    for sym in symbols:
+                        request = sym + "," + userId + "\n"
+                        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                        self.socket.connect(('quoteserve.seng.uvic.ca', 4444))
+                        self.socket.send(request)
+                        data = self.socket.recv(1024)
+                        self.socket.close()
 
+                        vals = self.quote._quoteStringToDictionary(data)
+                        if vals["value"] > val:
+                            print sym
+                            print "bought for:" + str(vals["value"])
+                            breakval = True
+                            break
+                    if breakval:
+                        break
+                if breakval:
+                    break
+
+            else:
+                pass
+
+
+class hammerQuoteServerToSell(Thread):
+    def __init__(self):
+        Thread.__init__(self)
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.daemon = True
+        self.quote = Quotes()
+        self.start()
+
+    def run(self):
+        val = 0
         while True:
-            try:
-                self.socket.connect(('quoteserve.seng.uvic.ca', 4444))
-                self.socket.send(request)
-                data = self.socket.recv(1024)
-                vals = self.quote._quoteStringToDictionary(data)
-                self.socket.close()
-                if vals["value"] != None:
-                    return vals["value"]
-                else:
-                    # time.sleep(15)
-                    pass
-            except:
-                print "broken.."
+            if localTriggers.sellTriggers != {}:
+                for userId in localTriggers.sellTriggers:
+                    symDict = localTriggers.sellTriggers[userId]
+                    symbols = symDict.keys()
+                    for sym in symbols:
+                        request = sym + "," + userId + "\n"
+                        self.socket.connect(('quoteserve.seng.uvic.ca', 4444))
+                        self.socket.send(request)
+                        data = self.socket.recv(1024)
+                        self.socket.close()
+
+                        vals = self.quote._quoteStringToDictionary(data)
+                        if vals["value"] > val:
+                            print sym
+                            print "sold for:" + str(vals["value"])
+                            # logic for the selling
+                            breakval = True
+                            break
+                    if breakval:
+                        break
+                if breakval:
+                    break
+            else:
+                pass
+            # print 'B'
+
 
 class Triggers:
     def __init__(self):
         self.buyTriggers = {}
         self.sellTriggers = {}
-        self.threadHandler = threadHandler(None)
 
 
     def getBuyTriggers(self):
@@ -404,7 +410,6 @@ class Triggers:
         return self.sellTriggers
 
     def addBuyTrigger(self, userId, sym, cashReserved):
-        print "adding buy trigger"
         if userId not in self.buyTriggers:
             self.buyTriggers[userId] = {}
         self.buyTriggers[userId][sym] = {"cashReserved": cashReserved, "active": False, "buyAt": 0}
@@ -415,28 +420,33 @@ class Triggers:
         self.sellTriggers[userId][sym] = {"maxSellAmount": maxSellAmount, "active": False, "sellAt": 0}
 
     def setBuyActive(self, userId, symbol, buyAt):
-        print "starting buy thread"
         if self._triggerExists(userId, symbol, self.buyTriggers):
+            print "activating buy thread"
+
             trigger = self.buyTriggers.get(userId).get(symbol)
             if buyAt <= trigger.get('cashReserved'):
                 trigger["active"] = True
                 trigger["buyAt"] = buyAt
                 # start cron job
-                bought = self.threadHandler.addBuyThread(symbol, buyAt)
-                print "bought: " + str(bought)
+                # threadBuyHandler.addBuyThread(symbol, buyAt)
+                # print "bought: " + str(bought)
                 return trigger
         return 0
     def setSellActive(self, userId, symbol, sellAt):
-        if self._triggerExists(userId, symbol, self.buyTriggers):
-            print self.sellTriggers.get(userId)
-            print self.sellTriggers.get(userId).get(symbol)
+        if self._triggerExists(userId, symbol, self.sellTriggers):
+            print "activating sell thread"
+
+            # print self.sellTriggers.get(userId)
+            # print symbol
+            # print self.sellTriggers.get(userId).get(symbol)
+
             trigger = self.sellTriggers.get(userId).get(symbol)
             if sellAt <= trigger.get('cashReserved'):
                 trigger["active"] = True
                 trigger["sellAt"] = sellAt
                 # start cron job
-                sold = self.threadHandler.addSellThread(symbol , sellAt)
-                print "sold: " + str(sold)
+                # threadSellHandler.addSellThread(symbol , sellAt)
+                # print "sold: " + str(sold)
                 return trigger
         return 0
 
@@ -500,7 +510,13 @@ class databaseServer:
             self.database[userId] = user
             # not good but will work for now
             # adding user to threadhandler
-            localTriggers.threadHandler.userId = userId
+
+            # ---for milestone1---
+            # future add to a list of userID in threadhandler
+            # start threads
+            # threadBuyHandler.startBuyThread(userId)
+            # threadSellHandler.startSellThread(userId)
+
 
             return self.database.get(userId)
         else:
@@ -777,12 +793,15 @@ class Quotes():
     def _testPrint(self, newLine, *args):
         if self.testing:
             for arg in args:
-                print arg,
+                pass
+                # print arg,
             if newLine:
-                print
+                pass
+                # print
 
     def _printQuoteCacheState(self):
         print self.quoteCache
+        pass
 
 class httpsServer(HTTPServer):
     def __init__(self, serverAddr, handlerClass ):
@@ -810,7 +829,7 @@ class httpsRequestHandler(SimpleHTTPRequestHandler):
         self.rfile = socket._fileobject(self.request, "rb", self.wbufsize)
 
     def do_GET(self):
-        print self.command
+        # print self.command
         self.send_response(200)
 
     def do_POST(self):
@@ -910,12 +929,13 @@ def delegate(args):
     # ----------------------------
 
     # Call Quote
-    localDB.addUser(args["userId"])
+    if "./testLOG" != args["userId"]:
+        localDB.addUser(args["userId"])
 
     if args["command"] == "QUOTE":
-        print "getting Quote"
+        # print "getting Quote"
         quoteObj.getQuote( args["sym"] , args["userId"])
-        quoteObj._printQuoteCacheState()
+        # quoteObj._printQuoteCacheState()
         pass
     elif args["command"] == "ADD":
         handleCommandAdd(args)
@@ -937,6 +957,7 @@ def delegate(args):
         handleCommandCancelSell(args)
     # triggers
     elif args["command"] == "SET_BUY_AMOUNT":
+        print "adding buy amount"
         localTriggers.addBuyTrigger(args["userId"], args["sym"], args["cash"] )
         pass
     elif args["command"] == "CANCEL_BUY_AMOUNT":
@@ -949,7 +970,7 @@ def delegate(args):
         pass
 
     elif args["command"] == "SET_SELL_AMOUNT":
-        print "adding sell trigger"
+        print "adding sell amount"
         localTriggers.addSellTrigger(args["userId"], args["sym"], args["cash"] )
         pass
     elif args["command"] == "CANCEL_SELL_AMOUNT":
@@ -957,7 +978,7 @@ def delegate(args):
         pass
     elif args["command"] == "SET_SELL_TRIGGER":
         # activate trigger
-        # localTriggers.setSellActive(args["userId"], args["sym"], args["cash"])
+        localTriggers.setSellActive(args["userId"], args["sym"], args["cash"])
 
         pass
 
@@ -1116,6 +1137,9 @@ if __name__ == '__main__':
     localDB = databaseServer()
     localTriggers = Triggers()
     auditServer = AuditServer()
+    # trigger threads
+    hammerQuoteServerToSell()
+    hammerQuoteServerToBuy()
     # -----------------------
 
     main()
