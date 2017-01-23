@@ -510,13 +510,16 @@ class databaseServer:
         return user.get('portfolio')
 
 
-
-# quote shape: symbol: {value: string, retrieved: epoch time, user: string}
+# quote shape: symbol: {value: string, retrieved: epoch time, user: string, cryptoKey: string}
 class Quotes():
     def __init__(self, cacheExpire=60, testing=False):
         self.cacheExpire = cacheExpire
         self.quoteCache = {}
         self.testing = testing
+        if not testing:
+            self.quoteServerConnection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.quoteServerConnection.connect(('quoteserve.seng.uvic.ca', 4445))
+
 
     def getQuote(self, symbol, user):
         self._testPrint(True, "current cache state: ", self.quoteCache)
@@ -548,22 +551,18 @@ class Quotes():
         if self.testing:
             data = self._mockQuoteServer(request)
         else:
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.connect(('quoteserve.seng.uvic.ca', 4445))
-            s.send(request)
-            data = s.recv(1024)
-            # print data
-            # print "Hitting quoteServer"
-            s.close()
+
+            self.quoteServerConnection.send(request)
+            data = self.quoteServerConnection.recv(1024)
 
         newQuote = self._quoteStringToDictionary(data)
         self.quoteCache[symbol] = newQuote
         return newQuote
 
     def _quoteStringToDictionary(self, quoteString):
-        # "quote, sym, userid, timestamp, cryptokey\n"
+        # "quote, sym, userid, cryptokey\n"
         split = quoteString.split(",")
-        return {'value': float(split[0]), 'retrieved': split[3], 'user': split[2]}
+        return {'value': float(split[0]), 'retrieved': int(time.time()), 'user': split[2], 'cryptoKey': split[3]}
 
     def _cacheIsActive(self, quote):
         return (int(quote.get('retrieved', 0)) + self.cacheExpire) > int(time.time())
@@ -572,7 +571,7 @@ class Quotes():
         query = queryString.split(",")
         symbol = query[0]
         user = query[1]
-        quoteArray = [randint(0,50), symbol, user, int(time.time()), "cryptokey"]
+        quoteArray = [randint(0, 50), symbol, user, "cryptokey" + repr(randint(0, 50))]
         return ','.join(map(str, quoteArray))
 
     def _testPrint(self, newLine, *args):
