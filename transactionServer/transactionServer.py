@@ -178,7 +178,7 @@ class AuditServer:
 
 # '''
 #     def logUserCommand():
-#     def logQuoteServerHit():
+#     def logQuoteServer():
 #     def logAccountChange():
 #     def logSystemEvent():
 #     def logErrorMessage():
@@ -215,15 +215,26 @@ class AuditServer:
             file.write('\t\t<transactionNum>'+args['transactionNum']+'</transactionNum>')
             file.write('\t\t<username>'+args['userId']+'</username>\n')
             if logType == 'userCommand':
-                # stuff specific to userCommand
+                pass
+            elif logType == 'quoteServer':
+                file.write('\t\t<quoteServerTime>'+args['quoteServerTime']+'</quoteServerTime>\n')
+                file.write('\t\t<stockSymbol>'+args['stockSymbol']+'</stockSymbol>\n')
+                file.write('\t\t<price>'+args['price']+'</price>\n')
+                file.write('\t\t<cryptokey>'+args['cryptoKey']+'</cryptokey>\n')
+            elif logType == 'accountTransaction':
+                file.write('\t\t<action>'+args['action']+'</action>')
+                file.write('\t\t<funds>'+args['amount']+'</funds>')
+                pass
+            elif logType == 'systemEvent':
+                pass
+            elif logType == 'errorMessage':
+                file.write('\t\t<errorMessage>'+args['errorMessage']+'</errorMessage>\n')
+                pass
+            elif logType == 'debugMessage':
                 pass
             file.write('\t</userCommand>\n')    
         file.write('\n</log>\n')
         file.close()
-
-
-
-
 
 # class trigger:
 #     def __init__(self, userID, sym, price, ):
