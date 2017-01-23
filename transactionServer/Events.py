@@ -12,7 +12,7 @@
 #       'server': 'where the server originated from',
 #       'transactionNum': the transaction number the event is associated with,
 #       'username': 'userId of the user who triggered the event'
-#       'args': {} Some dictionary - specific for the type of event.
+#       SOME ADDITIONAL ARGS
 #   }
 
 class Event(object):
@@ -23,6 +23,13 @@ class Event(object):
 		'systemEvent': 'systemEvent',
 		'quoteServerEvent': 'quoteServerEvent',
 		'errorEvent': 'errorEvent'
+	}
+
+	accountTransactionEvents = {
+		'add': 'add',
+		'remove': 'remove',
+		'reserve': 'reserve',
+		'free': 'free'
 	}
 
 	def __init__(self, **kwargs):
@@ -48,26 +55,21 @@ class Event(object):
 		elif self.eventType == 'errorEvent'
 			self._handleErrorEventKwargs(**kwargs)
 
-		# switch statements for each type of eventType
-			# for each eventType, have a handleEVENTTYPEkwargs method - call it.
 	def _handleUserCommandEventKwargs(**kwargs):
 		self._handleCommandKwargs(**kwargs)
-
-		return
 	
 	def _handleAccountTransactionEventKwargs(self, **kwargs):
 		self.accountTransactionEventType = self.accountTransactionEvents[kwargs['AccountTransactionEventType']]
 		self.funds = kwargs['funds']
 
 	def _handleSystemEventKwargs(self, **kwargs):
-		return
+		self._handleCommandKwargs(**kwargs)
 
 	def _handleQuoteServerEventKwargs(self, **kwargs):
 		self.quoteServerTime = kwargs['quoteServerTime']
 		self.stockSymbol = kwargs['stockSymbol']
 		self.price = kwargs['price']
 		self.cryptoKey = kwargs['cryptoKey']
-
 	
 	def _handleErrorEventKwargs(self, **kwargs):
 		self.errorMessage = kwargs['errorMessage']
@@ -75,97 +77,88 @@ class Event(object):
 
 	def _handleCommandKwargs(self, **kwargs):
 		self.commandName = kwargs['commandName']
-		
-		if commandName in ['quote', 'cancel_set_buy', 'cancel_set_sell']:
+		if self.commandName in ['quote', 'cancel_set_buy', 'cancel_set_sell']:
 			self.stockSymbol = kwargs['stockSymbol']
-		elif commandName in ['dumplog']:
+		elif self.commandName in ['dumplog']:
 			self.fileName = kwargs['fileName']
-		elif commandName in ['add']:
+		elif self.commandName in ['add']:
 			self.amount = kwargs['amount']
-		elif commandName in ['buy', 'sell', 'set_buy_amount', 'set_sell_amount', 'set_buy_trigger', 'set_sell_trigger']:
+		elif self.commandName in ['buy', 'sell', 'set_buy_amount', 'set_sell_amount', 'set_buy_trigger', 'set_sell_trigger']:
 			self.amount = kwargs['amount']
 			self.stockSymbol = kwargs['stockSymbol']
-		elif commandName in ['commit_buy', 'cancel_buy', 'commit_sell', 'cancel_sell', 'display_summary']:
-			# nothing to be added for these commands
-			return
+		elif self.commandName in ['commit_buy', 'cancel_buy', 'commit_sell', 'cancel_sell', 'display_summary']:
+			pass
 
 	def serialize(self):
-		baseSerialization = {
-			'eventType': self.eventType,
-			'timeStamp': self.timeStamp,
-			'server': self.server,
-			'transactionNum': self.transactionNum,
-			'userId': self.userId
-		}
 		# for each diff type of eventType, extend the base serialization.
-		self._handleKwargsSerialization(**kwargs)
+		return dict(self._handleKwargsSerialization(),
+			eventType=self.eventType,
+			timeStamp=self.timeStamp,
+			server=self.server,
+			transactionNum=self.transactionNum,
+			userId=self.userId
+		}
 
-	def _handleKwargsSerialization(self, **kwargs):
+
+	def _handleKwargsSerialization(self):
 		# for each type of event handle the serialization
-		return
+		# figure out what type of event we are dealing with
+		if self.eventType == 'userCommandEvent':
+			return self._handleUserCommandEventKwargsSerialization()
+		elif self.eventType == 'accountTransactionEvent':
+			return self._handleAccountTransactionEventKwargsSerialization()
+		elif self.eventType == 'systemEvent':
+			return self._handleSystemEventKwargsSerialization()
+		elif self.eventType == 'quoteServerEvent':
+			return self._handleQuoteServerEventKwargsSerialization()
+		elif self.eventType == 'errorEvent'
+			return self._handleErrorEventKwargsSerialization()
 
+	def _handleUserCommandEventKwargsSerialization(self):
+		return self._handleCommandSerialization()
 
-class QuoteServerEvent(BaseEvent):
+	def _handleAccountTransactionEventKwargsSerialization(self):
+		return {
+			'accountTransactionEventType' = self.accountTransactionEventType,
+			'funds' = self.funds
+		}
 
-	def __init__(self, timeStamp, server, transactionNum, userId, **kwargs):	
-		super(QuoteServerEvent, self).__init__(timeStamp, server, transactionNum, userId, **kwargs)
-		self.eventType = self.eventTypes['QuoteServerEvent']
+	def _handleSystemEventKwargsSerialization(self):
+		return self._handleCommandSerialization()
 
-		
-	def _handleKwargs(self, **kwargs):
-		self.quoteServerTime = kwargs['quoteServerTime']
-		self.stockSymbol = kwargs['stockSymbol']
-		self.price = kwargs['price']
-		self.cryptoKey = kwargs['cryptoKey']
+	def _handleQuoteServerEventKwargsSerialization(self):
+		return {
+			'quoteServerTime': self.quoteServerTime,
+			'stockSymbol': self.stockSymbol,
+			'price': self.price,
+			'cryptoKey': self.cryptoKey
+		}
 
-	def serialize(self):
-		return dict(super(QuoteServerEvent, self).serialize(), 
-			quoteServerTime=self.quoteServerTime, 
-			stockSymbol=self.stockSymbol, 
-			price=self.price, 
-			cryptoKey=self.cryptoKey
-		)
+	def _handleErrorEventKwargsSerialization(self, **kwargs):
+		return dict(self._handleCommandSerialization(), {
+			'errorMessage': self.errorMessage
+		})
 
-class AccountTransactionEvent(BaseEvent):
-
-	accountTransactionEvents = {
-		'add': 'add',
-		'remove': 'remove',
-		'reserve': 'reserve',
-		'free': 'free'
-	}
-
-	def __init__(self, timeStamp, server, transactionNum, userId, **kwargs):
-		super(AccountTransactionEvent, self).__init__(timeStamp, server, transactionNum, userId)
-		self.eventType = self.eventTypes['AccountTransactionEvent']
-
-	def _handleKwargs(self, **kwargs):
-		self.accountTransactionEventType = self.accountTransactionEvents[AccountTransactionEventType]
-		self.funds = funds
-
-	def serialize(self):
-		return dict(super(AccountTransactionEvent, self).serialize(),
-			accountTransactionEventType=self.accountTransactionEventType,
-			funds=self.funds
-		)
-
-class commandEvent(BaseEvent):
-
-	def __init__(self, eventType, timeStamp, server, transactionNum, userId):
-		super(commandEvent, self).__init__(timeStamp, server, transactionNum, userId)
-
-	def command(**kwargs):
-		commandName = kwargs['name']
-		if commandName in ['commit_buy', 'cancel_buy', 'commit_sell', 'cancel_sell', 'display_summary']:
-			print 'handle the case where no additional args are needed'
-		if commandName in ['quote', 'cancel_set_buy', 'cancel_set_sell']:
-			print 'handle the case where stockSymbol is needed'
-		if commandName in ['dumplog']:
-			print 'handle the case where fileName is needed'
-		if commandName in ['add']:
-			print 'handle the case where amount is needed'
-		if commandName in ['buy', 'sell', 'set_buy_amount', 'set_sell_amount', 'set_buy_trigger', 'set_sell_trigger']:
-			print 'handle the case where both amount and stockSymbol are needed'
+	def _handleCommandSerialization(self):
+		if self.commandName in ['quote', 'cancel_set_buy', 'cancel_set_sell']:
+			return {
+				'stockSymbol': self.stockSymbol
+			}
+		elif self.commandName in ['dumplog']:
+			return {
+				'fileName': self.fileName
+			}
+		elif self.commandName in ['add']:
+			return {
+				'amount': self.amount
+			}
+		elif self.commandName in ['buy', 'sell', 'set_buy_amount', 'set_sell_amount', 'set_buy_trigger', 'set_sell_trigger']:
+			return {
+				'amount': self.amount,
+				'stockSymbol': self.stockSymbol
+			}
+		elif self.commandName in ['commit_buy', 'cancel_buy', 'commit_sell', 'cancel_sell', 'display_summary']:
+			return {}
 
 #   Valid 'type's and their arg values:
 #       userCommand
@@ -224,32 +217,3 @@ class commandEvent(BaseEvent):
 #               'command': same as in userCommand,
 #               'errorMessage': message associated with the error
 #           }
-'''
-class errorEvent:
-	__init__(self, eventType, timeStamp, server, transactionNum, userid):
-		self.eventType: eventType,
-#   		userCommand
-#           accountTransaction
-#           systemEvent
-#           quoteServer
-#           errorEvent  
-		self.timeStamp: timeStamp,
-		self.server: server,
-		self.transactionNum: transactionNum,
-		self.username: userId,
-		self.args = {}
-          
-#       'timestamp': seconds since the epoch,
-#       'server': 'where the server originated from',
-#       'transactionNum': the transaction number the event is associated with,
-#       'username': 'userId of the user who triggered the event'
-#       'args': {} Some dictionary - specific for the type of event.
-    systemEvent
-    accountTransaction
-    commandEvent - this adds a method for each type of command
-        userCommand
-        quoteServer
-        errorEvent
-
-method add arguments
-'''
