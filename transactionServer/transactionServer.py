@@ -551,7 +551,11 @@ def extractData(data):
     #
     # {'userID': 'oY01WVirLr', 'cash': '63511.53',
     # 'lineNum': '1', 'command': 'ADD'}
-    # print args
+    
+    '''
+        This should be changed to use the Events class - when it is done.
+    '''
+
     delegate(args)
 
 def delegate(args):
