@@ -185,18 +185,7 @@ class AuditServer:
 #     def logDebugMessage(server, timestamp, transactionNum, command, userId, stockSymbol, fileName, funds, debugMessage):
 # '''
     def writeLogs(self, fileName):
-        print 'trying to print contents to file: %s.' % (fileName)
         self._dumpIntoFile(fileName)
-
-    # writes a single line to the log file
-    def _writeLineToLogFile(self,line):
-        self.logFile.append(line)
-        return
-
-    # writes a list of lines to the log file
-    def _writeLinesToLogFile(self,lines):
-        self.logFile.extend(lines)
-        return
 
     # dumps the logs to a given file
     def _dumpIntoFile(self,fileName):
