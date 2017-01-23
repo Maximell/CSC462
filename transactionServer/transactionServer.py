@@ -215,7 +215,13 @@ class AuditServer:
             file.write('\t\t<transactionNum>'+args['transactionNum']+'</transactionNum>')
             file.write('\t\t<username>'+args['userId']+'</username>\n')
             if logType == 'userCommand':
-                pass
+                file.write('\t\t<command>'+args['commandName']+'</command>\n')
+                if args.get('stockSymbol'):
+                    file.write('\t\t<stockSymbol>'+args['stockSymbol']+'</stockSymbol>\n')
+                if args.get('fileName'):
+                    file.write('\t\t<filename>'+args['fileName']+'</filename>\n')
+                if args.get('amount'):
+                    file.write('\t\t<funds>'+args['amount']+'</funds>\n')
             elif logType == 'quoteServer':
                 file.write('\t\t<quoteServerTime>'+args['quoteServerTime']+'</quoteServerTime>\n')
                 file.write('\t\t<stockSymbol>'+args['stockSymbol']+'</stockSymbol>\n')
@@ -225,7 +231,13 @@ class AuditServer:
                 file.write('\t\t<action>'+args['action']+'</action>')
                 file.write('\t\t<funds>'+args['amount']+'</funds>')
             elif logType == 'systemEvent':
-                pass
+                file.write('\t\t<command>'+args['commandName']+'</command>\n')                
+                if args.get('stockSymbol'):
+                    file.write('\t\t<stockSymbol>'+args['stockSymbol']+'</stockSymbol>\n')
+                if args.get('fileName'):
+                    file.write('\t\t<filename>'+args['fileName']+'</filename>\n')
+                if args.get('amount'):
+                    file.write('\t\t<funds>'+args['amount']+'</funds>\n')
             elif logType == 'errorMessage':
                 file.write('\t\t<errorMessage>'+args['errorMessage']+'</errorMessage>\n')
             elif logType == 'debugMessage':
