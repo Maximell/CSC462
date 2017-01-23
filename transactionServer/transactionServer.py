@@ -224,14 +224,12 @@ class AuditServer:
             elif logType == 'accountTransaction':
                 file.write('\t\t<action>'+args['action']+'</action>')
                 file.write('\t\t<funds>'+args['amount']+'</funds>')
-                pass
             elif logType == 'systemEvent':
                 pass
             elif logType == 'errorMessage':
                 file.write('\t\t<errorMessage>'+args['errorMessage']+'</errorMessage>\n')
-                pass
             elif logType == 'debugMessage':
-                pass
+                file.write('\t\t<debugMessage>'+args['debugMessage']+'</debugMessage>\n')
             file.write('\t</userCommand>\n')    
         file.write('\n</log>\n')
         file.close()
