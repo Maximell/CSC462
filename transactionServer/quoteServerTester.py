@@ -1,7 +1,7 @@
-from transactionServer import quotes
+from transactionServer import Quotes
 import time
 
-quotes = quotes(testing=True, cacheExpire=2)
+quotes = Quotes(testing=True, cacheExpire=2)
 
 print "TEST: NO CACHE\n", quotes.getQuote("hello", "usr"), "\n"
 print "TEST: CACHE\n", quotes.getQuote("hello", "usr"), "\n"

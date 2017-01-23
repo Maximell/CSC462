@@ -199,26 +199,7 @@ class loggerServer:
         file.close()
 
 
-# Class for users and database
-# Users are stored:
-#   {
-#       userId: 'abc123',
-#       cash: 0,
-#       reserve: 0,
-#         pendingBuys: [{symbol, number, timestamp}],
-#         pendingSells: [{symbol, number, timestamp}],
-#         portfolio: {symbol: amount, symbol2: amount}
-#   }
-# TODO: change strings to defined constants
-'''
-    TODO: consider throwing error instead of returning 0.
-    some functions return numbers, and 0 would be a valid number to return
-    like removing from portfolio
 
-    OR
-
-    change return of all functions to be the new user object, and 0 for failure
-'''
 
 
 # class trigger:
@@ -230,51 +211,85 @@ class loggerServer:
 #     def activate(self):
 #         self.active = True
 
-class triggerHandler:
+class Triggers:
     def __init__(self):
         self.buyTriggers = {}
         self.sellTriggers = {}
 
-    def addBuyTrigger(self, userId, sym, reserved):
+    def getBuyTriggers(self):
+        return self.buyTriggers
+
+    def getSellTriggers(self):
+        return self.sellTriggers
+
+    def addBuyTrigger(self, userId, sym, cashReserved):
         if userId not in self.buyTriggers:
             self.buyTriggers[userId] = {}
-        self.buyTriggers[userId][sym] = {"reserved": reserved, "active": False, "buyAt": 0}
+        self.buyTriggers[userId][sym] = {"cashReserved": cashReserved, "active": False, "buyAt": 0}
 
-    def addSellTrigger(self, userId, sym, reserved):
+    def addSellTrigger(self, userId, sym, maxSellAmount):
         if userId not in self.sellTriggers:
             self.sellTriggers[userId] = {}
-        self.sellTriggers[userId][sym] = {"reserved": reserved, "active": False, "buyAt": 0}
+        self.sellTriggers[userId][sym] = {"maxSellAmount": maxSellAmount, "active": False, "sellAt": 0}
 
-    def setBuyActive(self, userId, sym, buyAt):
-        if self.buyTriggers.get(userId):
-            if self.buyTriggers.get(userId).get(sym):
-                self.buyTriggers.get(userId).get(sym)["active"] = True
-                self.buyTriggers.get(userId).get(sym)["buyAt"] = buyAt
-                return self.buyTriggers.get(userId).get(sym)
+    def setBuyActive(self, userId, symbol, buyAt):
+        if self._triggerExists(userId, symbol, self.buyTriggers):
+            trigger = self.buyTriggers.get(userId).get(symbol)
+            if buyAt <= trigger.get('cashReserved'):
+                trigger["active"] = True
+                trigger["buyAt"] = buyAt
+                return trigger
         return 0
 
-    def setSellActive(self , userId , sym, buyAt):
-        if self.sellTriggers.get(userId):
-            if self.sellTriggers.get(userId).get(sym):
-                self.sellTriggers.get(userId).get(sym)["active"] = True
-                self.sellTriggers.get(userId).get(sym)["buyAt"] = buyAt
-                return self.sellTriggers.get(userId).get(sym)
+    def setSellActive(self , userId , symbol, sellAt):
+        if self._triggerExists(userId, symbol, self.sellTriggers):
+            trigger = self.sellTriggers.get(userId).get(symbol)
+            if sellAt <= trigger.get('maxSellAmount'):
+                trigger["active"] = True
+                trigger["sellAt"] = sellAt
+                return trigger
         return 0
 
     def cancelBuyTrigger(self, userId, symbol):
-        if self.buyTriggers.get(userId):
-            if self.buyTriggers.get(userId).get(symbol):
-                del self.buyTriggers[userId][symbol]
-                return 1
+        if self._triggerExists(userId, symbol, self.buyTriggers):
+            removedTrigger = self.buyTriggers[userId][symbol]
+            del self.buyTriggers[userId][symbol]
+            return removedTrigger
         return 0
 
     def cancelSellTrigger(self, userId, symbol):
-        if self.sellTriggers.get(userId):
-            if self.sellTriggers.get(userId).get(symbol):
-                del self.sellTriggers[userId][symbol]
+        if self._triggerExists(userId, symbol, self.sellTriggers):
+            removedTrigger = self.sellTriggers[userId][symbol]
+            del self.sellTriggers[userId][symbol]
+            return removedTrigger
+        return 0
+
+    def _triggerExists(self, userId, symbol, triggers):
+        if triggers.get(userId):
+            if triggers.get(userId).get(symbol):
                 return 1
         return 0
 
+# Class for users and database
+# Users are stored:
+#   {
+#       userId: 'abc123',
+#       cash: 0,
+#       reserve: 0,
+#         pendingBuys: [{symbol, number, timestamp}],
+#         pendingSells: [{symbol, number, timestamp}],
+#         portfolio: {symbol: {amount, reserved}}
+#   }
+# TODO: change strings to defined constants
+'''
+    TODO: consider throwing error instead of returning 0.
+    some functions return numbers, and 0 would be a valid number to return
+    like removing from portfolio
+
+    OR
+
+    change return of all functions to be the new user object, and 0 for failure
+'''
 
 class databaseServer:
 
@@ -415,15 +430,16 @@ class databaseServer:
         user = self.getUser(userId)
         if not user:
             return False
-        portfolioAmount = user.get('portfolio').get(symbol)
+        portfolio = user.get('portfolio').get(symbol)
         # cant sell portfolio that doesnt exist
-        if portfolioAmount is None:
+        if portfolio is None:
             return False
+        portfolioAmount = portfolio.get('amount')
         # trying to sell more than they own
         if portfolioAmount < amount:
             return False
 
-        user['portfolio'][symbol] -= amount
+        user['portfolio'][symbol]['amount'] -= amount
         return user['portfolio'][symbol]
 
     # returns new amount
@@ -432,11 +448,61 @@ class databaseServer:
         user = self.getUser(userId)
         if not user:
             return False
-        portfolioAmount = user.get('portfolio').get(symbol)
-        if portfolioAmount is None:
-            user['portfolio'][symbol] = 0
+        portfolio = user.get('portfolio').get(symbol)
+        if portfolio is None:
+            user['portfolio'][symbol] = {'amount': 0, 'reserved': 0}
 
-        user['portfolio'][symbol] = amount
+        user['portfolio'][symbol]['amount'] = amount
+        return user['portfolio'][symbol]
+
+    def reserveFromPortfolio(self, userId, symbol, numberToReserve):
+        user = self.getUser(userId)
+        if not user:
+            return False
+        portfolio = user.get('portfolio').get(symbol)
+        # cant reserve portfolio that doesnt exist
+        if portfolio is None:
+            return False
+        portfolioAmount = portfolio.get('amount')
+        # trying to reserve more than they own
+        if portfolioAmount < numberToReserve:
+            return False
+
+        user['portfolio'][symbol]['reserved'] += numberToReserve
+        user['portfolio'][symbol]['amount'] -= numberToReserve
+        return user['portfolio'][symbol]
+
+    def releasePortfolioReserves(self, userId, symbol, numberToRelease):
+        user = self.getUser(userId)
+        if not user:
+            return False
+        portfolio= user.get('portfolio').get(symbol)
+        # cant reserve portfolio that doesnt exist
+        if portfolio is None:
+            return False
+
+        portfolioReserved = portfolio.get('reserved')
+        if portfolioReserved < numberToRelease:
+            return False
+
+        user['portfolio'][symbol]['reserved'] -= numberToRelease
+        user['portfolio'][symbol]['amount'] += numberToRelease
+        return user['portfolio'][symbol]
+
+    def commitReservedPortfolio(self, userId, symbol, numberToCommit):
+        user = self.getUser(userId)
+        if not user:
+            return False
+        portfolio = user.get('portfolio').get(symbol)
+        # cant reserve portfolio that doesnt exist
+        if portfolio is None:
+            return False
+
+        portfolioReserved = portfolio.get('reserved')
+        if portfolioReserved < numberToCommit:
+            return False
+
+        user['portfolio'][symbol]['reserved'] -= numberToCommit
         return user['portfolio'][symbol]
 
     def checkPortfolio(self, userId):
@@ -766,6 +832,36 @@ def handleCommandCancelSell(args):
     if not sell:
         return "no sells"
 
+def handeCommandSetBuyAmount(args):
+    symbol = args.get("sym")
+    amount = args.get("cash")
+    userId = args.get("userId")
+
+    if localDB.getUser(userId).get("cash") >= amount:
+        localDB.reserveCash(userId, amount)
+        localTriggers.addBuyTrigger(userId, symbol, amount)
+    else:
+        return "not enough available cash"
+
+def handleCommandSetBuyTrigger(args):
+    symbol = args.get("sym")
+    buyAt = args.get("cash")
+    userId = args.get("userId")
+
+    success = localTriggers.setBuyActive(userId, symbol, buyAt)
+    if not success:
+        return "trigger doesnt exist or is at a higher value than amount reserved for it"
+
+def handleCommandCancleSetBuy(args):
+    symbol = args["sym"]
+    userId = args["userId"]
+
+    trigger = localTriggers.cancelBuyTrigger(userId, symbol)
+    if trigger:
+        reserved = trigger.get('cashReserved')
+        localDB.releaseCash(userId, reserved)
+    else:
+        return "no trigger to cancel"
 
 def main():
 #   starting httpserver and waiting for input
@@ -800,7 +896,7 @@ if __name__ == '__main__':
     # -----------------------
     quoteObj = Quotes()
     localDB = databaseServer()
-    localTriggers = triggerHandler()
+    localTriggers = Triggers()
     # -----------------------
 
     main()
