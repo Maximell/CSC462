@@ -11,6 +11,8 @@ import math
 import urlparse
 from OpenSSL import SSL
 import sched, time
+import threading
+
 # from events import Event
 
 
@@ -199,26 +201,7 @@ class loggerServer:
         file.close()
 
 
-# Class for users and database
-# Users are stored:
-#   {
-#       userId: 'abc123',
-#       cash: 0,
-#       reserve: 0,
-#         pendingBuys: [{symbol, number, timestamp}],
-#         pendingSells: [{symbol, number, timestamp}],
-#         portfolio: {symbol: amount, symbol2: amount}
-#   }
-# TODO: change strings to defined constants
-'''
-    TODO: consider throwing error instead of returning 0.
-    some functions return numbers, and 0 would be a valid number to return
-    like removing from portfolio
 
-    OR
-
-    change return of all functions to be the new user object, and 0 for failure
-'''
 
 
 # class trigger:
@@ -230,51 +213,160 @@ class loggerServer:
 #     def activate(self):
 #         self.active = True
 
-class triggerHandler:
+# Here we want our trigger's threads
+# hitting the quote server for quotes every 15sec
+class threadHandler:
+    def __init__(self , userId):
+        self.userId = userId
+        self.threadBuyDict = {}
+        self.threadSellDict = {}
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+        self.quote = Quotes()
+
+        # s.send(request)
+        # data = s.recv(1024)
+        # print data
+        # print "Hitting quoteServer"
+        # s.close()
+
+    def addBuyThread(self, sym, price):
+        self.threadBuyDict[sym] = {"price": price, "thread": threading.Timer(0, self.hammerQuoteServer, (sym, price))}
+        # print self.threadBuyDict[sym]
+        ret = self.threadBuyDict[sym].get("thread").start()
+        return ret
+
+    def addSellThread(self, sym, price):
+        self.threadSellDict[sym] = {"price": price, "thread": threading.Timer(0, self.hammerQuoteServer, (sym, price))}
+        # print self.threadSellDict[sym]
+        ret = self.threadSellDict[sym].get("thread").start()
+        return ret
+
+    def hammerQuoteServerToBuy(self, sym, price):
+        request = sym + "," + self.userId + "\n"
+
+        while True:
+            try:
+                self.socket.connect(('quoteserve.seng.uvic.ca', 4444))
+                self.socket.send(request)
+                data = self.socket.recv(1024)
+                vals = self.quote._quoteStringToDictionary(data)
+                self.socket.close()
+                if vals["value"] != None:
+                    return vals["value"]
+                else:
+                    # time.sleep(15)
+                    pass
+            except:
+                print "broken.."
+    def hammerQuoteServerToBuy(self, sym, price):
+        request = sym + "," + self.userId + "\n"
+
+        while True:
+            try:
+                self.socket.connect(('quoteserve.seng.uvic.ca', 4444))
+                self.socket.send(request)
+                data = self.socket.recv(1024)
+                vals = self.quote._quoteStringToDictionary(data)
+                self.socket.close()
+                if vals["value"] != None:
+                    return vals["value"]
+                else:
+                    # time.sleep(15)
+                    pass
+            except:
+                print "broken.."
+
+class Triggers:
     def __init__(self):
         self.buyTriggers = {}
         self.sellTriggers = {}
+        self.threadHandler = threadHandler(None)
 
-    def addBuyTrigger(self, userId, sym, reserved):
+
+    def getBuyTriggers(self):
+        return self.buyTriggers
+
+    def getSellTriggers(self):
+        return self.sellTriggers
+
+    def addBuyTrigger(self, userId, sym, cashReserved):
+        print "adding buy trigger"
         if userId not in self.buyTriggers:
             self.buyTriggers[userId] = {}
-        self.buyTriggers[userId][sym] = {"reserved": reserved, "active": False, "buyAt": 0}
+        self.buyTriggers[userId][sym] = {"cashReserved": cashReserved, "active": False, "buyAt": 0}
 
-    def addSellTrigger(self, userId, sym, reserved):
+    def addSellTrigger(self, userId, sym, maxSellAmount):
         if userId not in self.sellTriggers:
             self.sellTriggers[userId] = {}
-        self.sellTriggers[userId][sym] = {"reserved": reserved, "active": False, "buyAt": 0}
+        self.sellTriggers[userId][sym] = {"maxSellAmount": maxSellAmount, "active": False, "sellAt": 0}
 
-    def setBuyActive(self, userId, sym, buyAt):
-        if self.buyTriggers.get(userId):
-            if self.buyTriggers.get(userId).get(sym):
-                self.buyTriggers.get(userId).get(sym)["active"] = True
-                self.buyTriggers.get(userId).get(sym)["buyAt"] = buyAt
-                return self.buyTriggers.get(userId).get(sym)
+    def setBuyActive(self, userId, symbol, buyAt):
+        print "starting buy thread"
+        if self._triggerExists(userId, symbol, self.buyTriggers):
+            trigger = self.buyTriggers.get(userId).get(symbol)
+            if buyAt <= trigger.get('cashReserved'):
+                trigger["active"] = True
+                trigger["buyAt"] = buyAt
+                # start cron job
+                bought = self.threadHandler.addBuyThread(symbol, buyAt)
+                print "bought: " + str(bought)
+                return trigger
         return 0
-
-    def setSellActive(self , userId , sym, sellAt):
-        if self.sellTriggers.get(userId):
-            if self.sellTriggers.get(userId).get(sym):
-                self.sellTriggers.get(userId).get(sym)["active"] = True
-                self.sellTriggers.get(userId).get(sym)["buyAt"] = sellAt
-                return self.sellTriggers.get(userId).get(sym)
+    def setSellActive(self, userId, symbol, sellAt):
+        if self._triggerExists(userId, symbol, self.buyTriggers):
+            print self.sellTriggers.get(userId)
+            print self.sellTriggers.get(userId).get(symbol)
+            trigger = self.sellTriggers.get(userId).get(symbol)
+            if sellAt <= trigger.get('cashReserved'):
+                trigger["active"] = True
+                trigger["sellAt"] = sellAt
+                # start cron job
+                sold = self.threadHandler.addSellThread(symbol , sellAt)
+                print "sold: " + str(sold)
+                return trigger
         return 0
 
     def cancelBuyTrigger(self, userId, symbol):
-        if self.buyTriggers.get(userId):
-            if self.buyTriggers.get(userId).get(symbol):
-                del self.buyTriggers[userId][symbol]
-                return 1
+        if self._triggerExists(userId, symbol, self.buyTriggers):
+            removedTrigger = self.buyTriggers[userId][symbol]
+            del self.buyTriggers[userId][symbol]
+            return removedTrigger
         return 0
 
     def cancelSellTrigger(self, userId, symbol):
-        if self.sellTriggers.get(userId):
-            if self.sellTriggers.get(userId).get(symbol):
-                del self.sellTriggers[userId][symbol]
+        if self._triggerExists(userId, symbol, self.sellTriggers):
+            removedTrigger = self.sellTriggers[userId][symbol]
+            del self.sellTriggers[userId][symbol]
+            return removedTrigger
+        return 0
+
+    def _triggerExists(self, userId, symbol, triggers):
+        if triggers.get(userId):
+            if triggers.get(userId).get(symbol):
                 return 1
         return 0
 
+# Class for users and database
+# Users are stored:
+#   {
+#       userId: 'abc123',
+#       cash: 0,
+#       reserve: 0,
+#         pendingBuys: [{symbol, number, timestamp}],
+#         pendingSells: [{symbol, number, timestamp}],
+#         portfolio: {symbol: {amount, reserved}}
+#   }
+# TODO: change strings to defined constants
+'''
+    TODO: consider throwing error instead of returning 0.
+    some functions return numbers, and 0 would be a valid number to return
+    like removing from portfolio
+
+    OR
+
+    change return of all functions to be the new user object, and 0 for failure
+'''
 
 class databaseServer:
 
@@ -293,6 +385,10 @@ class databaseServer:
         if userId not in self.database:
             user = { 'userId': userId, 'cash': 0, 'reserve': 0, 'pendingBuys': [], 'pendingSells': [], 'portfolio': {}}
             self.database[userId] = user
+            # not good but will work for now
+            # adding user to threadhandler
+            localTriggers.threadHandler.userId = userId
+
             return self.database.get(userId)
         else:
             pass
@@ -415,15 +511,16 @@ class databaseServer:
         user = self.getUser(userId)
         if not user:
             return False
-        portfolioAmount = user.get('portfolio').get(symbol)
+        portfolio = user.get('portfolio').get(symbol)
         # cant sell portfolio that doesnt exist
-        if portfolioAmount is None:
+        if portfolio is None:
             return False
+        portfolioAmount = portfolio.get('amount')
         # trying to sell more than they own
         if portfolioAmount < amount:
             return False
 
-        user['portfolio'][symbol] -= amount
+        user['portfolio'][symbol]['amount'] -= amount
         return user['portfolio'][symbol]
 
     # returns new amount
@@ -432,11 +529,61 @@ class databaseServer:
         user = self.getUser(userId)
         if not user:
             return False
-        portfolioAmount = user.get('portfolio').get(symbol)
-        if portfolioAmount is None:
-            user['portfolio'][symbol] = 0
+        portfolio = user.get('portfolio').get(symbol)
+        if portfolio is None:
+            user['portfolio'][symbol] = {'amount': 0, 'reserved': 0}
 
-        user['portfolio'][symbol] = amount
+        user['portfolio'][symbol]['amount'] = amount
+        return user['portfolio'][symbol]
+
+    def reserveFromPortfolio(self, userId, symbol, numberToReserve):
+        user = self.getUser(userId)
+        if not user:
+            return False
+        portfolio = user.get('portfolio').get(symbol)
+        # cant reserve portfolio that doesnt exist
+        if portfolio is None:
+            return False
+        portfolioAmount = portfolio.get('amount')
+        # trying to reserve more than they own
+        if portfolioAmount < numberToReserve:
+            return False
+
+        user['portfolio'][symbol]['reserved'] += numberToReserve
+        user['portfolio'][symbol]['amount'] -= numberToReserve
+        return user['portfolio'][symbol]
+
+    def releasePortfolioReserves(self, userId, symbol, numberToRelease):
+        user = self.getUser(userId)
+        if not user:
+            return False
+        portfolio= user.get('portfolio').get(symbol)
+        # cant reserve portfolio that doesnt exist
+        if portfolio is None:
+            return False
+
+        portfolioReserved = portfolio.get('reserved')
+        if portfolioReserved < numberToRelease:
+            return False
+
+        user['portfolio'][symbol]['reserved'] -= numberToRelease
+        user['portfolio'][symbol]['amount'] += numberToRelease
+        return user['portfolio'][symbol]
+
+    def commitReservedPortfolio(self, userId, symbol, numberToCommit):
+        user = self.getUser(userId)
+        if not user:
+            return False
+        portfolio = user.get('portfolio').get(symbol)
+        # cant reserve portfolio that doesnt exist
+        if portfolio is None:
+            return False
+
+        portfolioReserved = portfolio.get('reserved')
+        if portfolioReserved < numberToCommit:
+            return False
+
+        user['portfolio'][symbol]['reserved'] -= numberToCommit
         return user['portfolio'][symbol]
 
     def checkPortfolio(self, userId):
@@ -444,13 +591,16 @@ class databaseServer:
         return user.get('portfolio')
 
 
-
-# quote shape: symbol: {value: string, retrieved: epoch time, user: string}
+# quote shape: symbol: {value: string, retrieved: epoch time, user: string, cryptoKey: string}
 class Quotes():
     def __init__(self, cacheExpire=60, testing=False):
         self.cacheExpire = cacheExpire
         self.quoteCache = {}
         self.testing = testing
+        # if not testing:
+        #     self.quoteServerConnection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        #     self.quoteServerConnection.connect(('quoteserve.seng.uvic.ca', 4445))
+
 
     def getQuote(self, symbol, user):
         self._testPrint(True, "current cache state: ", self.quoteCache)
@@ -489,15 +639,17 @@ class Quotes():
             # print data
             # print "Hitting quoteServer"
             s.close()
+            # self.quoteServerConnection.send(request)
+            # data = self.quoteServerConnection.recv(1024)
 
         newQuote = self._quoteStringToDictionary(data)
         self.quoteCache[symbol] = newQuote
         return newQuote
 
     def _quoteStringToDictionary(self, quoteString):
-        # "quote, sym, userid, timestamp, cryptokey\n"
+        # "quote, sym, userid, cryptokey\n"
         split = quoteString.split(",")
-        return {'value': float(split[0]), 'retrieved': split[3], 'user': split[2]}
+        return {'value': float(split[0]), 'retrieved': int(time.time()), 'user': split[2], 'cryptoKey': split[3]}
 
     def _cacheIsActive(self, quote):
         return (int(quote.get('retrieved', 0)) + self.cacheExpire) > int(time.time())
@@ -506,7 +658,7 @@ class Quotes():
         query = queryString.split(",")
         symbol = query[0]
         user = query[1]
-        quoteArray = [randint(0,50), symbol, user, int(time.time()), "cryptokey"]
+        quoteArray = [randint(0, 50), symbol, user, "cryptokey" + repr(randint(0, 50))]
         return ','.join(map(str, quoteArray))
 
     def _testPrint(self, newLine, *args):
@@ -646,6 +798,7 @@ def delegate(args):
 
     # Call Quote
     localDB.addUser(args["userId"])
+
     if args["command"] == "QUOTE":
         print "getting Quote"
         quoteObj.getQuote( args["sym"] , args["userId"])
@@ -671,18 +824,28 @@ def delegate(args):
         handleCommandCancelSell(args)
     # triggers
     elif args["command"] == "SET_BUY_AMOUNT":
+        localTriggers.addBuyTrigger(args["userId"], args["sym"], args["cash"] )
         pass
     elif args["command"] == "CANCEL_BUY_AMOUNT":
+        localTriggers.cancelBuyTrigger(args["userId"], args["sym"], args["cash"])
         pass
     elif args["command"] == "SET_BUY_TRIGGER":
+        # activate trigger
+        localTriggers.setBuyActive(args["userId"], args["sym"], args["cash"])
 
         pass
 
     elif args["command"] == "SET_SELL_AMOUNT":
+        print "adding sell trigger"
+        localTriggers.addSellTrigger(args["userId"], args["sym"], args["cash"] )
         pass
     elif args["command"] == "CANCEL_SELL_AMOUNT":
+        localTriggers.cancelSellTrigger(args["userId"], args["sym"], args["cash"])
         pass
     elif args["command"] == "SET_SELL_TRIGGER":
+        # activate trigger
+        # localTriggers.setSellActive(args["userId"], args["sym"], args["cash"])
+
         pass
 
 
@@ -766,6 +929,36 @@ def handleCommandCancelSell(args):
     if not sell:
         return "no sells"
 
+def handeCommandSetBuyAmount(args):
+    symbol = args.get("sym")
+    amount = args.get("cash")
+    userId = args.get("userId")
+
+    if localDB.getUser(userId).get("cash") >= amount:
+        localDB.reserveCash(userId, amount)
+        localTriggers.addBuyTrigger(userId, symbol, amount)
+    else:
+        return "not enough available cash"
+
+def handleCommandSetBuyTrigger(args):
+    symbol = args.get("sym")
+    buyAt = args.get("cash")
+    userId = args.get("userId")
+
+    success = localTriggers.setBuyActive(userId, symbol, buyAt)
+    if not success:
+        return "trigger doesnt exist or is at a higher value than amount reserved for it"
+
+def handleCommandCancleSetBuy(args):
+    symbol = args["sym"]
+    userId = args["userId"]
+
+    trigger = localTriggers.cancelBuyTrigger(userId, symbol)
+    if trigger:
+        reserved = trigger.get('cashReserved')
+        localDB.releaseCash(userId, reserved)
+    else:
+        return "no trigger to cancel"
 
 def main():
 #   starting httpserver and waiting for input
@@ -800,7 +993,7 @@ if __name__ == '__main__':
     # -----------------------
     quoteObj = Quotes()
     localDB = databaseServer()
-    localTriggers = triggerHandler()
+    localTriggers = Triggers()
     # -----------------------
 
     main()
