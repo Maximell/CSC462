@@ -167,14 +167,96 @@ class AuditServer:
     def __init__(self):
         self.logFile = []
 
+    '''
+#   TO BE IMPLEMENTED WHEN WE MOVE TO EVENTS
     def log(self, event):
         print 'Logging an event: ' + event + '.'
         self.logFile.append(event)
+    '''
 
-    def logUserCommand(self, **kwargs):
-        self.logFile.append(dict(kwargs,
-            logType='userCommand'
-        ))
+    def logUserCommand(self, timeStamp, server, transactionNum, userId, commandName, stockSymbol=None, fileName=None, amount=None):
+        dictionary = {
+            'timeStamp': timeStamp
+            'server': server,
+            'transactionNum': transactionNum,
+            'userId': userId,
+            'commandName': commandName
+            'logType': 'userCommand'  
+        }
+        if stockSymbol:
+            dictionary = dict(dictionary, stockSymbol=stockSymbol)
+        if fileName:
+            dictionary = dict(dictionary, fileName=fileName)
+        if amount:
+            dictionary = dict(dictionary, amount=amount)
+        self.logFile.append(dictionary)
+
+    def logQuoteServer(self, timeStamp, server, transactionNum, userId, quoteServerTime, stockSymbol, price, cryptoKey):
+        dictionary = {
+            'timeStamp': timeStamp
+            'server': server,
+            'transactionNum': transactionNum,
+            'userId': userId,
+            'logType': 'quoteServer',
+            'quoteServerTime': quoteServerTime,
+            'stockSymbol': stockSymbol,
+            'price': price,
+            'cryptoKey': cryptoKey
+        }
+        self.logFile.append(dictionary)
+
+    def logAccountTransaction(self, timeStamp, server, transactionNum, userId, commandName, action, funds):
+        dictionary = {
+            'timeStamp': timeStamp
+            'server': server,
+            'transactionNum': transactionNum,
+            'userId': userId,
+            'logType': 'accountTransaction',
+            'action': action,
+            'funds': funds
+        }
+        self.logFile.append(dictionary)
+
+    def logSystemEvent(self, timeStamp, server, transactionNum, userId, commandName, stockSymbol=None, fileName=None, amount=None):
+        dictionary = {
+            'timeStamp': timeStamp
+            'server': server,
+            'transactionNum': transactionNum,
+            'userId': userId,
+            'commandName': commandName
+            'logType': 'systemEvent'  
+        }
+        if stockSymbol:
+            dictionary = dict(dictionary, stockSymbol=stockSymbol)
+        if fileName:
+            dictionary = dict(dictionary, fileName=fileName)
+        if amount:
+            dictionary = dict(dictionary, amount=amount)
+        self.logFile.append(dictionary)
+
+    def logErrorMessage(self, timeStamp, server, transactionNum, userId, commandName, errorMessage):
+        dictionary = {
+            'timeStamp': timeStamp
+            'server': server,
+            'transactionNum': transactionNum,
+            'userId': userId,
+            'commandName': commandName
+            'logType': 'errorEvent',
+            'errorMessage': errorMessage
+        }
+        self.logFile.append(dictionary)
+
+    def logDebugMessage(self, timeStamp, server, transactionNum, userId, commandName, debugMessage):
+        dictionary = {
+            'timeStamp': timeStamp
+            'server': server,
+            'transactionNum': transactionNum,
+            'userId': userId,
+            'commandName': commandName
+            'logType': 'debugEvent',
+            'debugMessage': debugMessage
+        }
+        self.logFile.append(dictionary)
 
 # '''
 #     def logUserCommand():
