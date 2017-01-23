@@ -213,7 +213,6 @@ class loggerServer:
 #     def activate(self):
 #         self.active = True
 
-
 # Here we want our trigger's threads
 # hitting the quote server for quotes every 15sec
 class threadHandler:
@@ -278,7 +277,6 @@ class threadHandler:
             except:
                 print "broken.."
 
-
 class Triggers:
     def __init__(self):
         self.buyTriggers = {}
@@ -292,18 +290,8 @@ class Triggers:
     def getSellTriggers(self):
         return self.sellTriggers
 
-
     def addBuyTrigger(self, userId, sym, cashReserved):
         print "adding buy trigger"
-
-    def getBuyTriggers(self):
-        return self.buyTriggers
-
-    def getSellTriggers(self):
-        return self.sellTriggers
-
-    def addBuyTrigger(self, userId, sym, cashReserved):
-
         if userId not in self.buyTriggers:
             self.buyTriggers[userId] = {}
         self.buyTriggers[userId][sym] = {"cashReserved": cashReserved, "active": False, "buyAt": 0}
@@ -314,7 +302,6 @@ class Triggers:
         self.sellTriggers[userId][sym] = {"maxSellAmount": maxSellAmount, "active": False, "sellAt": 0}
 
     def setBuyActive(self, userId, symbol, buyAt):
-
         print "starting buy thread"
         if self._triggerExists(userId, symbol, self.buyTriggers):
             trigger = self.buyTriggers.get(userId).get(symbol)
@@ -337,15 +324,6 @@ class Triggers:
                 # start cron job
                 sold = self.threadHandler.addSellThread(symbol , sellAt)
                 print "sold: " + str(sold)
-                return trigger
-        return 0
-
-    def setSellActive(self , userId , symbol, sellAt):
-        if self._triggerExists(userId, symbol, self.sellTriggers):
-            trigger = self.sellTriggers.get(userId).get(symbol)
-            if sellAt <= trigger.get('maxSellAmount'):
-                trigger["active"] = True
-                trigger["sellAt"] = sellAt
                 return trigger
         return 0
 
@@ -605,57 +583,6 @@ class databaseServer:
         if portfolioReserved < numberToCommit:
             return False
 
-        # Don't know what amount is
-        # user['portfolio'][symbol]['amount'] = amount
-        return user['portfolio'][symbol]
-
-    def reserveFromPortfolio(self, userId, symbol, numberToReserve):
-        user = self.getUser(userId)
-        if not user:
-            return False
-        portfolio = user.get('portfolio').get(symbol)
-        # cant reserve portfolio that doesnt exist
-        if portfolio is None:
-            return False
-        portfolioAmount = portfolio.get('amount')
-        # trying to reserve more than they own
-        if portfolioAmount < numberToReserve:
-            return False
-
-        user['portfolio'][symbol]['reserved'] += numberToReserve
-        user['portfolio'][symbol]['amount'] -= numberToReserve
-        return user['portfolio'][symbol]
-
-    def releasePortfolioReserves(self, userId, symbol, numberToRelease):
-        user = self.getUser(userId)
-        if not user:
-            return False
-        portfolio= user.get('portfolio').get(symbol)
-        # cant reserve portfolio that doesnt exist
-        if portfolio is None:
-            return False
-
-        portfolioReserved = portfolio.get('reserved')
-        if portfolioReserved < numberToRelease:
-            return False
-
-        user['portfolio'][symbol]['reserved'] -= numberToRelease
-        user['portfolio'][symbol]['amount'] += numberToRelease
-        return user['portfolio'][symbol]
-
-    def commitReservedPortfolio(self, userId, symbol, numberToCommit):
-        user = self.getUser(userId)
-        if not user:
-            return False
-        portfolio = user.get('portfolio').get(symbol)
-        # cant reserve portfolio that doesnt exist
-        if portfolio is None:
-            return False
-
-        portfolioReserved = portfolio.get('reserved')
-        if portfolioReserved < numberToCommit:
-            return False
-
         user['portfolio'][symbol]['reserved'] -= numberToCommit
         return user['portfolio'][symbol]
 
@@ -670,9 +597,6 @@ class Quotes():
         self.cacheExpire = cacheExpire
         self.quoteCache = {}
         self.testing = testing
-        # if not testing:
-        #     self.quoteServerConnection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        #     self.quoteServerConnection.connect(('quoteserve.seng.uvic.ca', 4445))
         # if not testing:
         #     self.quoteServerConnection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         #     self.quoteServerConnection.connect(('quoteserve.seng.uvic.ca', 4445))
@@ -715,9 +639,6 @@ class Quotes():
             # print data
             # print "Hitting quoteServer"
             s.close()
-            # self.quoteServerConnection.send(request)
-            # data = self.quoteServerConnection.recv(1024)
-
             # self.quoteServerConnection.send(request)
             # data = self.quoteServerConnection.recv(1024)
 
