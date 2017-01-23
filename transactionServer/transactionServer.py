@@ -1,4 +1,3 @@
-
 # demonstrate talking to the quote server
 import math
 import socket
@@ -95,7 +94,7 @@ from OpenSSL import SSL
 #           accountTransaction
 #           systemEvent
 #           quoteServer
-#           errorEvent            
+#           errorEvent
 #       'timestamp': seconds since the epoch,
 #       'server': 'where the server originated from',
 #       'transactionNum': the transaction number the event is associated with,
@@ -128,7 +127,7 @@ from OpenSSL import SSL
 #
 #                   dumplog
 #                       fileName
-#                    
+#
 #                   add
 #                   buy
 #                   sell
@@ -144,8 +143,8 @@ from OpenSSL import SSL
 #                   add
 #                   remove
 #                   reserve
-#                   free                      
-#               'funds': amount of money being moved    
+#                   free
+#               'funds': amount of money being moved
 #           }
 #       systemEvent
 #           args: {
@@ -164,7 +163,6 @@ from OpenSSL import SSL
 #               'errorMessage': message associated with the error
 #           }
 class AuditServer:
-
     def __init__(self):
         self.logFile = []
 
@@ -177,11 +175,11 @@ class AuditServer:
 
     def logUserCommand(self, timeStamp, server, transactionNum, userId, commandName, stockSymbol=None, fileName=None, amount=None):
         dictionary = {
-            'timeStamp': timeStamp
+            'timeStamp': timeStamp,
             'server': server,
             'transactionNum': transactionNum,
             'userId': userId,
-            'commandName': commandName
+            'commandName': commandName,
             'logType': 'userCommand'  
         }
         if stockSymbol:
@@ -194,7 +192,7 @@ class AuditServer:
 
     def logQuoteServer(self, timeStamp, server, transactionNum, userId, quoteServerTime, stockSymbol, price, cryptoKey):
         dictionary = {
-            'timeStamp': timeStamp
+            'timeStamp': timeStamp,
             'server': server,
             'transactionNum': transactionNum,
             'userId': userId,
@@ -208,7 +206,7 @@ class AuditServer:
 
     def logAccountTransaction(self, timeStamp, server, transactionNum, userId, commandName, action, funds):
         dictionary = {
-            'timeStamp': timeStamp
+            'timeStamp': timeStamp,
             'server': server,
             'transactionNum': transactionNum,
             'userId': userId,
@@ -220,11 +218,11 @@ class AuditServer:
 
     def logSystemEvent(self, timeStamp, server, transactionNum, userId, commandName, stockSymbol=None, fileName=None, amount=None):
         dictionary = {
-            'timeStamp': timeStamp
+            'timeStamp': timeStamp,
             'server': server,
             'transactionNum': transactionNum,
             'userId': userId,
-            'commandName': commandName
+            'commandName': commandName,
             'logType': 'systemEvent'  
         }
         if stockSymbol:
@@ -237,11 +235,11 @@ class AuditServer:
 
     def logErrorMessage(self, timeStamp, server, transactionNum, userId, commandName, errorMessage):
         dictionary = {
-            'timeStamp': timeStamp
+            'timeStamp': timeStamp,
             'server': server,
             'transactionNum': transactionNum,
             'userId': userId,
-            'commandName': commandName
+            'commandName': commandName,
             'logType': 'errorEvent',
             'errorMessage': errorMessage
         }
@@ -249,66 +247,72 @@ class AuditServer:
 
     def logDebugMessage(self, timeStamp, server, transactionNum, userId, commandName, debugMessage):
         dictionary = {
-            'timeStamp': timeStamp
+            'timeStamp': timeStamp,
             'server': server,
             'transactionNum': transactionNum,
             'userId': userId,
-            'commandName': commandName
+            'commandName': commandName,
             'logType': 'debugEvent',
             'debugMessage': debugMessage
         }
         self.logFile.append(dictionary)
 
+    def logUserCommand(self, **kwargs):
+        self.logFile.append(dict(kwargs,
+                                 logType='userCommand'
+                                 ))
+
     def writeLogs(self, fileName):
         self._dumpIntoFile(fileName)
 
     # dumps the logs to a given file
-    def _dumpIntoFile(self,fileName):
+    def _dumpIntoFile(self, fileName):
         try:
             file = open(fileName, 'w')
         except IOError:
             print 'Attempted to save into file %s but couldn\'t open file for writing.' % (fileName)
-        
+
         file.write('<?xml version="1.0"?>\n')
         file.write('<log>\n\n')
         for log in self.logFile:
             logType = log['logType']
-            file.write('\t<'+logType+'>\n')
-            file.write('\t\t<timestamp>'+log['timeStamp']+'</timestamp>\n')
-            file.write('\t\t<server>'+log['server']+'</server>\n')
-            file.write('\t\t<transactionNum>'+log['transactionNum']+'</transactionNum>')
-            file.write('\t\t<username>'+log['userId']+'</username>\n')
+            file.write('\t<' + logType + '>\n')
+            file.write('\t\t<timestamp>' + log['timeStamp'] + '</timestamp>\n')
+            file.write('\t\t<server>' + log['server'] + '</server>\n')
+            file.write('\t\t<transactionNum>' + log['transactionNum'] + '</transactionNum>')
+            file.write('\t\t<username>' + log['userId'] + '</username>\n')
             if logType == 'userCommand':
-                file.write('\t\t<command>'+log['commandName']+'</command>\n')
+                file.write('\t\t<command>' + log['commandName'] + '</command>\n')
                 if log.get('stockSymbol'):
-                    file.write('\t\t<stockSymbol>'+log['stockSymbol']+'</stockSymbol>\n')
+                    file.write('\t\t<stockSymbol>' + log['stockSymbol'] + '</stockSymbol>\n')
                 if log.get('fileName'):
-                    file.write('\t\t<filename>'+log['fileName']+'</filename>\n')
+                    file.write('\t\t<filename>' + log['fileName'] + '</filename>\n')
                 if log.get('amount'):
-                    file.write('\t\t<funds>'+log['amount']+'</funds>\n')
+                    file.write('\t\t<funds>' + log['amount'] + '</funds>\n')
             elif logType == 'quoteServer':
-                file.write('\t\t<quoteServerTime>'+log['quoteServerTime']+'</quoteServerTime>\n')
-                file.write('\t\t<stockSymbol>'+log['stockSymbol']+'</stockSymbol>\n')
-                file.write('\t\t<price>'+log['price']+'</price>\n')
-                file.write('\t\t<cryptokey>'+log['cryptoKey']+'</cryptokey>\n')
+                file.write('\t\t<quoteServerTime>' + log['quoteServerTime'] + '</quoteServerTime>\n')
+                file.write('\t\t<stockSymbol>' + log['stockSymbol'] + '</stockSymbol>\n')
+                file.write('\t\t<price>' + log['price'] + '</price>\n')
+                file.write('\t\t<cryptokey>' + log['cryptoKey'] + '</cryptokey>\n')
             elif logType == 'accountTransaction':
-                file.write('\t\t<action>'+log['action']+'</action>')
-                file.write('\t\t<funds>'+log['amount']+'</funds>')
+                file.write('\t\t<action>' + log['action'] + '</action>')
+                file.write('\t\t<funds>' + log['amount'] + '</funds>')
             elif logType == 'systemEvent':
-                file.write('\t\t<command>'+log['commandName']+'</command>\n')
+                file.write('\t\t<command>' + log['commandName'] + '</command>\n')
                 if log.get('stockSymbol'):
-                    file.write('\t\t<stockSymbol>'+log['stockSymbol']+'</stockSymbol>\n')
+                    file.write('\t\t<stockSymbol>' + log['stockSymbol'] + '</stockSymbol>\n')
                 if log.get('fileName'):
-                    file.write('\t\t<filename>'+log['fileName']+'</filename>\n')
+                    file.write('\t\t<filename>' + log['fileName'] + '</filename>\n')
                 if log.get('amount'):
-                    file.write('\t\t<funds>'+log['amount']+'</funds>\n')
+                    file.write('\t\t<funds>' + log['amount'] + '</funds>\n')
             elif logType == 'errorMessage':
-                file.write('\t\t<errorMessage>'+log['errorMessage']+'</errorMessage>\n')
+                file.write('\t\t<errorMessage>' + log['errorMessage'] + '</errorMessage>\n')
             elif logType == 'debugMessage':
-                file.write('\t\t<debugMessage>'+log['debugMessage']+'</debugMessage>\n')
-            file.write('\t</userCommand>\n')    
+                file.write('\t\t<debugMessage>' + log['debugMessage'] + '</debugMessage>\n')
+            file.write('\t</userCommand>\n')
         file.write('\n</log>\n')
         file.close()
+
 
 # Here we want our trigger's threads
 # hitting the quote server for quotes every 15sec
@@ -320,31 +324,38 @@ class hammerQuoteServerToBuy(Thread):
         self.daemon = True
         self.quote = Quotes()
         self.start()
+
     def run(self):
-        val = 0
-        breakval = False
+        breakVal = False
         while True:
             if localTriggers.buyTriggers != {}:
                 for userId in localTriggers.buyTriggers:
                     symDict = localTriggers.buyTriggers[userId]
+
                     symbols = symDict.keys()
                     for sym in symbols:
-                        request = sym + "," + userId + "\n"
-                        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                        self.socket.connect(('quoteserve.seng.uvic.ca', 4444))
-                        self.socket.send(request)
-                        data = self.socket.recv(1024)
-                        self.socket.close()
+                        if symDict[sym]["active"] == True:
+                            buyVal = symDict[sym]["buyAt"]
+                            request = sym + "," + userId + "\n"
+                            self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                            self.socket.connect(('quoteserve.seng.uvic.ca', 4444))
+                            self.socket.send(request)
+                            data = self.socket.recv(1024)
+                            self.socket.close()
 
-                        vals = self.quote._quoteStringToDictionary(data)
-                        if vals["value"] > val:
-                            print sym
-                            print "bought for:" + str(vals["value"])
-                            breakval = True
-                            break
-                    if breakval:
+                            vals = self.quote._quoteStringToDictionary(data)
+                            if vals["value"] <= buyVal:
+                                print sym
+                                print "bought for:" + str(vals["value"])
+                                breakVal = True
+                                # logic for buying
+                                args = {"sym": sym, "userId": userId, "cash": vals["value"]}
+                                handleCommandBuy(args)
+                                handleCommandCommitBuy(args)
+                                break
+                    if breakVal:
                         break
-                if breakval:
+                if breakVal:
                     break
 
             else:
@@ -360,40 +371,44 @@ class hammerQuoteServerToSell(Thread):
         self.start()
 
     def run(self):
-        val = 0
+        breakVal = False
         while True:
             if localTriggers.sellTriggers != {}:
                 for userId in localTriggers.sellTriggers:
                     symDict = localTriggers.sellTriggers[userId]
+                    # if symDict["active"] == True:
                     symbols = symDict.keys()
                     for sym in symbols:
-                        request = sym + "," + userId + "\n"
-                        self.socket.connect(('quoteserve.seng.uvic.ca', 4444))
-                        self.socket.send(request)
-                        data = self.socket.recv(1024)
-                        self.socket.close()
-
-                        vals = self.quote._quoteStringToDictionary(data)
-                        if vals["value"] > val:
-                            print sym
-                            print "sold for:" + str(vals["value"])
-                            # logic for the selling
-                            breakval = True
-                            break
-                    if breakval:
+                        if symDict[sym]["active"] == True:
+                            sellAt = symDict[sym]["sellAt"]
+                            request = sym + "," + userId + "\n"
+                            self.socket.connect(('quoteserve.seng.uvic.ca', 4444))
+                            self.socket.send(request)
+                            data = self.socket.recv(1024)
+                            self.socket.close()
+                            vals = self.quote._quoteStringToDictionary(data)
+                            if vals["value"] >= sellAt:
+                                print sym
+                                print "sold for:" + str(vals["value"])
+                                breakVal = True
+                                # logic for the selling
+                                args = {"sym": sym, "userId": userId, "cash": vals["value"]}
+                                handleCommandSell(args)
+                                handleCommandCommitSell(args)
+                                break
+                    if breakVal:
                         break
-                if breakval:
+                if breakVal:
                     break
             else:
                 pass
-            # print 'B'
+                # print 'B'
 
 
 class Triggers:
     def __init__(self):
         self.buyTriggers = {}
         self.sellTriggers = {}
-
 
     def getBuyTriggers(self):
         return self.buyTriggers
@@ -424,6 +439,7 @@ class Triggers:
                 # print "bought: " + str(bought)
                 return trigger
         return 0
+
     def setSellActive(self, userId, symbol, sellAt):
         if self._triggerExists(userId, symbol, self.sellTriggers):
             print "activating sell thread"
@@ -462,6 +478,7 @@ class Triggers:
                 return 1
         return 0
 
+
 # Class for users and database
 # Users are stored:
 #   {
@@ -483,11 +500,11 @@ class Triggers:
     change return of all functions to be the new user object, and 0 for failure
 '''
 
-class databaseServer:
 
+class databaseServer:
     def __init__(self, transactionExpire=60):
         self.database = {}
-        self.transactionExpire = transactionExpire # for testing
+        self.transactionExpire = transactionExpire  # for testing
 
     # returns user object for success
     # returns None for user not existing
@@ -498,7 +515,7 @@ class databaseServer:
     # returns None for failure
     def addUser(self, userId):
         if userId not in self.database:
-            user = { 'userId': userId, 'cash': 0, 'reserve': 0, 'pendingBuys': [], 'pendingSells': [], 'portfolio': {}}
+            user = {'userId': userId, 'cash': 0, 'reserve': 0, 'pendingBuys': [], 'pendingSells': [], 'portfolio': {}}
             self.database[userId] = user
             # not good but will work for now
             # adding user to threadhandler
@@ -529,7 +546,7 @@ class databaseServer:
         if user:
             user['cash'] = user.get('cash') + float(amount)
         else:
-            user = { 'userId': userId, 'cash': amount, 'reserve': 0 }
+            user = {'userId': userId, 'cash': amount, 'reserve': 0}
         self.database[userId] = user
         return self.database.get(userId)
 
@@ -678,7 +695,7 @@ class databaseServer:
         user = self.getUser(userId)
         if not user:
             return False
-        portfolio= user.get('portfolio').get(symbol)
+        portfolio = user.get('portfolio').get(symbol)
         # cant reserve portfolio that doesnt exist
         if portfolio is None:
             return False
@@ -722,7 +739,6 @@ class Quotes():
         #     self.quoteServerConnection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         #     self.quoteServerConnection.connect(('quoteserve.seng.uvic.ca', 4445))
 
-
     def getQuote(self, symbol, user):
         self._testPrint(True, "current cache state: ", self.quoteCache)
 
@@ -743,6 +759,7 @@ class Quotes():
         that way we can guarantee the 60 seconds for a commit
         if we use cache, the quote could be 119 seconds old when they commit, and that breaks the requirements
     '''
+
     def getQuoteNoCache(self, symbol, user):
         return self._hitQuoteServerAndCache(symbol, user)
 
@@ -795,8 +812,9 @@ class Quotes():
         print self.quoteCache
         pass
 
+
 class httpsServer(HTTPServer):
-    def __init__(self, serverAddr, handlerClass ):
+    def __init__(self, serverAddr, handlerClass):
         BaseServer.__init__(self, serverAddr, handlerClass)
         ctx = SSL.Context(SSL.SSLv23_METHOD)
         # server.pem's location (containing the server private key and
@@ -811,8 +829,9 @@ class httpsServer(HTTPServer):
 
     def shutdown_request(self, request):
         request.shutdown()
-    # def parse_request(self , request):
-    #     print "servicing"
+        # def parse_request(self , request):
+        #     print "servicing"
+
 
 class httpsRequestHandler(SimpleHTTPRequestHandler):
     def setup(self):
@@ -843,9 +862,6 @@ class httpsRequestHandler(SimpleHTTPRequestHandler):
         extractData(self.data)
 
 
-
-
-
 def extractData(data):
     # extracting data and splitting properly
 
@@ -873,7 +889,7 @@ def extractData(data):
             del args[key]
             break
 
-    #   depending on what command we have
+    # depending on what command we have
     if len(sanitized) == 2:
         # 2 case: 1 where userId and sym
         #         2 where userId and cash
@@ -890,12 +906,13 @@ def extractData(data):
     #
     # {'userId': 'oY01WVirLr', 'cash': '63511.53',
     # 'lineNum': '1', 'command': 'ADD'}
-    
+
     '''
         This should be changed to use the Events class - when it is done.
     '''
 
     delegate(args)
+
 
 def delegate(args):
     # this is where we will figure what command we are dealing with
@@ -926,7 +943,7 @@ def delegate(args):
 
     if args["command"] == "QUOTE":
         # print "getting Quote"
-        quoteObj.getQuote( args["sym"] , args["userId"])
+        quoteObj.getQuote(args["sym"], args["userId"])
         # quoteObj._printQuoteCacheState()
         pass
     elif args["command"] == "ADD":
@@ -950,7 +967,7 @@ def delegate(args):
     # triggers
     elif args["command"] == "SET_BUY_AMOUNT":
         print "adding buy amount"
-        localTriggers.addBuyTrigger(args["userId"], args["sym"], args["cash"] )
+        localTriggers.addBuyTrigger(args["userId"], args["sym"], args["cash"])
         pass
     elif args["command"] == "CANCEL_BUY_AMOUNT":
         localTriggers.cancelBuyTrigger(args["userId"], args["sym"], args["cash"])
@@ -963,7 +980,7 @@ def delegate(args):
 
     elif args["command"] == "SET_SELL_AMOUNT":
         print "adding sell amount"
-        localTriggers.addSellTrigger(args["userId"], args["sym"], args["cash"] )
+        localTriggers.addSellTrigger(args["userId"], args["sym"], args["cash"])
         pass
     elif args["command"] == "CANCEL_SELL_AMOUNT":
         localTriggers.cancelSellTrigger(args["userId"], args["sym"], args["cash"])
@@ -973,7 +990,6 @@ def delegate(args):
         localTriggers.setSellActive(args["userId"], args["sym"], args["cash"])
 
         pass
-
 
 
 def handleCommandAdd(args):
@@ -987,7 +1003,9 @@ def handleCommandAdd(args):
         funds=args['cash']
     )
 
+
 def handleCommandBuy(args):
+    print "buying..."
     symbol = args.get("sym")
     cash = args.get("cash")
     userId = args.get("userId")
@@ -1003,7 +1021,9 @@ def handleCommandBuy(args):
     else:
         return "not enough available cash"
 
+
 def handleCommandCommitBuy(args):
+    print "commit buying..."
     userId = args.get("userId")
     buy = localDB.popBuy(userId)
     if buy:
@@ -1019,6 +1039,7 @@ def handleCommandCommitBuy(args):
     else:
         return "no buys"
 
+
 def handleCommandCancelBuy(args):
     userId = args.get("userId")
     buy = localDB.popBuy(userId)
@@ -1029,7 +1050,9 @@ def handleCommandCancelBuy(args):
     else:
         return "no buys"
 
+
 def handleCommandSell(args):
+    print "selling..."
     symbol = args.get("sym")
     cash = args.get("cash")
     userId = args.get("userId")
@@ -1039,10 +1062,11 @@ def handleCommandSell(args):
     costPer = quote.get('value')
     amount = math.floor(cash / costPer)
 
-
     localDB.pushSell(userId, symbol, amount, costPer)
 
+
 def handleCommandCommitSell(args):
+    print "commiting selling..."
     userId = args.get("userId")
     sell = localDB.popSell(userId)
     if sell:
@@ -1057,11 +1081,13 @@ def handleCommandCommitSell(args):
     else:
         return "no sells"
 
+
 def handleCommandCancelSell(args):
     userId = args.get("userId")
     sell = localDB.popSell(userId)
     if not sell:
         return "no sells"
+
 
 def handeCommandSetBuyAmount(args):
     symbol = args.get("sym")
@@ -1074,6 +1100,7 @@ def handeCommandSetBuyAmount(args):
     else:
         return "not enough available cash"
 
+
 def handleCommandSetBuyTrigger(args):
     symbol = args.get("sym")
     buyAt = args.get("cash")
@@ -1082,6 +1109,7 @@ def handleCommandSetBuyTrigger(args):
     success = localTriggers.setBuyActive(userId, symbol, buyAt)
     if not success:
         return "trigger doesnt exist or is at a higher value than amount reserved for it"
+
 
 def handleCommandCancleSetBuy(args):
     symbol = args["sym"]
@@ -1094,12 +1122,13 @@ def handleCommandCancleSetBuy(args):
     else:
         return "no trigger to cancel"
 
+
 def main():
-#   starting httpserver and waiting for input
+    #   starting httpserver and waiting for input
     spoolUpServer()
 
 
-def spoolUpServer(handlerClass = httpsRequestHandler, serverClass = httpsServer):
+def spoolUpServer(handlerClass=httpsRequestHandler, serverClass=httpsServer):
     socknum = 4442
 
     try:
@@ -1112,15 +1141,17 @@ def spoolUpServer(handlerClass = httpsRequestHandler, serverClass = httpsServer)
         httpd = serverClass(serverAddr, handlerClass)
 
     socketName = httpd.socket.getsockname()
-    print "serving HTTPS on" , socketName[0], "port number:", socketName[1],
+    print "serving HTTPS on", socketName[0], "port number:", socketName[1],
     print "waiting for request..."
     # this idles the server waiting for requests
     httpd.serve_forever()
+
 
 def incrementSocketNum(socketNum):
     # This is used to increment the socket incase ours is being used
     socketNum += 1
     return socketNum
+
 
 if __name__ == '__main__':
     # Global vars
