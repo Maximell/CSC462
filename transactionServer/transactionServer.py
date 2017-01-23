@@ -232,29 +232,48 @@ class loggerServer:
 
 class triggerHandler:
     def __init__(self):
-        buyTriggers = {}
-        sellTriggers = {}
+        self.buyTriggers = {}
+        self.sellTriggers = {}
 
-    def addBuyTrigger(self, userId, sym, price):
+    def addBuyTrigger(self, userId, sym, reserved):
         if userId not in self.buyTriggers:
             self.buyTriggers[userId] = {}
-        self.buyTriggers[userId][sym] = {"price":price, "active":False}
+        self.buyTriggers[userId][sym] = {"reserved": reserved, "active": False, "buyAt": 0}
 
-    def addSellTrigger(self, userId, sym, price):
+    def addSellTrigger(self, userId, sym, reserved):
         if userId not in self.sellTriggers:
             self.sellTriggers[userId] = {}
-        self.sellTriggers[userId][sym] = {"price":price, "active":False}
+        self.sellTriggers[userId][sym] = {"reserved": reserved, "active": False, "buyAt": 0}
 
-    def setBuyActive(self, userId, sym):
-        self.buyTriggers.get(userId).get(sym)["active"] = True
+    def setBuyActive(self, userId, sym, buyAt):
+        if self.buyTriggers.get(userId):
+            if self.buyTriggers.get(userId).get(sym):
+                self.buyTriggers.get(userId).get(sym)["active"] = True
+                self.buyTriggers.get(userId).get(sym)["buyAt"] = buyAt
+                return self.buyTriggers.get(userId).get(sym)
+        return 0
 
-    def setSellActive(self , userId , sym):
-        self.sellTriggers.get(userId).get(sym)["active"] = True
+    def setSellActive(self , userId , sym, buyAt):
+        if self.sellTriggers.get(userId):
+            if self.sellTriggers.get(userId).get(sym):
+                self.sellTriggers.get(userId).get(sym)["active"] = True
+                self.sellTriggers.get(userId).get(sym)["buyAt"] = buyAt
+                return self.sellTriggers.get(userId).get(sym)
+        return 0
 
+    def cancelBuyTrigger(self, userId, symbol):
+        if self.buyTriggers.get(userId):
+            if self.buyTriggers.get(userId).get(symbol):
+                del self.buyTriggers[userId][symbol]
+                return 1
+        return 0
 
-
-
-
+    def cancelSellTrigger(self, userId, symbol):
+        if self.sellTriggers.get(userId):
+            if self.sellTriggers.get(userId).get(symbol):
+                del self.sellTriggers[userId][symbol]
+                return 1
+        return 0
 
 
 class databaseServer:
