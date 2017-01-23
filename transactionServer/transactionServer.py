@@ -253,11 +253,11 @@ class triggerHandler:
                 return self.buyTriggers.get(userId).get(sym)
         return 0
 
-    def setSellActive(self , userId , sym, buyAt):
+    def setSellActive(self , userId , sym, sellAt):
         if self.sellTriggers.get(userId):
             if self.sellTriggers.get(userId).get(sym):
                 self.sellTriggers.get(userId).get(sym)["active"] = True
-                self.sellTriggers.get(userId).get(sym)["buyAt"] = buyAt
+                self.sellTriggers.get(userId).get(sym)["buyAt"] = sellAt
                 return self.sellTriggers.get(userId).get(sym)
         return 0
 
