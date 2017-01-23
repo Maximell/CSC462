@@ -945,7 +945,7 @@ def delegate(args):
         # print "getting Quote"
         quoteObj.getQuote(args["sym"], args["userId"])
         # quoteObj._printQuoteCacheState()
-        pass
+
     elif args["command"] == "ADD":
         handleCommandAdd(args)
 
@@ -960,23 +960,22 @@ def delegate(args):
 
     elif args["command"] == "SELL":
         handleCommandSell(args)
+
     elif args["command"] == "COMMIT_SELL":
         handleCommandCommitSell(args)
+
     elif args["command"] == "CANCEL_SELL":
         handleCommandCancelSell(args)
+
     # triggers
     elif args["command"] == "SET_BUY_AMOUNT":
-        print "adding buy amount"
-        localTriggers.addBuyTrigger(args["userId"], args["sym"], args["cash"])
-        pass
-    elif args["command"] == "CANCEL_BUY_AMOUNT":
-        localTriggers.cancelBuyTrigger(args["userId"], args["sym"], args["cash"])
-        pass
-    elif args["command"] == "SET_BUY_TRIGGER":
-        # activate trigger
-        localTriggers.setBuyActive(args["userId"], args["sym"], args["cash"])
+        handleCommandSetBuyAmount(args)
 
-        pass
+    elif args["command"] == "CANCEL_BUY_AMOUNT":
+        handleCommandCancelSetBuy(args)
+
+    elif args["command"] == "SET_BUY_TRIGGER":
+        handleCommandSetBuyTrigger(args)
 
     elif args["command"] == "SET_SELL_AMOUNT":
         print "adding sell amount"
@@ -1088,8 +1087,7 @@ def handleCommandCancelSell(args):
     if not sell:
         return "no sells"
 
-
-def handeCommandSetBuyAmount(args):
+def handleCommandSetBuyAmount(args):
     symbol = args.get("sym")
     amount = args.get("cash")
     userId = args.get("userId")
@@ -1110,8 +1108,7 @@ def handleCommandSetBuyTrigger(args):
     if not success:
         return "trigger doesnt exist or is at a higher value than amount reserved for it"
 
-
-def handleCommandCancleSetBuy(args):
+def handleCommandCancelSetBuy(args):
     symbol = args["sym"]
     userId = args["userId"]
 
