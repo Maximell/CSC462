@@ -937,6 +937,18 @@ def delegate(args):
     # set_sell_trigger
     # ----------------------------
 
+    # TODO: not sure how filename comes in
+    auditServer.logUserCommand(
+        int(time.time()),
+        "transaction",
+        args.get('lineNum'),
+        args.get('userId'),
+        args.get("command"),
+        args.get('sym'),
+        None,
+        args.get('cash')
+    )
+
     # Call Quote
     if "./testLOG" != args["userId"]:
         localDB.addUser(args["userId"])
@@ -1119,6 +1131,41 @@ def handleCommandCancelSetBuy(args):
     else:
         return "no trigger to cancel"
 
+def handleCommandSetSellAmount(args):
+    symbol = args.get("sym")
+    amount = args.get("cash")
+    userId = args.get("userId")
+
+    localTriggers.addSellTrigger(userId, symbol, amount)
+
+def handleCommandSetSellTrigger(args):
+    symbol = args.get("sym")
+    sellAt = args.get("cash")
+    userId = args.get("userId")
+
+    trigger = localTriggers.setSellActive(userId, symbol, sellAt)
+    if trigger:
+        reserve = math.floor( trigger.get('maxSellAmount') / sellAt)
+        if localDB.reserveFromPortfolio(userId, symbol, reserve):
+            return
+        else:
+            # reset the trigger to non active
+            localTriggers.addSellTrigger(userId, symbol, trigger.get('maxSellAmount'))
+            return "not enough available"
+    return "no trigger to activate"
+
+def handleCommandCancelSetSell(args):
+    symbol = args.get("sym")
+    userId = args.get("userId")
+
+    trigger = localTriggers.cancelSellTrigger(userId, symbol)
+    if trigger:
+        # if its active, need to remove from reserved portfolio
+        if trigger.get('active'):
+            refund = math.floor( trigger.get('maxSellAmount') / trigger.get('sellAt') )
+            localDB.releasePortfolioReserves(userId, symbol, refund)
+        return
+    return "no trigger to cancel"
 
 def main():
     #   starting httpserver and waiting for input
