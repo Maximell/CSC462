@@ -277,38 +277,38 @@ class AuditServer:
         for log in self.logFile:
             logType = log['logType']
             file.write('\t<' + logType + '>\n')
-            file.write('\t\t<timestamp>' + log['timeStamp'] + '</timestamp>\n')
-            file.write('\t\t<server>' + log['server'] + '</server>\n')
-            file.write('\t\t<transactionNum>' + log['transactionNum'] + '</transactionNum>')
-            file.write('\t\t<username>' + log['userId'] + '</username>\n')
+            file.write('\t\t<timestamp>' + str(log['timeStamp']) + '</timestamp>\n')
+            file.write('\t\t<server>' + str(log['server']) + '</server>\n')
+            file.write('\t\t<transactionNum>' + str(log['transactionNum']) + '</transactionNum>')
+            file.write('\t\t<username>' + str(log['userId']) + '</username>\n')
             if logType == 'userCommand':
-                file.write('\t\t<command>' + log['commandName'] + '</command>\n')
+                file.write('\t\t<command>' + str(log['commandName']) + '</command>\n')
                 if log.get('stockSymbol'):
-                    file.write('\t\t<stockSymbol>' + log['stockSymbol'] + '</stockSymbol>\n')
+                    file.write('\t\t<stockSymbol>' + str(log['stockSymbol']) + '</stockSymbol>\n')
                 if log.get('fileName'):
-                    file.write('\t\t<filename>' + log['fileName'] + '</filename>\n')
+                    file.write('\t\t<filename>' + str(log['fileName']) + '</filename>\n')
                 if log.get('amount'):
-                    file.write('\t\t<funds>' + log['amount'] + '</funds>\n')
+                    file.write('\t\t<funds>' + str(log['amount']) + '</funds>\n')
             elif logType == 'quoteServer':
-                file.write('\t\t<quoteServerTime>' + log['quoteServerTime'] + '</quoteServerTime>\n')
-                file.write('\t\t<stockSymbol>' + log['stockSymbol'] + '</stockSymbol>\n')
-                file.write('\t\t<price>' + log['price'] + '</price>\n')
-                file.write('\t\t<cryptokey>' + log['cryptoKey'] + '</cryptokey>\n')
+                file.write('\t\t<quoteServerTime>' + str(log['quoteServerTime']) + '</quoteServerTime>\n')
+                file.write('\t\t<stockSymbol>' + str(log['stockSymbol']) + '</stockSymbol>\n')
+                file.write('\t\t<price>' + str(log['price']) + '</price>\n')
+                file.write('\t\t<cryptokey>' + str(log['cryptoKey']) + '</cryptokey>\n')
             elif logType == 'accountTransaction':
-                file.write('\t\t<action>' + log['action'] + '</action>')
-                file.write('\t\t<funds>' + log['amount'] + '</funds>')
+                file.write('\t\t<action>' + str(log['action']) + '</action>')
+                file.write('\t\t<funds>' + str(log['amount']) + '</funds>')
             elif logType == 'systemEvent':
-                file.write('\t\t<command>' + log['commandName'] + '</command>\n')
+                file.write('\t\t<command>' + str(log['commandName']) + '</command>\n')
                 if log.get('stockSymbol'):
-                    file.write('\t\t<stockSymbol>' + log['stockSymbol'] + '</stockSymbol>\n')
+                    file.write('\t\t<stockSymbol>' + str(log['stockSymbol']) + '</stockSymbol>\n')
                 if log.get('fileName'):
-                    file.write('\t\t<filename>' + log['fileName'] + '</filename>\n')
+                    file.write('\t\t<filename>' + str(log['fileName']) + '</filename>\n')
                 if log.get('amount'):
-                    file.write('\t\t<funds>' + log['amount'] + '</funds>\n')
+                    file.write('\t\t<funds>' + str(log['amount']) + '</funds>\n')
             elif logType == 'errorMessage':
-                file.write('\t\t<errorMessage>' + log['errorMessage'] + '</errorMessage>\n')
+                file.write('\t\t<errorMessage>' + str(log['errorMessage']) + '</errorMessage>\n')
             elif logType == 'debugMessage':
-                file.write('\t\t<debugMessage>' + log['debugMessage'] + '</debugMessage>\n')
+                file.write('\t\t<debugMessage>' + str(log['debugMessage']) + '</debugMessage>\n')
             file.write('\t</userCommand>\n')
         file.write('\n</log>\n')
         file.close()
