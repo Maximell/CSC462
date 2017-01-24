@@ -1067,6 +1067,7 @@ def handleCommandSell(args):
     cash = args.get("cash")
     userId = args.get("userId")
 
+    print "this line num: ", args.get("lineNum")
     quote = quoteObj.getQuoteNoCache(symbol, args["userId"], args.get("lineNum"))
 
     costPer = quote.get('value')
