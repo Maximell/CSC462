@@ -950,21 +950,38 @@ def delegate(args):
     # set_sell_trigger
     # ----------------------------
 
-    # TODO: not sure how filename comes in
-    auditServer.logUserCommand(
-        int(time.time()),
-        "transaction",
-        args.get('lineNum'),
-        args.get('userId'),
-        args.get("command"),
-        args.get('sym'),
-        None,
-        args.get('cash')
-    )
+
 
     # Call Quote
     if "./testLOG" != args["userId"]:
+        # TODO: not sure how filename comes in
+        auditServer.logUserCommand(
+            int(time.time()),
+            "transaction",
+            args.get('lineNum'),
+            args.get('userId'),
+            args.get("command"),
+            stockSymbol=args.get('sym'),
+            fileName=None,
+            amount=args.get('cash')
+        )
         localDB.addUser(args["userId"])
+    else:
+        # TODO: not sure how filename comes in
+        fileName = args.get('userId')
+        auditServer.logUserCommand(
+            int(time.time()),
+            "transaction",
+            args.get('lineNum'),
+            "TODO get user properly",
+            args.get("command"),
+            stockSymbol=args.get('sym'),
+            fileName=fileName,
+            amount=args.get('cash')
+        )
+        auditServer.writeLogs(fileName)
+
+
 
     if args["command"] == "QUOTE":
         # print "getting Quote"
