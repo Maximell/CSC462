@@ -257,10 +257,10 @@ class AuditServer:
         }
         self.logFile.append(dictionary)
 
-    def logUserCommand(self, **kwargs):
-        self.logFile.append(dict(kwargs,
-                                 logType='userCommand'
-                                 ))
+    # def logUserCommand(self, **kwargs):
+    #     self.logFile.append(dict(kwargs,
+    #                              logType='userCommand'
+    #                              ))
 
     def writeLogs(self, fileName):
         self._dumpIntoFile(fileName)
