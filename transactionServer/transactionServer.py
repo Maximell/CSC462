@@ -173,6 +173,7 @@ class AuditServer:
         self.logFile.append(event)
     '''
 
+    # TODO: need a logAdminCommand which doesnt have userId (for dumplog command)
     def logUserCommand(self, timeStamp, server, transactionNum, userId, commandName, stockSymbol=None, fileName=None, amount=None):
         dictionary = {
             'timeStamp': timeStamp,
