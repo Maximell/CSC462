@@ -312,6 +312,7 @@ class AuditServer:
             file.write('\t</'+ logType +'>\n')
         file.write('\n</log>\n')
         file.close()
+        print "Log file written."
 
 
 # Here we want our trigger's threads
