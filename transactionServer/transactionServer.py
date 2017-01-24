@@ -318,11 +318,11 @@ class AuditServer:
 # hitting the quote server for quotes every 15sec
 
 class hammerQuoteServerToBuy(Thread):
-    def __init__(self):
+    def __init__(self, quoteServer):
         Thread.__init__(self)
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.daemon = True
-        self.quote = Quotes()
+        self.quote = quoteServer
         self.start()
 
     def run(self):
@@ -363,11 +363,11 @@ class hammerQuoteServerToBuy(Thread):
 
 
 class hammerQuoteServerToSell(Thread):
-    def __init__(self):
+    def __init__(self, quoteServer):
         Thread.__init__(self)
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.daemon = True
-        self.quote = Quotes()
+        self.quote = quoteServer
         self.start()
 
     def run(self):
@@ -800,6 +800,7 @@ class Quotes():
     def _quoteStringToDictionary(self, quoteString):
         # "quote, sym, userid, cryptokey\n"
         #TODO print the string and find out what it actually looks like..
+        print "from quote server: ", quoteString
         split = quoteString.split(",")
         return {'value': float(split[0]), 'retrieved': int(time.time()), 'user': split[2], 'cryptoKey': split[3]}
 
@@ -1215,8 +1216,8 @@ if __name__ == '__main__':
     localTriggers = Triggers()
 
     # trigger threads
-    hammerQuoteServerToSell()
-    hammerQuoteServerToBuy()
+    hammerQuoteServerToSell(quoteObj)
+    hammerQuoteServerToBuy(quoteObj)
     # -----------------------
 
     main()
