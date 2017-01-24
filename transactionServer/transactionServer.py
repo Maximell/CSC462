@@ -786,9 +786,9 @@ class Quotes():
         self.auditServer.logQuoteServer(
             int(time.time()),
             "quote",
-            "need TODO",
+            transactionNumber,
             user,
-            newQuote.get('retrieved'),
+            newQuote.get('serverTime'),
             symbol,
             newQuote.get('value'),
             newQuote.get('cryptoKey')
@@ -798,11 +798,9 @@ class Quotes():
         return newQuote
 
     def _quoteStringToDictionary(self, quoteString):
-        # "quote, sym, userid, cryptokey\n"
-        #TODO print the string and find out what it actually looks like..
-        print "from quote server: ", quoteString
+        # "quote, sym, timeStamp, cryptokey\n"
         split = quoteString.split(",")
-        return {'value': float(split[0]), 'retrieved': int(time.time()), 'user': split[2], 'cryptoKey': split[3]}
+        return {'value': float(split[0]), 'retrieved': int(time.time()), 'serverTime': split[2], 'cryptoKey': split[3]}
 
     def _cacheIsActive(self, quote):
         return (int(quote.get('retrieved', 0)) + self.cacheExpire) > int(time.time())
@@ -1014,15 +1012,6 @@ def delegate(args):
 
 def handleCommandAdd(args):
     localDB.addCash(args["userId"], args["cash"])
-    auditServer.logUserCommand(
-        timeStamp=int(time.time()),
-        server='transactionServer1',
-        transactionNum=args['lineNum'],
-        command=args['command'],
-        userId=args['userId'],
-        funds=args['cash']
-    )
-
 
 def handleCommandBuy(args):
     print "buying..."
