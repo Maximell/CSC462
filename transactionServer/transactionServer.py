@@ -180,7 +180,7 @@ class AuditServer:
             'transactionNum': transactionNum,
             'userId': userId,
             'commandName': commandName,
-            'logType': 'userCommand'  
+            'logType': 'userCommand'
         }
         if stockSymbol:
             dictionary = dict(dictionary, stockSymbol=stockSymbol)
@@ -223,7 +223,7 @@ class AuditServer:
             'transactionNum': transactionNum,
             'userId': userId,
             'commandName': commandName,
-            'logType': 'systemEvent'  
+            'logType': 'systemEvent'
         }
         if stockSymbol:
             dictionary = dict(dictionary, stockSymbol=stockSymbol)
@@ -731,15 +731,16 @@ class databaseServer:
 
 # quote shape: symbol: {value: string, retrieved: epoch time, user: string, cryptoKey: string}
 class Quotes():
-    def __init__(self, cacheExpire=60, testing=False):
+    def __init__(self, auditServer, cacheExpire=60, testing=False):
         self.cacheExpire = cacheExpire
         self.quoteCache = {}
         self.testing = testing
+        self.auditServer = auditServer
         # if not testing:
         #     self.quoteServerConnection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         #     self.quoteServerConnection.connect(('quoteserve.seng.uvic.ca', 4445))
 
-    def getQuote(self, symbol, user):
+    def getQuote(self, symbol, user, transactionNumber):
         self._testPrint(True, "current cache state: ", self.quoteCache)
 
         cache = self.quoteCache.get(symbol)
@@ -752,7 +753,7 @@ class Quotes():
             self._testPrint(False, "expired cache")
             # print "not active"
         # print "not from cache"
-        return self._hitQuoteServerAndCache(symbol, user)
+        return self._hitQuoteServerAndCache(symbol, user, transactionNumber)
 
     '''
         this can be used on buy commands
@@ -760,10 +761,10 @@ class Quotes():
         if we use cache, the quote could be 119 seconds old when they commit, and that breaks the requirements
     '''
 
-    def getQuoteNoCache(self, symbol, user):
-        return self._hitQuoteServerAndCache(symbol, user)
+    def getQuoteNoCache(self, symbol, user, transactionNumber):
+        return self._hitQuoteServerAndCache(symbol, user, transactionNumber)
 
-    def _hitQuoteServerAndCache(self, symbol, user):
+    def _hitQuoteServerAndCache(self, symbol, user, transactionNumber):
         self._testPrint(False, "not from cache")
         request = symbol + "," + user + "\n"
 
@@ -781,11 +782,24 @@ class Quotes():
             # data = self.quoteServerConnection.recv(1024)
 
         newQuote = self._quoteStringToDictionary(data)
+
+        self.auditServer.logQuoteServer(
+            int(time.time()),
+            "quote",
+            "need TODO",
+            user,
+            newQuote.get('retrieved'),
+            symbol,
+            newQuote.get('value'),
+            newQuote.get('cryptoKey')
+        )
+
         self.quoteCache[symbol] = newQuote
         return newQuote
 
     def _quoteStringToDictionary(self, quoteString):
         # "quote, sym, userid, cryptokey\n"
+        #TODO print the string and find out what it actually looks like..
         split = quoteString.split(",")
         return {'value': float(split[0]), 'retrieved': int(time.time()), 'user': split[2], 'cryptoKey': split[3]}
 
@@ -955,7 +969,7 @@ def delegate(args):
 
     if args["command"] == "QUOTE":
         # print "getting Quote"
-        quoteObj.getQuote(args["sym"], args["userId"])
+        quoteObj.getQuote(args["sym"], args["userId"], args["lineNum"])
         # quoteObj._printQuoteCacheState()
 
     elif args["command"] == "ADD":
@@ -990,17 +1004,11 @@ def delegate(args):
         handleCommandSetBuyTrigger(args)
 
     elif args["command"] == "SET_SELL_AMOUNT":
-        print "adding sell amount"
-        localTriggers.addSellTrigger(args["userId"], args["sym"], args["cash"])
-        pass
+        handleCommandSetSellAmount(args)
     elif args["command"] == "CANCEL_SELL_AMOUNT":
-        localTriggers.cancelSellTrigger(args["userId"], args["sym"], args["cash"])
-        pass
+        handleCommandCancelSetSell(args)
     elif args["command"] == "SET_SELL_TRIGGER":
-        # activate trigger
-        localTriggers.setSellActive(args["userId"], args["sym"], args["cash"])
-
-        pass
+        handleCommandSetSellTrigger(args)
 
 
 def handleCommandAdd(args):
@@ -1020,9 +1028,10 @@ def handleCommandBuy(args):
     symbol = args.get("sym")
     cash = args.get("cash")
     userId = args.get("userId")
+    transactionNumber = args.get("lineNum")
 
     if localDB.getUser(userId).get("cash") >= cash:
-        quote = quoteObj.getQuoteNoCache(symbol, args["userId"])
+        quote = quoteObj.getQuoteNoCache(symbol, userId, transactionNumber)
 
         costPer = quote.get('value')
         amount = int(cash / costPer)
@@ -1200,10 +1209,11 @@ def incrementSocketNum(socketNum):
 if __name__ == '__main__':
     # Global vars
     # -----------------------
-    quoteObj = Quotes()
+    auditServer = AuditServer()
+    quoteObj = Quotes(auditServer)
     localDB = databaseServer()
     localTriggers = Triggers()
-    auditServer = AuditServer()
+
     # trigger threads
     hammerQuoteServerToSell()
     hammerQuoteServerToBuy()

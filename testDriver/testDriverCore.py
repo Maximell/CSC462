@@ -52,6 +52,6 @@ if __name__ == '__main__':
 		url = sys.argv[1]
 		port = sys.argv[2]
 		main()
-		send('DUMPLOG', ['./testLOG'], '-1')
+		send('DUMPLOG', ['./testLOG'], '100')
 		print('completed')
 		
