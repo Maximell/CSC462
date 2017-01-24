@@ -279,7 +279,7 @@ class AuditServer:
             file.write('\t<' + logType + '>\n')
             file.write('\t\t<timestamp>' + str(log['timeStamp']) + '</timestamp>\n')
             file.write('\t\t<server>' + str(log['server']) + '</server>\n')
-            file.write('\t\t<transactionNum>' + str(log['transactionNum']) + '</transactionNum>')
+            file.write('\t\t<transactionNum>' + str(log['transactionNum']) + '</transactionNum>\n')
             file.write('\t\t<username>' + str(log['userId']) + '</username>\n')
             if logType == 'userCommand':
                 file.write('\t\t<command>' + str(log['commandName']) + '</command>\n')
@@ -784,7 +784,7 @@ class Quotes():
         newQuote = self._quoteStringToDictionary(data)
 
         self.auditServer.logQuoteServer(
-            int(time.time()),
+            int(time.time() * 1000),
             "quote",
             transactionNumber,
             user,
@@ -798,9 +798,9 @@ class Quotes():
         return newQuote
 
     def _quoteStringToDictionary(self, quoteString):
-        # "quote, sym, timeStamp, cryptokey\n"
+        # "quote, sym, userId, timeStamp, cryptokey\n"
         split = quoteString.split(",")
-        return {'value': float(split[0]), 'retrieved': int(time.time()), 'serverTime': split[2], 'cryptoKey': split[3]}
+        return {'value': float(split[0]), 'retrieved': int(time.time()), 'serverTime': split[3], 'cryptoKey': split[4].strip("\n")}
 
     def _cacheIsActive(self, quote):
         return (int(quote.get('retrieved', 0)) + self.cacheExpire) > int(time.time())
@@ -956,7 +956,7 @@ def delegate(args):
     if "./testLOG" != args["userId"]:
         # TODO: not sure how filename comes in
         auditServer.logUserCommand(
-            int(time.time()),
+            int(time.time() * 1000),
             "transaction",
             args.get('lineNum'),
             args.get('userId'),
@@ -970,7 +970,7 @@ def delegate(args):
         # TODO: not sure how filename comes in
         fileName = args.get('userId')
         auditServer.logUserCommand(
-            int(time.time()),
+            int(time.time() * 1000),
             "transaction",
             args.get('lineNum'),
             "TODO get user properly",
