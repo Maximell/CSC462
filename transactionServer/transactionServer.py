@@ -309,7 +309,7 @@ class AuditServer:
                 file.write('\t\t<errorMessage>' + str(log['errorMessage']) + '</errorMessage>\n')
             elif logType == 'debugMessage':
                 file.write('\t\t<debugMessage>' + str(log['debugMessage']) + '</debugMessage>\n')
-            file.write('\t</userCommand>\n')
+            file.write('\t</'+ logType +'>\n')
         file.write('\n</log>\n')
         file.close()
 
