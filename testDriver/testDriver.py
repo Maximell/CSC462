@@ -52,5 +52,6 @@ if __name__ == '__main__':
 		loop.close()
 		# TODO: need to integrate this properly. currently its ignored. BUT its always last command, so just hard code it here
 		send('DUMPLOG', ['./testLOG'], '-1')
+		print(sys.argv)
 		print('completed')
 		

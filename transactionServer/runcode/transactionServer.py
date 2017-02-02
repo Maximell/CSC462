@@ -1139,6 +1139,7 @@ def spoolUpServer(handlerClass=httpsRequestHandler, serverClass=httpsServer):
 
     socketName = httpd.socket.getsockname()
     print "serving HTTPS on", socketName[0], "port number:", socketName[1],
+    print "printing addr = " + str(serverAddr)	
     print "waiting for request..."
     # this idles the server waiting for requests
     httpd.serve_forever()
