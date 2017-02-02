@@ -173,6 +173,7 @@ class AuditServer:
         self.logFile.append(event)
     '''
 
+    # TODO: need a logAdminCommand which doesnt have userId (for dumplog command)
     def logUserCommand(self, timeStamp, server, transactionNum, userId, commandName, stockSymbol=None, fileName=None, amount=None):
         dictionary = {
             'timeStamp': timeStamp,
@@ -180,7 +181,7 @@ class AuditServer:
             'transactionNum': transactionNum,
             'userId': userId,
             'commandName': commandName,
-            'logType': 'userCommand'  
+            'logType': 'userCommand'
         }
         if stockSymbol:
             dictionary = dict(dictionary, stockSymbol=stockSymbol)
@@ -223,7 +224,7 @@ class AuditServer:
             'transactionNum': transactionNum,
             'userId': userId,
             'commandName': commandName,
-            'logType': 'systemEvent'  
+            'logType': 'systemEvent'
         }
         if stockSymbol:
             dictionary = dict(dictionary, stockSymbol=stockSymbol)
@@ -257,10 +258,10 @@ class AuditServer:
         }
         self.logFile.append(dictionary)
 
-    def logUserCommand(self, **kwargs):
-        self.logFile.append(dict(kwargs,
-                                 logType='userCommand'
-                                 ))
+    # def logUserCommand(self, **kwargs):
+    #     self.logFile.append(dict(kwargs,
+    #                              logType='userCommand'
+    #                              ))
 
     def writeLogs(self, fileName):
         self._dumpIntoFile(fileName)
@@ -277,52 +278,53 @@ class AuditServer:
         for log in self.logFile:
             logType = log['logType']
             file.write('\t<' + logType + '>\n')
-            file.write('\t\t<timestamp>' + log['timeStamp'] + '</timestamp>\n')
-            file.write('\t\t<server>' + log['server'] + '</server>\n')
-            file.write('\t\t<transactionNum>' + log['transactionNum'] + '</transactionNum>')
-            file.write('\t\t<username>' + log['userId'] + '</username>\n')
+            file.write('\t\t<timestamp>' + str(log['timeStamp']) + '</timestamp>\n')
+            file.write('\t\t<server>' + str(log['server']) + '</server>\n')
+            file.write('\t\t<transactionNum>' + str(log['transactionNum']) + '</transactionNum>\n')
+            file.write('\t\t<username>' + str(log['userId']) + '</username>\n')
             if logType == 'userCommand':
-                file.write('\t\t<command>' + log['commandName'] + '</command>\n')
+                file.write('\t\t<command>' + str(log['commandName']) + '</command>\n')
                 if log.get('stockSymbol'):
-                    file.write('\t\t<stockSymbol>' + log['stockSymbol'] + '</stockSymbol>\n')
+                    file.write('\t\t<stockSymbol>' + str(log['stockSymbol']) + '</stockSymbol>\n')
                 if log.get('fileName'):
-                    file.write('\t\t<filename>' + log['fileName'] + '</filename>\n')
+                    file.write('\t\t<filename>' + str(log['fileName']) + '</filename>\n')
                 if log.get('amount'):
-                    file.write('\t\t<funds>' + log['amount'] + '</funds>\n')
+                    file.write('\t\t<funds>' + str(log['amount']) + '</funds>\n')
             elif logType == 'quoteServer':
-                file.write('\t\t<quoteServerTime>' + log['quoteServerTime'] + '</quoteServerTime>\n')
-                file.write('\t\t<stockSymbol>' + log['stockSymbol'] + '</stockSymbol>\n')
-                file.write('\t\t<price>' + log['price'] + '</price>\n')
-                file.write('\t\t<cryptokey>' + log['cryptoKey'] + '</cryptokey>\n')
+                file.write('\t\t<quoteServerTime>' + str(log['quoteServerTime']) + '</quoteServerTime>\n')
+                file.write('\t\t<stockSymbol>' + str(log['stockSymbol']) + '</stockSymbol>\n')
+                file.write('\t\t<price>' + str(log['price']) + '</price>\n')
+                file.write('\t\t<cryptokey>' + str(log['cryptoKey']) + '</cryptokey>\n')
             elif logType == 'accountTransaction':
-                file.write('\t\t<action>' + log['action'] + '</action>')
-                file.write('\t\t<funds>' + log['amount'] + '</funds>')
+                file.write('\t\t<action>' + str(log['action']) + '</action>')
+                file.write('\t\t<funds>' + str(log['amount']) + '</funds>')
             elif logType == 'systemEvent':
-                file.write('\t\t<command>' + log['commandName'] + '</command>\n')
+                file.write('\t\t<command>' + str(log['commandName']) + '</command>\n')
                 if log.get('stockSymbol'):
-                    file.write('\t\t<stockSymbol>' + log['stockSymbol'] + '</stockSymbol>\n')
+                    file.write('\t\t<stockSymbol>' + str(log['stockSymbol']) + '</stockSymbol>\n')
                 if log.get('fileName'):
-                    file.write('\t\t<filename>' + log['fileName'] + '</filename>\n')
+                    file.write('\t\t<filename>' + str(log['fileName']) + '</filename>\n')
                 if log.get('amount'):
-                    file.write('\t\t<funds>' + log['amount'] + '</funds>\n')
+                    file.write('\t\t<funds>' + str(log['amount']) + '</funds>\n')
             elif logType == 'errorMessage':
-                file.write('\t\t<errorMessage>' + log['errorMessage'] + '</errorMessage>\n')
+                file.write('\t\t<errorMessage>' + str(log['errorMessage']) + '</errorMessage>\n')
             elif logType == 'debugMessage':
-                file.write('\t\t<debugMessage>' + log['debugMessage'] + '</debugMessage>\n')
-            file.write('\t</userCommand>\n')
+                file.write('\t\t<debugMessage>' + str(log['debugMessage']) + '</debugMessage>\n')
+            file.write('\t</'+ logType +'>\n')
         file.write('\n</log>\n')
         file.close()
+        print "Log file written."
 
 
 # Here we want our trigger's threads
 # hitting the quote server for quotes every 15sec
 
 class hammerQuoteServerToBuy(Thread):
-    def __init__(self):
+    def __init__(self, quoteServer):
         Thread.__init__(self)
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.daemon = True
-        self.quote = Quotes()
+        self.quote = quoteServer
         self.start()
 
     def run(self):
@@ -363,11 +365,11 @@ class hammerQuoteServerToBuy(Thread):
 
 
 class hammerQuoteServerToSell(Thread):
-    def __init__(self):
+    def __init__(self, quoteServer):
         Thread.__init__(self)
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.daemon = True
-        self.quote = Quotes()
+        self.quote = quoteServer
         self.start()
 
     def run(self):
@@ -731,15 +733,16 @@ class databaseServer:
 
 # quote shape: symbol: {value: string, retrieved: epoch time, user: string, cryptoKey: string}
 class Quotes():
-    def __init__(self, cacheExpire=60, testing=False):
+    def __init__(self, auditServer, cacheExpire=60, testing=False):
         self.cacheExpire = cacheExpire
         self.quoteCache = {}
         self.testing = testing
+        self.auditServer = auditServer
         # if not testing:
         #     self.quoteServerConnection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         #     self.quoteServerConnection.connect(('quoteserve.seng.uvic.ca', 4445))
 
-    def getQuote(self, symbol, user):
+    def getQuote(self, symbol, user, transactionNumber):
         self._testPrint(True, "current cache state: ", self.quoteCache)
 
         cache = self.quoteCache.get(symbol)
@@ -752,7 +755,7 @@ class Quotes():
             self._testPrint(False, "expired cache")
             # print "not active"
         # print "not from cache"
-        return self._hitQuoteServerAndCache(symbol, user)
+        return self._hitQuoteServerAndCache(symbol, user, transactionNumber)
 
     '''
         this can be used on buy commands
@@ -760,10 +763,10 @@ class Quotes():
         if we use cache, the quote could be 119 seconds old when they commit, and that breaks the requirements
     '''
 
-    def getQuoteNoCache(self, symbol, user):
-        return self._hitQuoteServerAndCache(symbol, user)
+    def getQuoteNoCache(self, symbol, user, transactionNumber):
+        return self._hitQuoteServerAndCache(symbol, user, transactionNumber)
 
-    def _hitQuoteServerAndCache(self, symbol, user):
+    def _hitQuoteServerAndCache(self, symbol, user, transactionNumber):
         self._testPrint(False, "not from cache")
         request = symbol + "," + user + "\n"
 
@@ -781,13 +784,25 @@ class Quotes():
             # data = self.quoteServerConnection.recv(1024)
 
         newQuote = self._quoteStringToDictionary(data)
+
+        self.auditServer.logQuoteServer(
+            int(time.time() * 1000),
+            "quote",
+            transactionNumber,
+            user,
+            newQuote.get('serverTime'),
+            symbol,
+            newQuote.get('value'),
+            newQuote.get('cryptoKey')
+        )
+
         self.quoteCache[symbol] = newQuote
         return newQuote
 
     def _quoteStringToDictionary(self, quoteString):
-        # "quote, sym, userid, cryptokey\n"
+        # "quote, sym, userId, timeStamp, cryptokey\n"
         split = quoteString.split(",")
-        return {'value': float(split[0]), 'retrieved': int(time.time()), 'user': split[2], 'cryptoKey': split[3]}
+        return {'value': float(split[0]), 'retrieved': int(time.time()), 'serverTime': split[3], 'cryptoKey': split[4].strip("\n")}
 
     def _cacheIsActive(self, quote):
         return (int(quote.get('retrieved', 0)) + self.cacheExpire) > int(time.time())
@@ -937,25 +952,42 @@ def delegate(args):
     # set_sell_trigger
     # ----------------------------
 
-    # TODO: not sure how filename comes in
-    auditServer.logUserCommand(
-        int(time.time()),
-        "transaction",
-        args.get('lineNum'),
-        args.get('userId'),
-        args.get("command"),
-        args.get('sym'),
-        None,
-        args.get('cash')
-    )
+
 
     # Call Quote
     if "./testLOG" != args["userId"]:
+        # TODO: not sure how filename comes in
+        auditServer.logUserCommand(
+            int(time.time() * 1000),
+            "transaction",
+            args.get('lineNum'),
+            args.get('userId'),
+            args.get("command"),
+            stockSymbol=args.get('sym'),
+            fileName=None,
+            amount=args.get('cash')
+        )
         localDB.addUser(args["userId"])
+    else:
+        # TODO: not sure how filename comes in
+        fileName = args.get('userId')
+        auditServer.logUserCommand(
+            int(time.time() * 1000),
+            "transaction",
+            args.get('lineNum'),
+            "TODO get user properly",
+            args.get("command"),
+            stockSymbol=args.get('sym'),
+            fileName=fileName,
+            amount=args.get('cash')
+        )
+        auditServer.writeLogs(fileName)
+
+
 
     if args["command"] == "QUOTE":
         # print "getting Quote"
-        quoteObj.getQuote(args["sym"], args["userId"])
+        quoteObj.getQuote(args["sym"], args["userId"], args["lineNum"])
         # quoteObj._printQuoteCacheState()
 
     elif args["command"] == "ADD":
@@ -990,39 +1022,25 @@ def delegate(args):
         handleCommandSetBuyTrigger(args)
 
     elif args["command"] == "SET_SELL_AMOUNT":
-        print "adding sell amount"
-        localTriggers.addSellTrigger(args["userId"], args["sym"], args["cash"])
-        pass
+        handleCommandSetSellAmount(args)
     elif args["command"] == "CANCEL_SELL_AMOUNT":
-        localTriggers.cancelSellTrigger(args["userId"], args["sym"], args["cash"])
-        pass
+        handleCommandCancelSetSell(args)
     elif args["command"] == "SET_SELL_TRIGGER":
-        # activate trigger
-        localTriggers.setSellActive(args["userId"], args["sym"], args["cash"])
-
-        pass
+        handleCommandSetSellTrigger(args)
 
 
 def handleCommandAdd(args):
     localDB.addCash(args["userId"], args["cash"])
-    auditServer.logUserCommand(
-        timeStamp=int(time.time()),
-        server='transactionServer1',
-        transactionNum=args['lineNum'],
-        command=args['command'],
-        userId=args['userId'],
-        funds=args['cash']
-    )
-
 
 def handleCommandBuy(args):
     print "buying..."
     symbol = args.get("sym")
     cash = args.get("cash")
     userId = args.get("userId")
+    transactionNumber = args.get("lineNum")
 
     if localDB.getUser(userId).get("cash") >= cash:
-        quote = quoteObj.getQuoteNoCache(symbol, args["userId"])
+        quote = quoteObj.getQuoteNoCache(symbol, userId, transactionNumber)
 
         costPer = quote.get('value')
         amount = int(cash / costPer)
@@ -1068,7 +1086,7 @@ def handleCommandSell(args):
     cash = args.get("cash")
     userId = args.get("userId")
 
-    quote = quoteObj.getQuoteNoCache(symbol, args["userId"])
+    quote = quoteObj.getQuoteNoCache(symbol, args["userId"], args.get("lineNum"))
 
     costPer = quote.get('value')
     amount = math.floor(cash / costPer)
@@ -1186,7 +1204,7 @@ def spoolUpServer(handlerClass=httpsRequestHandler, serverClass=httpsServer):
 
     socketName = httpd.socket.getsockname()
     print "serving HTTPS on", socketName[0], "port number:", socketName[1],
-    print "printing addr = " + str(serverAddr)	
+    print "printing addr = " + str(serverAddr)
     print "waiting for request..."
     # this idles the server waiting for requests
     httpd.serve_forever()
@@ -1201,13 +1219,14 @@ def incrementSocketNum(socketNum):
 if __name__ == '__main__':
     # Global vars
     # -----------------------
-    quoteObj = Quotes()
+    auditServer = AuditServer()
+    quoteObj = Quotes(auditServer)
     localDB = databaseServer()
     localTriggers = Triggers()
-    auditServer = AuditServer()
+
     # trigger threads
-    hammerQuoteServerToSell()
-    hammerQuoteServerToBuy()
+    hammerQuoteServerToSell(quoteObj)
+    hammerQuoteServerToBuy(quoteObj)
     # -----------------------
 
     main()
