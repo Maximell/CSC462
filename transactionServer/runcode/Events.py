@@ -111,7 +111,7 @@ class Event(object):
 		elif self.eventType == 'errorEvent':
 			self._handleErrorEventKwargs(**kwargs)
 
-	def _handleUserCommandEventKwargs(**kwargs):
+	def _handleUserCommandEventKwargs(self, **kwargs):
 		self._handleCommandKwargs(**kwargs)
 	
 	def _handleAccountTransactionEventKwargs(self, **kwargs):
