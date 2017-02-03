@@ -1,3 +1,5 @@
+import time
+
 # TODO: change strings to defined constants
 '''
     TODO: consider throwing error instead of returning 0.
