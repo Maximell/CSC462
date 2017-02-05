@@ -594,11 +594,11 @@ class databaseServer:
             return self.database.get(userId)
 
     # returns {symbol, number, costPer, timestamp}
-    def pushBuy(self, userId, symbol, number, costPer):
+    def pushBuy(self, userId, symbol, amount):
         user = self.getUser(userId)
         if not user:
             return 0
-        newBuy = {'symbol': symbol, 'number': number, 'costPer': costPer, 'timestamp': int(time.time())}
+        newBuy = {'symbol': symbol, 'amount': amount, 'timestamp': int(time.time())}
         user.get('pendingBuys').append(newBuy)
         return newBuy
 
@@ -613,11 +613,13 @@ class databaseServer:
         return pendingBuys.pop()
 
     # returns {symbol, number, costPer, timestamp}
-    def pushSell(self, userId, symbol, number, costPer):
+    def pushSell(self, userId, symbol, amount):
         user = self.getUser(userId)
         if not user:
             return 0
-        newSell = {'symbol': symbol, 'number': number, 'costPer': costPer, 'timestamp': int(time.time())}
+        if not user['portfolio'].get(symbol):
+            return 0
+        newSell = {'symbol': symbol, 'amount': amount, 'timestamp': int(time.time())}
         user.get('pendingSells').append(newSell)
         return newSell
 
@@ -1037,74 +1039,73 @@ def handleCommandBuy(args):
     symbol = args.get("sym")
     cash = args.get("cash")
     userId = args.get("userId")
-    transactionNumber = args.get("lineNum")
 
     if localDB.getUser(userId).get("cash") >= cash:
-        quote = quoteObj.getQuoteNoCache(symbol, userId, transactionNumber)
-
-        costPer = quote.get('value')
-        amount = int(cash / costPer)
-
-        localDB.pushBuy(userId, symbol, amount, costPer)
-        localDB.reserveCash(userId, amount * costPer)
+        localDB.pushBuy(userId, symbol, cash)
+        localDB.reserveCash(userId, cash)
     else:
         return "not enough available cash"
 
 
 def handleCommandCommitBuy(args):
     print "commit buying..."
-    userId = args.get("userId")
+    userId = args["userId"]
+    transactionNumber = args["lineNum"]
     buy = localDB.popBuy(userId)
     if buy:
-        symbol = buy.get('symbol')
-        number = buy.get('number')
-        costPer = buy.get('costPer')
+        symbol = buy['symbol']
+        moneyReserved = buy['amount']
         if localDB.isBuySellActive(buy):
-            localDB.addToPortfolio(userId, symbol, number)
-            localDB.commitReserveCash(userId, number * costPer)
+            costPer = quoteObj.getQuote(symbol, userId, transactionNumber)['value']
+            numberOfStocks = math.floor(moneyReserved / costPer)
+
+            localDB.addToPortfolio(userId, symbol, numberOfStocks)
+
+            spentCash = numberOfStocks * costPer
+            unspentCash = moneyReserved - spentCash
+            localDB.commitReserveCash(userId, numberOfStocks * costPer)
+            localDB.releaseCash(userId, unspentCash)
         else:
-            localDB.releaseCash(userId, number * costPer)
+            localDB.releaseCash(userId, moneyReserved)
             return "inactive"
     else:
         return "no buys"
 
 
 def handleCommandCancelBuy(args):
-    userId = args.get("userId")
+    userId = args["userId"]
     buy = localDB.popBuy(userId)
     if buy:
-        number = buy.get('number')
-        costPer = buy.get('costPer')
-        localDB.releaseCash(userId, number * costPer)
+        amount = buy['amount']
+        localDB.releaseCash(userId, amount)
     else:
         return "no buys"
 
 
 def handleCommandSell(args):
     print "selling..."
-    symbol = args.get("sym")
-    cash = args.get("cash")
-    userId = args.get("userId")
+    symbol = args["sym"]
+    cash = args["cash"]
+    userId = args["userId"]
 
-    quote = quoteObj.getQuoteNoCache(symbol, args["userId"], args.get("lineNum"))
-
-    costPer = quote.get('value')
-    amount = math.floor(cash / costPer)
-
-    localDB.pushSell(userId, symbol, amount, costPer)
+    if not localDB.pushSell(userId, symbol, cash):
+        return "dont own that stock"
 
 
 def handleCommandCommitSell(args):
     print "commiting selling..."
-    userId = args.get("userId")
+    userId = args["userId"]
+    transactionNumber = args["lineNum"]
     sell = localDB.popSell(userId)
     if sell:
-        symbol = sell.get('symbol')
-        number = sell.get('number')
-        costPer = sell.get('costPer')
+        symbol = sell['symbol']
+        amount = sell['amount']
         if localDB.isBuySellActive(sell):
-            localDB.removeFromPortfolio(userId, symbol, number)
-            localDB.addCash(userId, number * costPer)
+            costPer = quoteObj.getQuote(symbol, userId, transactionNumber)['value']
+            numberOfStocks = math.floor(amount / costPer)
+
+            localDB.removeFromPortfolio(userId, symbol, numberOfStocks)
+            localDB.addCash(userId, numberOfStocks * costPer)
         else:
             return "inactive"
     else:
