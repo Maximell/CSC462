@@ -407,6 +407,14 @@ class hammerQuoteServerToSell(Thread):
                 # print 'B'
 
 
+# {
+#     symbol : {
+#        user1 :{
+#            "cashReserved": cashReserved, "active": False, "buyAt": 0
+#        }
+#    }
+# }
+
 class Triggers:
     def __init__(self):
         self.buyTriggers = {}
@@ -419,64 +427,52 @@ class Triggers:
         return self.sellTriggers
 
     def addBuyTrigger(self, userId, sym, cashReserved):
-        if userId not in self.buyTriggers:
-            self.buyTriggers[userId] = {}
-        self.buyTriggers[userId][sym] = {"cashReserved": cashReserved, "active": False, "buyAt": 0}
+        if sym not in self.buyTriggers:
+            self.buyTriggers[sym] = {}
+        self.buyTriggers[sym][userId] = {"cashReserved": cashReserved, "active": False, "buyAt": 0}
 
     def addSellTrigger(self, userId, sym, maxSellAmount):
-        if userId not in self.sellTriggers:
-            self.sellTriggers[userId] = {}
-        self.sellTriggers[userId][sym] = {"maxSellAmount": maxSellAmount, "active": False, "sellAt": 0}
+        if sym not in self.sellTriggers:
+            self.sellTriggers[sym] = {}
+        self.sellTriggers[sym][userId] = {"maxSellAmount": maxSellAmount, "active": False, "sellAt": 0}
 
     def setBuyActive(self, userId, symbol, buyAt):
         if self._triggerExists(userId, symbol, self.buyTriggers):
             print "activating buy thread"
 
-            trigger = self.buyTriggers.get(userId).get(symbol)
+            trigger = self.buyTriggers.get(symbol).get(userId)
             if buyAt <= trigger.get('cashReserved'):
                 trigger["active"] = True
                 trigger["buyAt"] = buyAt
-                # start cron job
-                # threadBuyHandler.addBuyThread(symbol, buyAt)
-                # print "bought: " + str(bought)
                 return trigger
         return 0
 
     def setSellActive(self, userId, symbol, sellAt):
         if self._triggerExists(userId, symbol, self.sellTriggers):
-            print "activating sell thread"
-
-            # print self.sellTriggers.get(userId)
-            # print symbol
-            # print self.sellTriggers.get(userId).get(symbol)
-
-            trigger = self.sellTriggers.get(userId).get(symbol)
+            trigger = self.sellTriggers.get(symbol).get(userId)
             if sellAt <= trigger.get('cashReserved'):
                 trigger["active"] = True
                 trigger["sellAt"] = sellAt
-                # start cron job
-                # threadSellHandler.addSellThread(symbol , sellAt)
-                # print "sold: " + str(sold)
                 return trigger
         return 0
 
     def cancelBuyTrigger(self, userId, symbol):
         if self._triggerExists(userId, symbol, self.buyTriggers):
-            removedTrigger = self.buyTriggers[userId][symbol]
-            del self.buyTriggers[userId][symbol]
+            removedTrigger = self.buyTriggers[symbol][userId]
+            del self.buyTriggers[symbol][userId]
             return removedTrigger
         return 0
 
     def cancelSellTrigger(self, userId, symbol):
         if self._triggerExists(userId, symbol, self.sellTriggers):
-            removedTrigger = self.sellTriggers[userId][symbol]
-            del self.sellTriggers[userId][symbol]
+            removedTrigger = self.sellTriggers[symbol][userId]
+            del self.sellTriggers[symbol][userId]
             return removedTrigger
         return 0
 
     def _triggerExists(self, userId, symbol, triggers):
-        if triggers.get(userId):
-            if triggers.get(userId).get(symbol):
+        if triggers.get(symbol):
+            if triggers.get(symbol).get(userId):
                 return 1
         return 0
 
