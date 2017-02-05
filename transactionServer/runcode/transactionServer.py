@@ -318,7 +318,7 @@ class AuditServer:
 
 # Here we want our trigger's threads
 # hitting the quote server for quotes every 15sec
-
+# TODO: just turn buy and sell into 1 class for both buy and sell, cuz 90 % of it is the same thing
 class hammerQuoteServerToBuy(Thread):
     def __init__(self, quoteServer):
         Thread.__init__(self)
@@ -328,40 +328,24 @@ class hammerQuoteServerToBuy(Thread):
         self.start()
 
     def run(self):
-        breakVal = False
         while True:
-            if localTriggers.buyTriggers != {}:
-                for userId in localTriggers.buyTriggers:
-                    symDict = localTriggers.buyTriggers[userId]
-
-                    symbols = symDict.keys()
-                    for sym in symbols:
-                        if symDict[sym]["active"] == True:
-                            buyVal = symDict[sym]["buyAt"]
-                            request = sym + "," + userId + "\n"
-                            self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                            self.socket.connect(('quoteserve.seng.uvic.ca', 4444))
-                            self.socket.send(request)
-                            data = self.socket.recv(1024)
-                            self.socket.close()
-
-                            vals = self.quote._quoteStringToDictionary(data)
-                            if vals["value"] <= buyVal:
-                                print sym
-                                print "bought for:" + str(vals["value"])
-                                breakVal = True
-                                # logic for buying
-                                args = {"sym": sym, "userId": userId, "cash": vals["value"]}
+            for symbol in localTriggers.buyTriggers:
+                if len(localTriggers.buyTriggers[symbol]):
+                    # get the id of someone for the request to the quote server
+                    someonesUserId = localTriggers.buyTriggers[symbol].itervalues().next()
+                    # TODO: should it be saved to the cache everytime we go straight to quote server?
+                    # TODO: include transaction in the trigger, and use it here in place of -1
+                    quote = self.quote.getQuoteNoCache(symbol, someonesUserId, "-1")
+                    quoteValue = quote["value"]
+                    for userId in localTriggers.buyTriggers[symbol]:
+                        trigger = localTriggers.buyTriggers[symbol][userId]
+                        if trigger["active"]:
+                            if quoteValue <= trigger["buyAt"]:
+                                args = {"sym": symbol, "userId": userId, "cash": trigger["maxSellAmount"]}
                                 handleCommandBuy(args)
                                 handleCommandCommitBuy(args)
-                                break
-                    if breakVal:
-                        break
-                if breakVal:
-                    break
 
-            else:
-                pass
+            time.sleep(15)
 
 
 class hammerQuoteServerToSell(Thread):
@@ -373,38 +357,24 @@ class hammerQuoteServerToSell(Thread):
         self.start()
 
     def run(self):
-        breakVal = False
         while True:
-            if localTriggers.sellTriggers != {}:
-                for userId in localTriggers.sellTriggers:
-                    symDict = localTriggers.sellTriggers[userId]
-                    # if symDict["active"] == True:
-                    symbols = symDict.keys()
-                    for sym in symbols:
-                        if symDict[sym]["active"] == True:
-                            sellAt = symDict[sym]["sellAt"]
-                            request = sym + "," + userId + "\n"
-                            self.socket.connect(('quoteserve.seng.uvic.ca', 4444))
-                            self.socket.send(request)
-                            data = self.socket.recv(1024)
-                            self.socket.close()
-                            vals = self.quote._quoteStringToDictionary(data)
-                            if vals["value"] >= sellAt:
-                                print sym
-                                print "sold for:" + str(vals["value"])
-                                breakVal = True
-                                # logic for the selling
-                                args = {"sym": sym, "userId": userId, "cash": vals["value"]}
+            for symbol in localTriggers.buyTriggers:
+                if len(localTriggers.buyTriggers[symbol]):
+                    # get the id of someone for the request to the quote server
+                    someonesUserId = localTriggers.buyTriggers[symbol].itervalues().next()
+                    # TODO: should it be saved to the cache everytime we go straight to quote server?
+                    # TODO: include transaction in the trigger, and use it here in place of -1
+                    quote = self.quote.getQuoteNoCache(symbol, someonesUserId, "-1")
+                    quoteValue = quote["value"]
+                    for userId in localTriggers.sellTriggers[symbol]:
+                        trigger = localTriggers.sellTriggers[symbol][userId]
+                        if trigger["active"]:
+                            if quoteValue >= trigger["sellAt"]:
+                                args = {"sym": symbol, "userId": userId, "cash": trigger["maxSellAmount"]}
                                 handleCommandSell(args)
                                 handleCommandCommitSell(args)
-                                break
-                    if breakVal:
-                        break
-                if breakVal:
-                    break
-            else:
-                pass
-                # print 'B'
+
+            time.sleep(15)
 
 
 # {
