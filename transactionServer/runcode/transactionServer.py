@@ -322,6 +322,7 @@ class AuditServer:
 class hammerQuoteServerToBuy(Thread):
     def __init__(self, quoteServer):
         Thread.__init__(self)
+        self.buyLock = threading.Lock()
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.daemon = True
         self.quote = quoteServer
@@ -330,6 +331,8 @@ class hammerQuoteServerToBuy(Thread):
     def run(self):
         breakVal = False
         while True:
+            if not self.buyLock.locked():
+                continue
             if localTriggers.buyTriggers != {}:
                 for userId in localTriggers.buyTriggers:
                     symDict = localTriggers.buyTriggers[userId]
@@ -367,6 +370,7 @@ class hammerQuoteServerToBuy(Thread):
 class hammerQuoteServerToSell(Thread):
     def __init__(self, quoteServer):
         Thread.__init__(self)
+        self.sellLock = threading.Lock()
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.daemon = True
         self.quote = quoteServer
@@ -375,6 +379,8 @@ class hammerQuoteServerToSell(Thread):
     def run(self):
         breakVal = False
         while True:
+            if not self.sellLock.locked():
+                continue
             if localTriggers.sellTriggers != {}:
                 for userId in localTriggers.sellTriggers:
                     symDict = localTriggers.sellTriggers[userId]
@@ -461,16 +467,22 @@ class Triggers:
         return 0
 
     def cancelBuyTrigger(self, userId, symbol):
+        # danger here'
         if self._triggerExists(userId, symbol, self.buyTriggers):
+            hammerQuoteServerToBuy.buyLock.acquire()
             removedTrigger = self.buyTriggers[userId][symbol]
             del self.buyTriggers[userId][symbol]
+            hammerQuoteServerToBuy.buyLock.realease()
             return removedTrigger
         return 0
 
     def cancelSellTrigger(self, userId, symbol):
+        # danger here
         if self._triggerExists(userId, symbol, self.sellTriggers):
+            hammerQuoteServerToSell.sellLock.acquire()
             removedTrigger = self.sellTriggers[userId][symbol]
             del self.sellTriggers[userId][symbol]
+            hammerQuoteServerToSell.sellLock.realease()
             return removedTrigger
         return 0
 
@@ -1225,6 +1237,7 @@ if __name__ == '__main__':
     localTriggers = Triggers()
 
     # trigger threads
+
     hammerQuoteServerToSell(quoteObj)
     hammerQuoteServerToBuy(quoteObj)
     # -----------------------
