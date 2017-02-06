@@ -1,3 +1,16 @@
+# library imports
+import requests
+from flask import Flask
+
+from OpenSSL import SSL
+context = SSL.Context(SSL.SSLv23_METHOD)
+# server.pem's location (containing the server private key and the server certificate).
+# fpem = "cert.pem"
+# context.use_privatekey_file(fpem)
+# context.use_certificate_file(fpem)
+context = ('key.key' , 'cert1.crt')
+
+app = Flask(__name__)
 
 # Class for a logging 'server'
 # In general, an event takes the form of:
@@ -229,4 +242,82 @@ class AuditServer:
         file.write('\n</log>\n')
         file.close()
         print "Log file written."
+
+
+    # # Call Quote
+    # if "./testLOG" != args["userId"]:
+    #     # TODO: not sure how filename comes in
+    #     auditServer.logUserCommand(
+    #         int(time.time() * 1000),
+    #         "transaction",
+    #         args.get('lineNum'),
+    #         args.get('userId'),
+    #         args.get("command"),
+    #         stockSymbol=args.get('sym'),
+    #         fileName=None,
+    #         amount=args.get('cash')
+    #     )
+    #     localDB.addUser(args["userId"])
+    # else:
+    #     # TODO: not sure how filename comes in
+    #     fileName = args.get('userId')
+    #     auditServer.logUserCommand(
+    #         int(time.time() * 1000),
+    #         "transaction",
+    #         args.get('lineNum'),
+    #         "TODO get user properly",
+    #         args.get("command"),
+    #         stockSymbol=args.get('sym'),
+    #         fileName=fileName,
+    #         amount=args.get('cash')
+    #     )
+    #     auditServer.writeLogs(fileName)
+
+
+@app.route('/')
+def index():
+    return 'FlaskAuditServer is running!'
+
+# User Command Log
+@app.route('/add/<float:timeStamp>/<string:server>/<int:lineNum>/<string:userId>/<string:userId>/<string:command>/<string:sym>/<string:fileName>/<float:cash>', methods=['POST'])
+@app.route('/add/<float:timeStamp>/<string:server>/<int:lineNum>/<string:userId>/<string:userId>/<string:command>/<string:sym>/<string:fileName>/<int:cash>', methods=['POST'])
+def LogUserCommand(timeStamp, server, transactionNum, userId, commandName, stockSymbol=None, fileName=None, cash=None):
+    return "Log user Command" % auditServer.logUserCommand(timeStamp, server, transactionNum, userId, commandName, stockSymbol, fileName, cash)
+
+# Quote Server Log
+@app.route('/add/<float:timeStamp>/<string:server>/<int:lineNum>/<string:userId>/<string:userId>/<string:command>/<string:sym>/<string:fileName>/<float:cash>', methods=['POST'])
+@app.route('/add/<float:timeStamp>/<string:server>/<int:lineNum>/<string:userId>/<string:userId>/<string:command>/<string:sym>/<string:fileName>/<int:cash>', methods=['POST'])
+def LogQuoteServer(timeStamp, server, transactionNum, userId, commandName, stockSymbol=None, fileName=None, cash=None):
+    return "Quote Server" % auditServer.logQuoteServer(timeStamp, server, transactionNum, userId, commandName, stockSymbol, fileName, cash)
+
+# Account Transaction Log
+@app.route('/add/<float:timeStamp>/<string:server>/<int:lineNum>/<string:userId>/<string:userId>/<string:command>/<string:action>/<string:fileName>/<float:funds>', methods=['POST'])
+@app.route('/add/<float:timeStamp>/<string:server>/<int:lineNum>/<string:userId>/<string:userId>/<string:command>/<string:action>/<string:fileName>/<int:funds>', methods=['POST'])
+def LogAccountTransaction(timeStamp, server, transactionNum, userId, commandName, action, funds):
+    return "Log Account Transaction" % auditServer.logAccountTransaction(timeStamp, server, transactionNum, userId, commandName, action, funds)
+
+# System event log
+@app.route('/add/<float:timeStamp>/<string:server>/<int:lineNum>/<string:userId>/<string:userId>/<string:command>/<string:sym>/<string:fileName>/<float:cash>', methods=['POST'])
+@app.route('/add/<float:timeStamp>/<string:server>/<int:lineNum>/<string:userId>/<string:userId>/<string:command>/<string:sym>/<string:fileName>/<int:cash>', methods=['POST'])
+def LogSystemEvent(timeStamp, server, transactionNum, userId, commandName, stockSymbol=None, fileName=None, cash=None):
+    return "System event logged" % auditServer.logSystemEvent(timeStamp, server, transactionNum, userId, commandName, stockSymbol, fileName, cash)
+
+# Error msg log
+@app.route('/add/<float:timeStamp>/<string:server>/<int:lineNum>/<string:userId>/<string:userId>/<string:command>/<string:error>, methods=['POST'])
+def LogErrorMessage(timeStamp, server, transactionNum, userId, commandName, error):
+    return "error msg logged" % auditServer.logErrorMessage(timeStamp, server, transactionNum, userId, commandName, error)
+# Debug msg log
+@app.route('/add/<float:timeStamp>/<string:server>/<int:lineNum>/<string:userId>/<string:userId>/<string:command>/<string:debugMsg>/<string:fileName>/<float:cash>',methods=['POST'])
+def LogDebugMessage(timeStamp, server, transactionNum, userId, commandName, debugMsg):
+    return "Logging Debugg msg" % auditServer.logDebugMessage(timeStamp, server, transactionNum, userId, commandName, debugMsg)
+# Dumplog
+@app.route('/dumplog/<string:fileName>')
+def DumpIntoFile(fileName=None):
+    return "Dumplog" % auditServer._dumpIntoFile( fileName)
+
+
+
+if __name__== '__main__':
+    auditServer = AuditServer()
+    app.run(host='127.0.0.2', debug=True, ssl_context=context)
 
