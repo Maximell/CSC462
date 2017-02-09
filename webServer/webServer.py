@@ -5,12 +5,12 @@ app = Flask(__name__)
 def hello_world():
 	return 'Hello, world.'
 
-@app.route('/add/<string:userId>/<float:amount>')
-@app.route('/add/<string:userId>/<int:amount>')
-def add(userId, amount):
+@app.route('/add/<string:userId>/', methods=['POST'])
+def add(userId):
+	amount = request.form['amount']
 	return 'Trying to add %f amount to user %s.' % (amount, userId)
 
-@app.route('/quote/<string:userId>/<string:stockSymbol>')
+@app.route('/quote/<string:userId>/<string:stockSymbol>', methods=['GET'])
 def quote(userId, stockSymbol):
 	return 'Getting a quote for user %s on stock %s.' % (userId, stockSymbol)
 
