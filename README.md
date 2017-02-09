@@ -9,7 +9,7 @@ This readme should include:
 Notes
 
 How to connect to lab machines.
-- ssh netlinkID@B147.seng.uvic.ca
+- ssh netlinkID@B142.seng.uvic.ca
 
 Things you need on your local machine to run the deploy script:
 - ssh

@@ -3,7 +3,14 @@ import requests
 import asyncio
 import sys
 
+urls = {
+	'ADD': '/add/%s/%f'
+}
+
 def send(command, args, lineNum):
+	if command in ['ADD', 'BUY', '']:
+		r = requests.post(base_url + urls['ADD'] % (args['userId'], args['amount']))
+
 	r = requests.post(base_url, data = {'command': command, 'args': args, 'lineNum': lineNum})
 	# print(r.status_code)
 
