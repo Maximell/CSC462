@@ -328,6 +328,7 @@ TODO: just turn buy and sell into 1 class for both buy and sell
 class hammerQuoteServerToBuy(Thread):
     def __init__(self, quoteServer):
         Thread.__init__(self)
+        self.buyLock = threading.Lock()
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.daemon = True
         self.quote = quoteServer
@@ -335,13 +336,15 @@ class hammerQuoteServerToBuy(Thread):
 
     def run(self):
         while True:
+            if not self.buyLock.locked():
+                continue
             for symbol in localTriggers.buyTriggers:
                 if len(localTriggers.buyTriggers[symbol]):
                     # get the id of someone for the request to the quote server
                     someonesUserId = localTriggers.buyTriggers[symbol].itervalues().next()
                     # TODO: should it be saved to the cache everytime we go straight to quote server?
                     transId = localTriggers.buyTriggers[symbol][someonesUserId]["transId"]
-                    quote = self.quote.getQuoteNoCache(symbol, someonesUserId, transId)
+                    quote = self.quote.getQuote(symbol, someonesUserId, transId)
                     quoteValue = quote["value"]
                     for userId in localTriggers.buyTriggers[symbol]:
                         trigger = localTriggers.buyTriggers[symbol][userId]
@@ -351,12 +354,13 @@ class hammerQuoteServerToBuy(Thread):
                                 handleCommandBuy(args)
                                 handleCommandCommitBuy(args)
 
-            time.sleep(15)
+            time.sleep(1)
 
 
 class hammerQuoteServerToSell(Thread):
     def __init__(self, quoteServer):
         Thread.__init__(self)
+        self.sellLock = threading.Lock()
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.daemon = True
         self.quote = quoteServer
@@ -364,13 +368,15 @@ class hammerQuoteServerToSell(Thread):
 
     def run(self):
         while True:
+            if not self.sellLock.locked():
+                continue
             for symbol in localTriggers.buyTriggers:
                 if len(localTriggers.buyTriggers[symbol]):
                     # get the id of someone for the request to the quote server
                     someonesUserId = localTriggers.sellTriggers[symbol].itervalues().next()
                     # TODO: should it be saved to the cache everytime we go straight to quote server?
                     transId = localTriggers.sellTriggers[symbol][someonesUserId]["transId"]
-                    quote = self.quote.getQuoteNoCache(symbol, someonesUserId, transId)
+                    quote = self.quote.getQuote(symbol, someonesUserId, transId)
                     quoteValue = quote["value"]
                     for userId in localTriggers.sellTriggers[symbol]:
                         trigger = localTriggers.sellTriggers[symbol][userId]
@@ -380,7 +386,7 @@ class hammerQuoteServerToSell(Thread):
                                 handleCommandSell(args)
                                 handleCommandCommitSell(args)
 
-            time.sleep(15)
+            time.sleep(1)
 
 
 # {
@@ -412,15 +418,15 @@ class Triggers:
             return self.sellTriggers[symbol][userId]
         return 0
 
-    def addBuyTrigger(self, userId, sym, cashReserved, transactionNumber):
-        if sym not in self.buyTriggers:
-            self.buyTriggers[sym] = {}
-        self.buyTriggers[sym][userId] = {"cashReserved": cashReserved, "active": False, "buyAt": 0, "transId": transactionNumber}
+    def addBuyTrigger(self, userId, sym, cashReserved):
+        if userId not in self.buyTriggers:
+            self.buyTriggers[userId] = {}
+        self.buyTriggers[userId][sym] = {"cashReserved": cashReserved, "active": False, "buyAt": 0, "transId": transactionNumber}
 
-    def addSellTrigger(self, userId, sym, maxSellAmount, transactionNumber):
-        if sym not in self.sellTriggers:
-            self.sellTriggers[sym] = {}
-        self.sellTriggers[sym][userId] = {"maxSellAmount": maxSellAmount, "active": False, "sellAt": 0, "transId": transactionNumber}
+    def addSellTrigger(self, userId, sym, maxSellAmount):
+        if userId not in self.sellTriggers:
+            self.sellTriggers[userId] = {}
+        self.sellTriggers[userId][sym] = {"maxSellAmount": maxSellAmount, "active": False, "sellAt": 0, "transId": transactionNumber}
 
     def setBuyActive(self, userId, symbol, buyAt):
         if self._triggerExists(userId, symbol, self.buyTriggers):
@@ -443,16 +449,22 @@ class Triggers:
         return 0
 
     def cancelBuyTrigger(self, userId, symbol):
+        # danger here'
         if self._triggerExists(userId, symbol, self.buyTriggers):
+            hammerQuoteServerToBuy.buyLock.acquire()
             removedTrigger = self.buyTriggers[symbol][userId]
             del self.buyTriggers[symbol][userId]
+            hammerQuoteServerToBuy.buyLock.realease()
             return removedTrigger
         return 0
 
     def cancelSellTrigger(self, userId, symbol):
+        # danger here
         if self._triggerExists(userId, symbol, self.sellTriggers):
+            hammerQuoteServerToSell.sellLock.acquire()
             removedTrigger = self.sellTriggers[symbol][userId]
             del self.sellTriggers[symbol][userId]
+            hammerQuoteServerToSell.sellLock.realease()
             return removedTrigger
         return 0
 
@@ -1209,6 +1221,7 @@ if __name__ == '__main__':
     localTriggers = Triggers()
 
     # trigger threads
+
     hammerQuoteServerToSell(quoteObj)
     hammerQuoteServerToBuy(quoteObj)
     # -----------------------
