@@ -9,6 +9,10 @@ from BaseHTTPServer import HTTPServer
 from SimpleHTTPServer import SimpleHTTPRequestHandler
 from SocketServer import BaseServer
 from random import randint
+import uuid
+import pika
+import json
+import queueNames
 
 from OpenSSL import SSL
 
@@ -743,6 +747,60 @@ class databaseServer:
         return user.get('portfolio')
 
 
+
+
+
+
+
+'''
+    new stuff here, eventually, class quote should be gone, but in the sense of not breaking abunch of other stuff, its still there
+'''
+
+class QuoteRpcClient(object):
+    def __init__(self):
+        self.response = None
+        self.corr_id = None
+
+        self.connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+
+        self.channel = self.connection.channel()
+
+        result = self.channel.queue_declare(exclusive=True)
+        self.callback_queue = result.method.queue
+
+        self.channel.basic_consume(self.on_response, no_ack=True, queue=self.callback_queue)
+
+    def on_response(self, ch, method, props, body):
+        # make sure its the right package
+        if self.corr_id == props.correlation_id:
+            # self.response is essential the return of this function, because call() waits on it to be not None
+            self.response = json.loads(body)
+
+    def call(self, requestBody):
+        self.response = None
+        self.corr_id = str(uuid.uuid4())
+        print "sending quote request Id:", self.corr_id
+        self.channel.basic_publish(
+            exchange='',
+            routing_key=queueNames.QUOTE,
+            properties=pika.BasicProperties(
+                reply_to=self.callback_queue,
+                correlation_id=self.corr_id
+            ),
+            body=json.dumps(requestBody)
+        )
+        while self.response is None:
+            self.connection.process_data_events()
+        return self.response
+
+
+
+
+
+
+
+
+
 # quote shape: symbol: {value: string, retrieved: epoch time, user: string, cryptoKey: string}
 class Quotes():
     def __init__(self, auditServer, cacheExpire=60, testing=False):
@@ -998,9 +1056,7 @@ def delegate(args):
 
 
     if args["command"] == "QUOTE":
-        # print "getting Quote"
-        quoteObj.getQuote(args["sym"], args["userId"], args["lineNum"])
-        # quoteObj._printQuoteCacheState()
+        handleCommandQuote(args)
 
     elif args["command"] == "ADD":
         handleCommandAdd(args)
@@ -1040,6 +1096,13 @@ def delegate(args):
     elif args["command"] == "SET_SELL_TRIGGER":
         handleCommandSetSellTrigger(args)
 
+def handleCommandQuote(args):
+    response = quote_rpc.call({
+        "symbol": args["sym"],
+        "userId": args["userId"],
+        "transactionNumber": args["lineNum"]
+    })
+    print "--from rpc quote server!:", response
 
 def handleCommandAdd(args):
     localDB.addCash(args["userId"], args["cash"])
@@ -1235,6 +1298,10 @@ if __name__ == '__main__':
     quoteObj = Quotes(auditServer)
     localDB = databaseServer()
     localTriggers = Triggers()
+
+    # rpc classes
+    quote_rpc = QuoteRpcClient()
+
 
     # trigger threads
 
