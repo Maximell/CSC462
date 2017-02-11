@@ -24,7 +24,7 @@ def buy(userId, stockSymbol):
 def commitBuy(userId):
 	return 'Committing buy for user %s.' % (userId)
 
-@app.route('/cancel-buy/<string:userId', methods=['POST'])
+@app.route('/cancel-buy/<string:userId>', methods=['POST'])
 def cancelBuy(userId):
 	return 'Cancelling buy for user %s.' % (userId)
 
@@ -38,7 +38,7 @@ def sell(userId, stockSymbol):
 def commitSell(userId):
 	return 'Committing sell for user %s.' % (userId)
 
-@app.route('/cancel-sell/<string:userId', methods=['POST'])
+@app.route('/cancel-sell/<string:userId>', methods=['POST'])
 def cancelSell(userId):
 	return 'Cancelling sell for user %s.' % (userId)
 
