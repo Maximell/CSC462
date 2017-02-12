@@ -323,6 +323,12 @@ class AuditServer:
 # Here we want our trigger's threads
 # hitting the quote server for quotes every 15sec
 
+'''
+TODO: just turn buy and sell into 1 class for both buy and sell
+    - tried, but if buy and sell are brought together into one `triggers`,
+    then symbol -> user is no longer unique, since you can sell and buy for same one.
+    adds extra layer of complexity for adding and removing triggers
+'''
 class hammerQuoteServerToBuy(Thread):
     def __init__(self, quoteServer):
         Thread.__init__(self)
@@ -333,42 +339,26 @@ class hammerQuoteServerToBuy(Thread):
         self.start()
 
     def run(self):
-        breakVal = False
         while True:
             if not self.buyLock.locked():
                 continue
-            if localTriggers.buyTriggers != {}:
-                for userId in localTriggers.buyTriggers:
-                    symDict = localTriggers.buyTriggers[userId]
-
-                    symbols = symDict.keys()
-                    for sym in symbols:
-                        if symDict[sym]["active"] == True:
-                            buyVal = symDict[sym]["buyAt"]
-                            request = sym + "," + userId + "\n"
-                            self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                            self.socket.connect(('quoteserve.seng.uvic.ca', 4444))
-                            self.socket.send(request)
-                            data = self.socket.recv(1024)
-                            self.socket.close()
-
-                            vals = self.quote._quoteStringToDictionary(data)
-                            if vals["value"] <= buyVal:
-                                print sym
-                                print "bought for:" + str(vals["value"])
-                                breakVal = True
-                                # logic for buying
-                                args = {"sym": sym, "userId": userId, "cash": vals["value"]}
+            for symbol in localTriggers.buyTriggers:
+                if len(localTriggers.buyTriggers[symbol]):
+                    # get the id of someone for the request to the quote server
+                    someonesUserId = localTriggers.buyTriggers[symbol].itervalues().next()
+                    # TODO: should it be saved to the cache everytime we go straight to quote server?
+                    transId = localTriggers.buyTriggers[symbol][someonesUserId]["transId"]
+                    quote = self.quote.getQuote(symbol, someonesUserId, transId)
+                    quoteValue = quote["value"]
+                    for userId in localTriggers.buyTriggers[symbol]:
+                        trigger = localTriggers.buyTriggers[symbol][userId]
+                        if trigger["active"]:
+                            if quoteValue <= trigger["buyAt"]:
+                                args = {"sym": symbol, "userId": userId, "cash": trigger["maxSellAmount"]}
                                 handleCommandBuy(args)
                                 handleCommandCommitBuy(args)
-                                break
-                    if breakVal:
-                        break
-                if breakVal:
-                    break
 
-            else:
-                pass
+            time.sleep(1)
 
 
 class hammerQuoteServerToSell(Thread):
@@ -381,41 +371,35 @@ class hammerQuoteServerToSell(Thread):
         self.start()
 
     def run(self):
-        breakVal = False
         while True:
             if not self.sellLock.locked():
                 continue
-            if localTriggers.sellTriggers != {}:
-                for userId in localTriggers.sellTriggers:
-                    symDict = localTriggers.sellTriggers[userId]
-                    # if symDict["active"] == True:
-                    symbols = symDict.keys()
-                    for sym in symbols:
-                        if symDict[sym]["active"] == True:
-                            sellAt = symDict[sym]["sellAt"]
-                            request = sym + "," + userId + "\n"
-                            self.socket.connect(('quoteserve.seng.uvic.ca', 4444))
-                            self.socket.send(request)
-                            data = self.socket.recv(1024)
-                            self.socket.close()
-                            vals = self.quote._quoteStringToDictionary(data)
-                            if vals["value"] >= sellAt:
-                                print sym
-                                print "sold for:" + str(vals["value"])
-                                breakVal = True
-                                # logic for the selling
-                                args = {"sym": sym, "userId": userId, "cash": vals["value"]}
+            for symbol in localTriggers.buyTriggers:
+                if len(localTriggers.buyTriggers[symbol]):
+                    # get the id of someone for the request to the quote server
+                    someonesUserId = localTriggers.sellTriggers[symbol].itervalues().next()
+                    # TODO: should it be saved to the cache everytime we go straight to quote server?
+                    transId = localTriggers.sellTriggers[symbol][someonesUserId]["transId"]
+                    quote = self.quote.getQuote(symbol, someonesUserId, transId)
+                    quoteValue = quote["value"]
+                    for userId in localTriggers.sellTriggers[symbol]:
+                        trigger = localTriggers.sellTriggers[symbol][userId]
+                        if trigger["active"]:
+                            if quoteValue >= trigger["sellAt"]:
+                                args = {"sym": symbol, "userId": userId, "cash": trigger["maxSellAmount"]}
                                 handleCommandSell(args)
                                 handleCommandCommitSell(args)
-                                break
-                    if breakVal:
-                        break
-                if breakVal:
-                    break
-            else:
-                pass
-                # print 'B'
 
+            time.sleep(1)
+
+
+# {
+#     symbol : {
+#        user1 :{
+#            "cashReserved": cashReserved, "active": False, "buyAt": 0
+#        }
+#    }
+# }
 
 class Triggers:
     def __init__(self):
@@ -425,48 +409,46 @@ class Triggers:
     def getBuyTriggers(self):
         return self.buyTriggers
 
+    def getBuyTrigger(self, userId, symbol):
+        if self._triggerExists(userId, symbol, self.buyTriggers):
+            return self.buyTriggers[symbol][userId]
+        return 0
+
     def getSellTriggers(self):
         return self.sellTriggers
+
+    def getSellTrigger(self, userId, symbol):
+        if self._triggerExists(userId, symbol, self.sellTriggers):
+            return self.sellTriggers[symbol][userId]
+        return 0
 
     def addBuyTrigger(self, userId, sym, cashReserved):
         if userId not in self.buyTriggers:
             self.buyTriggers[userId] = {}
-        self.buyTriggers[userId][sym] = {"cashReserved": cashReserved, "active": False, "buyAt": 0}
+        self.buyTriggers[userId][sym] = {"cashReserved": cashReserved, "active": False, "buyAt": 0, "transId": transactionNumber}
 
     def addSellTrigger(self, userId, sym, maxSellAmount):
         if userId not in self.sellTriggers:
             self.sellTriggers[userId] = {}
-        self.sellTriggers[userId][sym] = {"maxSellAmount": maxSellAmount, "active": False, "sellAt": 0}
+        self.sellTriggers[userId][sym] = {"maxSellAmount": maxSellAmount, "active": False, "sellAt": 0, "transId": transactionNumber}
 
     def setBuyActive(self, userId, symbol, buyAt):
         if self._triggerExists(userId, symbol, self.buyTriggers):
             print "activating buy thread"
 
-            trigger = self.buyTriggers.get(userId).get(symbol)
+            trigger = self.buyTriggers.get(symbol).get(userId)
             if buyAt <= trigger.get('cashReserved'):
                 trigger["active"] = True
                 trigger["buyAt"] = buyAt
-                # start cron job
-                # threadBuyHandler.addBuyThread(symbol, buyAt)
-                # print "bought: " + str(bought)
                 return trigger
         return 0
 
     def setSellActive(self, userId, symbol, sellAt):
         if self._triggerExists(userId, symbol, self.sellTriggers):
-            print "activating sell thread"
-
-            # print self.sellTriggers.get(userId)
-            # print symbol
-            # print self.sellTriggers.get(userId).get(symbol)
-
-            trigger = self.sellTriggers.get(userId).get(symbol)
+            trigger = self.sellTriggers.get(symbol).get(userId)
             if sellAt <= trigger.get('cashReserved'):
                 trigger["active"] = True
                 trigger["sellAt"] = sellAt
-                # start cron job
-                # threadSellHandler.addSellThread(symbol , sellAt)
-                # print "sold: " + str(sold)
                 return trigger
         return 0
 
@@ -474,8 +456,8 @@ class Triggers:
         # danger here'
         if self._triggerExists(userId, symbol, self.buyTriggers):
             hammerQuoteServerToBuy.buyLock.acquire()
-            removedTrigger = self.buyTriggers[userId][symbol]
-            del self.buyTriggers[userId][symbol]
+            removedTrigger = self.buyTriggers[symbol][userId]
+            del self.buyTriggers[symbol][userId]
             hammerQuoteServerToBuy.buyLock.realease()
             return removedTrigger
         return 0
@@ -484,15 +466,15 @@ class Triggers:
         # danger here
         if self._triggerExists(userId, symbol, self.sellTriggers):
             hammerQuoteServerToSell.sellLock.acquire()
-            removedTrigger = self.sellTriggers[userId][symbol]
-            del self.sellTriggers[userId][symbol]
+            removedTrigger = self.sellTriggers[symbol][userId]
+            del self.sellTriggers[symbol][userId]
             hammerQuoteServerToSell.sellLock.realease()
             return removedTrigger
         return 0
 
     def _triggerExists(self, userId, symbol, triggers):
-        if triggers.get(userId):
-            if triggers.get(userId).get(symbol):
+        if triggers.get(symbol):
+            if triggers.get(symbol).get(userId):
                 return 1
         return 0
 
@@ -610,11 +592,11 @@ class databaseServer:
             return self.database.get(userId)
 
     # returns {symbol, number, costPer, timestamp}
-    def pushBuy(self, userId, symbol, number, costPer):
+    def pushBuy(self, userId, symbol, amount):
         user = self.getUser(userId)
         if not user:
             return 0
-        newBuy = {'symbol': symbol, 'number': number, 'costPer': costPer, 'timestamp': int(time.time())}
+        newBuy = {'symbol': symbol, 'amount': amount, 'timestamp': int(time.time())}
         user.get('pendingBuys').append(newBuy)
         return newBuy
 
@@ -629,11 +611,13 @@ class databaseServer:
         return pendingBuys.pop()
 
     # returns {symbol, number, costPer, timestamp}
-    def pushSell(self, userId, symbol, number, costPer):
+    def pushSell(self, userId, symbol, amount):
         user = self.getUser(userId)
         if not user:
             return 0
-        newSell = {'symbol': symbol, 'number': number, 'costPer': costPer, 'timestamp': int(time.time())}
+        if not user['portfolio'].get(symbol):
+            return 0
+        newSell = {'symbol': symbol, 'amount': amount, 'timestamp': int(time.time())}
         user.get('pendingSells').append(newSell)
         return newSell
 
@@ -1112,74 +1096,73 @@ def handleCommandBuy(args):
     symbol = args.get("sym")
     cash = args.get("cash")
     userId = args.get("userId")
-    transactionNumber = args.get("lineNum")
 
     if localDB.getUser(userId).get("cash") >= cash:
-        quote = quoteObj.getQuoteNoCache(symbol, userId, transactionNumber)
-
-        costPer = quote.get('value')
-        amount = int(cash / costPer)
-
-        localDB.pushBuy(userId, symbol, amount, costPer)
-        localDB.reserveCash(userId, amount * costPer)
+        localDB.pushBuy(userId, symbol, cash)
+        localDB.reserveCash(userId, cash)
     else:
         return "not enough available cash"
 
 
 def handleCommandCommitBuy(args):
     print "commit buying..."
-    userId = args.get("userId")
+    userId = args["userId"]
+    transactionNumber = args["lineNum"]
     buy = localDB.popBuy(userId)
     if buy:
-        symbol = buy.get('symbol')
-        number = buy.get('number')
-        costPer = buy.get('costPer')
+        symbol = buy['symbol']
+        moneyReserved = buy['amount']
         if localDB.isBuySellActive(buy):
-            localDB.addToPortfolio(userId, symbol, number)
-            localDB.commitReserveCash(userId, number * costPer)
+            costPer = quoteObj.getQuote(symbol, userId, transactionNumber)['value']
+            numberOfStocks = math.floor(moneyReserved / costPer)
+
+            localDB.addToPortfolio(userId, symbol, numberOfStocks)
+
+            spentCash = numberOfStocks * costPer
+            unspentCash = moneyReserved - spentCash
+            localDB.commitReserveCash(userId, numberOfStocks * costPer)
+            localDB.releaseCash(userId, unspentCash)
         else:
-            localDB.releaseCash(userId, number * costPer)
+            localDB.releaseCash(userId, moneyReserved)
             return "inactive"
     else:
         return "no buys"
 
 
 def handleCommandCancelBuy(args):
-    userId = args.get("userId")
+    userId = args["userId"]
     buy = localDB.popBuy(userId)
     if buy:
-        number = buy.get('number')
-        costPer = buy.get('costPer')
-        localDB.releaseCash(userId, number * costPer)
+        amount = buy['amount']
+        localDB.releaseCash(userId, amount)
     else:
         return "no buys"
 
 
 def handleCommandSell(args):
     print "selling..."
-    symbol = args.get("sym")
-    cash = args.get("cash")
-    userId = args.get("userId")
+    symbol = args["sym"]
+    cash = args["cash"]
+    userId = args["userId"]
 
-    quote = quoteObj.getQuoteNoCache(symbol, args["userId"], args.get("lineNum"))
-
-    costPer = quote.get('value')
-    amount = math.floor(cash / costPer)
-
-    localDB.pushSell(userId, symbol, amount, costPer)
+    if not localDB.pushSell(userId, symbol, cash):
+        return "dont own that stock"
 
 
 def handleCommandCommitSell(args):
     print "commiting selling..."
-    userId = args.get("userId")
+    userId = args["userId"]
+    transactionNumber = args["lineNum"]
     sell = localDB.popSell(userId)
     if sell:
-        symbol = sell.get('symbol')
-        number = sell.get('number')
-        costPer = sell.get('costPer')
+        symbol = sell['symbol']
+        amount = sell['amount']
         if localDB.isBuySellActive(sell):
-            localDB.removeFromPortfolio(userId, symbol, number)
-            localDB.addCash(userId, number * costPer)
+            costPer = quoteObj.getQuote(symbol, userId, transactionNumber)['value']
+            numberOfStocks = math.floor(amount / costPer)
+
+            localDB.removeFromPortfolio(userId, symbol, numberOfStocks)
+            localDB.addCash(userId, numberOfStocks * costPer)
         else:
             return "inactive"
     else:
@@ -1196,10 +1179,11 @@ def handleCommandSetBuyAmount(args):
     symbol = args.get("sym")
     amount = args.get("cash")
     userId = args.get("userId")
+    transactionNumber = args.get("lineNum")
 
     if localDB.getUser(userId).get("cash") >= amount:
         localDB.reserveCash(userId, amount)
-        localTriggers.addBuyTrigger(userId, symbol, amount)
+        localTriggers.addBuyTrigger(userId, symbol, amount, transactionNumber)
     else:
         return "not enough available cash"
 
@@ -1228,24 +1212,25 @@ def handleCommandSetSellAmount(args):
     symbol = args.get("sym")
     amount = args.get("cash")
     userId = args.get("userId")
+    transactionNumber = args.get("lineNum")
 
-    localTriggers.addSellTrigger(userId, symbol, amount)
+    localTriggers.addSellTrigger(userId, symbol, amount, transactionNumber)
 
 def handleCommandSetSellTrigger(args):
     symbol = args.get("sym")
     sellAt = args.get("cash")
     userId = args.get("userId")
 
-    trigger = localTriggers.setSellActive(userId, symbol, sellAt)
-    if trigger:
-        reserve = math.floor( trigger.get('maxSellAmount') / sellAt)
-        if localDB.reserveFromPortfolio(userId, symbol, reserve):
-            return
-        else:
-            # reset the trigger to non active
-            localTriggers.addSellTrigger(userId, symbol, trigger.get('maxSellAmount'))
-            return "not enough available"
-    return "no trigger to activate"
+    trigger = localTriggers.getSellTrigger(userId, symbol)
+    if not trigger:
+        return "no trigger to activate"
+
+    reserve = math.floor(trigger.get('maxSellAmount') / sellAt)
+    if not localDB.reserveFromPortfolio(userId, symbol, reserve):
+        return "not enough available"
+
+    localTriggers.setSellActive(userId, symbol, sellAt)
+
 
 def handleCommandCancelSetSell(args):
     symbol = args.get("sym")
