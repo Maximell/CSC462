@@ -6,6 +6,9 @@ from random import randint
 import json
 import queueNames
 
+def createQuoteRequest(userId, symbol, transactionNumber):
+    return {"userId": userId, "symbol": symbol, "transactionNumber": transactionNumber}
+
 # quote shape: symbol: {value: string, retrieved: epoch time, user: string, cryptoKey: string}
 class Quotes():
     def __init__(self, cacheExpire=60, testing=False):

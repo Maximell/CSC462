@@ -13,7 +13,8 @@ import uuid
 import pika
 import json
 import queueNames
-
+from mqDatabaseServer import databaseFunctions
+from mqQuoteServer import createQuoteRequest
 from OpenSSL import SSL
 
 
@@ -777,6 +778,43 @@ class QuoteRpcClient(object):
             self.connection.process_data_events()
         return self.response
 
+class DatabaseRpcClient(object):
+    def __init__(self):
+        self.response = None
+        self.corr_id = None
+
+        self.connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+
+        self.channel = self.connection.channel()
+
+        result = self.channel.queue_declare(exclusive=True)
+        self.callback_queue = result.method.queue
+
+        self.channel.basic_consume(self.on_response, no_ack=True, queue=self.callback_queue)
+
+    def on_response(self, ch, method, props, body):
+        # make sure its the right package
+        if self.corr_id == props.correlation_id:
+            # self.response is essential the return of this function, because call() waits on it to be not None
+            self.response = json.loads(body)
+
+    def call(self, requestBody):
+        self.response = None
+        self.corr_id = str(uuid.uuid4())
+        print "sending quote request Id:", self.corr_id
+        self.channel.basic_publish(
+            exchange='',
+            routing_key=queueNames.DATABASE,
+            properties=pika.BasicProperties(
+                reply_to=self.callback_queue,
+                correlation_id=self.corr_id
+            ),
+            body=json.dumps(requestBody)
+        )
+        while self.response is None:
+            self.connection.process_data_events()
+        return self.response
+
 
 
 
@@ -1081,62 +1119,44 @@ def delegate(args):
         handleCommandSetSellTrigger(args)
 
 def handleCommandQuote(args):
-    response = quote_rpc.call({
-        "symbol": args["sym"],
-        "userId": args["userId"],
-        "transactionNumber": args["lineNum"]
-    })
-    print "--from rpc quote server!:", response
+    symbol = args["sym"]
+    userId = args["userId"]
+    transactionNumber = args["lineNum"]
+
+    request = createQuoteRequest(userId, symbol, transactionNumber)
+    response = quote_rpc.call(request)
 
 def handleCommandAdd(args):
-    localDB.addCash(args["userId"], args["cash"])
+    request = databaseFunctions.createAddRequest(args["userId"], args["cash"])
+    response = db_rpc.call(request)
 
 def handleCommandBuy(args):
-    print "buying..."
-    symbol = args.get("sym")
-    cash = args.get("cash")
-    userId = args.get("userId")
+    symbol = args["sym"]
+    cash = args["cash"]
+    userId = args["userId"]
 
-    if localDB.getUser(userId).get("cash") >= cash:
-        localDB.pushBuy(userId, symbol, cash)
-        localDB.reserveCash(userId, cash)
-    else:
-        return "not enough available cash"
+    request = databaseFunctions.createBuyRequest(userId, cash, symbol)
+    response = db_rpc.call(request)
 
 
 def handleCommandCommitBuy(args):
-    print "commit buying..."
     userId = args["userId"]
     transactionNumber = args["lineNum"]
-    buy = localDB.popBuy(userId)
-    if buy:
-        symbol = buy['symbol']
-        moneyReserved = buy['amount']
-        if localDB.isBuySellActive(buy):
-            costPer = quoteObj.getQuote(symbol, userId, transactionNumber)['value']
-            numberOfStocks = math.floor(moneyReserved / costPer)
 
-            localDB.addToPortfolio(userId, symbol, numberOfStocks)
-
-            spentCash = numberOfStocks * costPer
-            unspentCash = moneyReserved - spentCash
-            localDB.commitReserveCash(userId, numberOfStocks * costPer)
-            localDB.releaseCash(userId, unspentCash)
-        else:
-            localDB.releaseCash(userId, moneyReserved)
-            return "inactive"
-    else:
-        return "no buys"
+    popRequest = databaseFunctions.createPopBuyRequest(userId)
+    popResponse = db_rpc.call(popRequest)
+    if popRequest["status"] == 200:
+        buy = popResponse["response"]
+        quote = createQuoteRequest(userId, buy["symbol"], transactionNumber)
+        commitRequest = databaseFunctions.createCommitBuyRequest(userId, buy, quote["value"])
+        commitResponse = db_rpc.call(commitRequest)
 
 
 def handleCommandCancelBuy(args):
     userId = args["userId"]
-    buy = localDB.popBuy(userId)
-    if buy:
-        amount = buy['amount']
-        localDB.releaseCash(userId, amount)
-    else:
-        return "no buys"
+
+    request = databaseFunctions.createCancelBuyRequest(userId)
+    response = db_rpc.call(request)
 
 
 def handleCommandSell(args):
@@ -1286,6 +1306,7 @@ if __name__ == '__main__':
 
     # rpc classes
     quote_rpc = QuoteRpcClient()
+    db_rpc = DatabaseRpcClient()
 
 
     # trigger threads
