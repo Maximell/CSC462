@@ -324,12 +324,7 @@ class AuditServer:
 # Here we want our trigger's threads
 # hitting the quote server for quotes every 15sec
 
-'''
-TODO: just turn buy and sell into 1 class for both buy and sell
-    - tried, but if buy and sell are brought together into one `triggers`,
-    then symbol -> user is no longer unique, since you can sell and buy for same one.
-    adds extra layer of complexity for adding and removing triggers
-'''
+# TODO: triggers cant actually just be used as client, because they have stuff reserved for them.
 class hammerQuoteServerToBuy(Thread):
     def __init__(self, quoteServer):
         Thread.__init__(self)
@@ -486,9 +481,9 @@ class Triggers:
 #       userId: 'abc123',
 #       cash: 0,
 #       reserve: 0,
-#         pendingBuys: [{symbol, number, timestamp}],
-#         pendingSells: [{symbol, number, timestamp}],
-#         portfolio: {symbol: {amount, reserved}}
+#       pendingBuys: [{symbol, number, timestamp}],
+#       pendingSells: [{symbol, number, timestamp}],
+#       portfolio: {symbol: {amount, reserved}}
 #   }
 # TODO: change strings to defined constants
 '''
@@ -1137,6 +1132,7 @@ def handleCommandBuy(args):
 
     request = databaseFunctions.createBuyRequest(userId, cash, symbol)
     response = db_rpc.call(request)
+    # response['status'] == 400 means they dont have enough money
 
 
 def handleCommandCommitBuy(args):
@@ -1146,7 +1142,7 @@ def handleCommandCommitBuy(args):
     popRequest = databaseFunctions.createPopBuyRequest(userId)
     popResponse = db_rpc.call(popRequest)
     if popRequest["status"] == 200:
-        buy = popResponse["response"]
+        buy = popResponse["body"]
         quote = createQuoteRequest(userId, buy["symbol"], transactionNumber)
         commitRequest = databaseFunctions.createCommitBuyRequest(userId, buy, quote["value"])
         commitResponse = db_rpc.call(commitRequest)
@@ -1160,41 +1156,36 @@ def handleCommandCancelBuy(args):
 
 
 def handleCommandSell(args):
-    print "selling..."
     symbol = args["sym"]
     cash = args["cash"]
     userId = args["userId"]
 
-    if not localDB.pushSell(userId, symbol, cash):
-        return "dont own that stock"
+    request = databaseFunctions.createSellRequest(userId, cash, symbol)
+    response = db_rpc.call(request)
+    # response['status'] == 400 means they dont have that
 
 
 def handleCommandCommitSell(args):
-    print "commiting selling..."
     userId = args["userId"]
     transactionNumber = args["lineNum"]
-    sell = localDB.popSell(userId)
-    if sell:
-        symbol = sell['symbol']
-        amount = sell['amount']
-        if localDB.isBuySellActive(sell):
-            costPer = quoteObj.getQuote(symbol, userId, transactionNumber)['value']
-            numberOfStocks = math.floor(amount / costPer)
 
-            localDB.removeFromPortfolio(userId, symbol, numberOfStocks)
-            localDB.addCash(userId, numberOfStocks * costPer)
-        else:
-            return "inactive"
-    else:
-        return "no sells"
+    popRequest = databaseFunctions.createPopSellRequest(userId)
+    popResponse = db_rpc.call(popRequest)
+    if popRequest["status"] == 200:
+        sell = popResponse["body"]
+        quote = createQuoteRequest(userId, sell["symbol"], transactionNumber)
+        commitRequest = databaseFunctions.createCommitSellRequest(userId, sell, quote["value"])
+        commitResponse = db_rpc.call(commitRequest)
 
 
 def handleCommandCancelSell(args):
     userId = args.get("userId")
-    sell = localDB.popSell(userId)
-    if not sell:
-        return "no sells"
 
+    request = databaseFunctions.createCancelSellRequest(userId)
+    response = db_rpc.call(request)
+
+
+# TODO: still need to do these with rabbitmq, db functions for reserve/release cash/portfolio are done
 def handleCommandSetBuyAmount(args):
     symbol = args.get("sym")
     amount = args.get("cash")

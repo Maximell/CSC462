@@ -15,6 +15,10 @@ class databaseFunctions:
     POP_SELL = 7
     COMMIT_SELL = 8
     CANCEL_SELL = 9
+    RESERVE_CASH = 10
+    RELEASE_CASH = 11
+    RESERVE_PORTFOLIO = 12
+    RELEASE_PORTFOLIO = 13
 
     # @classmethod makes it so you dont have to instantiate the class. just call databaseFunctions.createAddRequest()
 
@@ -54,6 +58,22 @@ class databaseFunctions:
     @classmethod
     def createCancelSellRequest(cls, userId):
         return {'function': cls.CANCEL_SELL, 'userId': userId}
+
+    @classmethod
+    def createReserveCashRequest(cls, userId, amount):
+        return {'function': cls.RESERVE_CASH, 'userId': userId, 'amount': amount}
+
+    @classmethod
+    def createReleaseCashRequest(cls, userId, amount):
+        return {'function': cls.RELEASE_CASH, 'userId': userId, 'amount': amount}
+
+    @classmethod
+    def createReservePortfolioRequest(cls, userId, amount, symbol):
+        return {'function': cls.RESERVE_PORTFOLIO, 'userId': userId, 'amount': amount, 'symbol': symbol}
+
+    @classmethod
+    def createReleasePortfolioRequest(cls, userId, amount, symbol):
+        return {'function': cls.RELEASE_PORTFOLIO, 'userId': userId, 'amount': amount, 'symbol': symbol}
 
 
     @classmethod
@@ -280,18 +300,10 @@ def on_request(ch, method, props, body):
     payload = json.loads(body)
     function = payload["function"]
 
-    response = create_response(404, "function not found")
-
-    if function == databaseFunctions.ADD:
-        response = handleAdd(payload)
-    elif function == databaseFunctions.BUY:
-        response = handleBuy(payload)
-    elif function == databaseFunctions.POP_BUY:
-        response = handlePopBuy(payload)
-    elif function == databaseFunctions.COMMIT_BUY:
-        response = handleCommitBuy(payload)
-    elif function == databaseFunctions.CANCEL_BUY:
-        response = handleCancelBuy(payload)
+    try:
+        response = handleFunctionSwitch[function](payload)
+    except KeyError:
+        response = create_response(404, "function not found")
 
     response = json.dumps(response)
 
@@ -305,7 +317,7 @@ def on_request(ch, method, props, body):
 
 
 def create_response(status, response):
-    return {'status': status, 'response': response}
+    return {'status': status, 'body': response}
 
 def handleAdd(payload):
     amount = payload["amount"]
@@ -367,11 +379,95 @@ def handleCancelBuy(payload):
 
     return create_response(400, "no buys available")
 
+def handleSell(payload):
+    symbol = payload["symbol"]
+    amount = payload["amount"]
+    userId = payload["userId"]
 
+    if databaseServer.pushSell(userId, symbol, amount):
+        return create_response(200, databaseServer.getUser(userId))
+    return create_response(400, "dont own any of those stock")
+
+def handlePopSell(payload):
+    userId = payload["userId"]
+
+    sell = databaseServer.popSell(userId)
+    if sell:
+        return create_response(200, sell)
+    return create_response(400, "no sells available")
+
+def handleCommitSell(payload):
+    userId = payload["userId"]
+    sell = payload["sell"]
+    costPer = payload["costPer"]
+    symbol = sell["symbol"]
+    amount = sell["amount"]
+
+    if databaseServer.isBuySellActive(sell):
+        numberOfStocks = math.floor(amount / costPer)
+
+        databaseServer.removeFromPortfolio(userId, symbol, numberOfStocks)
+        user = databaseServer.addCash(userId, numberOfStocks * costPer)
+        return create_response(200, user)
+    return create_response(400, "sell no longer active")
+
+def handleCancelSell(payload):
+    userId = payload["userId"]
+
+    sell = databaseServer.popSell(userId)
+    if sell:
+        return create_response(200, databaseServer.getUser(userId))
+    return create_response(400, "no sells available")
+
+def handleReserveCash(payload):
+    amount = payload["amount"]
+    userId = payload["userId"]
+
+    user = databaseServer.reserveCash(userId, amount)
+    return create_response(200, user)
+
+def handleReleaseCash(payload):
+    amount = payload["amount"]
+    userId = payload["userId"]
+
+    user = databaseServer.releaseCash(userId, amount)
+    return create_response(200, user)
+
+def handleReservePortfolio(payload):
+    symbol = payload["symbol"]
+    amount = payload["amount"]
+    userId = payload["userId"]
+
+    user = databaseServer.reserveFromPortfolio(userId, symbol, amount)
+    return create_response(200, user)
+
+def handleReleasePortfolio(payload):
+    symbol = payload["symbol"]
+    amount = payload["amount"]
+    userId = payload["userId"]
+
+    user = databaseServer.releasePortfolioReserves(userId, symbol, amount)
+    return create_response(200, user)
 
 
 if __name__ == '__main__':
     databaseServer = database()
+
+    handleFunctionSwitch = {
+        databaseFunctions.ADD: handleAdd,
+        databaseFunctions.BUY: handleBuy,
+        databaseFunctions.POP_BUY: handlePopBuy,
+        databaseFunctions.COMMIT_BUY: handleCommitBuy,
+        databaseFunctions.CANCEL_BUY: handleCancelBuy,
+        databaseFunctions.SELL: handleSell,
+        databaseFunctions.POP_SELL: handlePopSell,
+        databaseFunctions.COMMIT_SELL: handleCommitSell,
+        databaseFunctions.CANCEL_SELL: handleCancelSell,
+        databaseFunctions.RESERVE_CASH: handleReserveCash,
+        databaseFunctions.RELEASE_CASH: handleReleaseCash,
+        databaseFunctions.RESERVE_PORTFOLIO: handleReservePortfolio,
+        databaseFunctions.RELEASE_PORTFOLIO: handleReleasePortfolio
+    }
 
     connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
     channel = connection.channel()
