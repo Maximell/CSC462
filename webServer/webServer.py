@@ -53,7 +53,7 @@ def cancelSetBuy(userId, stockSymbol):
 	return 'Cancelling set buy for user %s on stock %s.' % (userId, stockSymbol)
 
 @app.route('/set-buy-trigger/<string:userId>/<string:stockSymbol>', methods=['POST'])
-def setBuyTrigger(userId, stockSymbol, amount):
+def setBuyTrigger(userId, stockSymbol):
 	amount = request.form['amount']
 
 	return 'Setting a buy trigger for user %s on stock %s for amount %f.' % (userId, stockSymbol, amount)
@@ -74,12 +74,12 @@ def setSellTrigger(userId, stockSymbol):
 def cancelSetSell(userId, stockSymbol):
 	return 'Cancelling set sell for user %s on stock %s.' % (userId, stockSymbol)
 
-@app.route('/dumplog/', methods=['GET'])
+@app.route('/dumplog/', methods=['POST'])
 def dumpLog():
 	fileName = request.form['fileName']
 
 	return 'Dumping log into file: %s.' % (fileName)
 
-@app.route('/display-summary/<string:userId>', methods=['POST'])
+@app.route('/display-summary/<string:userId>', methods=['GET'])
 def displaySummary(userId):
 	return 'Displaying summary for user %s.' % (userId)

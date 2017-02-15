@@ -4,14 +4,59 @@ import asyncio
 import sys
 
 urls = {
-	'ADD': '/add/%s/%f'
+	'ADD': '/add/%s/',
+	'BUY': '/buy/%s/%s/',
+	'QUOTE': '/quote/%s/%s/',
+	'COMMIT_BUY': '/commit-buy/%s/',
+	'CANCEL_BUY': '/cancel-buy/%s/',
+	'SELL': '/sell/%s/%s/',
+	'COMMIT_SELL': '/commit-sell/%s/',
+	'CANCEL_SELL': '/cancel-sell/%s/',
+	'SET_BUY_AMOUNT': '/set-buy-amount/%s/%s/',
+	'CANCEL_SET_BUY': '/cancel-set-buy/%s/%s/',
+	'SET_BUY_TRIGGER': '/set-buy-trigger/%s/%s/',
+	'SET_SELL_AMOUNT': '/set-sell-amount/%s/%s/',
+	'SET_SELL_TRIGGER': '/set-sell-trigger/%s/%s/',
+	'CANCEL_SET_SELL': '/cancel-set-sell/%s/%s/',
+	'DUMPLOG': '/dumplog/',
+	'DISPLAY_SUMMARY': '/display-summary/%s/'
 }
 
 def send(command, args, lineNum):
-	if command in ['ADD', 'BUY', '']:
-		r = requests.post(base_url + urls['ADD'] % (args['userId'], args['amount']))
+	url = base_url
+	data = {
+		'lineNum': lineNum
+	}
+	method = 'GET'
 
-	r = requests.post(base_url, data = {'command': command, 'args': args, 'lineNum': lineNum})
+	if command in ['ADD']:
+		url = base_url + urls[command] % (args['userid'])
+		method = 'POST'
+	if command in ['BUY', 'SELL', 'SET_BUY_AMOUNT', 'SET_BUY_TRIGGER', 'SET_SELL_AMOUNT', 'SET_SELL_TRIGGER']:
+		url = base_url + urls[command] % (args['userId'], args['stockSymbol'])
+		data['amount'] = args['amount']
+		method = 'POST'
+	if command in ['QUOTE']:
+		url = base_url + urls[command] % (args['userId'], args['stockSymbol'])
+		method = 'GET'
+	if command in ['COMMIT_BUY', 'CANCEL_BUY', 'COMMIT_SELL', 'CANCEL_SELL']:
+		url = base_url + urls[command] % (args['userId'])
+		method = 'POST'
+	if command in ['CANCEL_SET_BUY', 'CANCEL_SET_SELL']:
+		url = base_url + urls[command] % (args['userId'], args['stockSymbol'])
+		method = 'POST'
+	if command in ['DUMPLOG']:
+		url = base_url + urls[command]
+		data['filename'] = args['fileName']
+		method = 'POST'
+	if command in ['DISPLAY_SUMMARY']:
+		url = base_url + urls[command] % (args['userId'])
+		method = 'GET'
+
+	print method
+	print url
+	print data
+	r = requests.Request(method, url, data=data)
 	# print(r.status_code)
 
 async def sendRequests(userCommandList):
