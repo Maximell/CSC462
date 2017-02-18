@@ -23,14 +23,30 @@ urls = {
 }
 
 def send(command, args, lineNum):
+	
 	url = base_url
 	data = {
 		'lineNum': lineNum
 	}
+	if len(args) > 2:
+		args = {'userId':args[0] , 'stockSymbol':args[1], 'amount':args[2]
+	}
+	elif len(args) == 2 and command in ['ADD']:
+		args = {'userId':args[0] , 'amount':args[1]
+	}
+	elif len(args) == 2:
+		args = {'userId':args[0] , 'stockSymbol':args[1]
+	}
+	elif len(args) == 1 and command in ['DUMPLOG']:
+		args = {'fileName':args[0]}
+	elif len(args) == 1:
+		args = {'userId':args[0]}
+
 	method = 'GET'
 
 	if command in ['ADD']:
-		url = base_url + urls[command] % (args['userid'])
+		url = base_url + urls[command] % (args['userId'])
+		data['amount'] = args['amount']
 		method = 'POST'
 	if command in ['BUY', 'SELL', 'SET_BUY_AMOUNT', 'SET_BUY_TRIGGER', 'SET_SELL_AMOUNT', 'SET_SELL_TRIGGER']:
 		url = base_url + urls[command] % (args['userId'], args['stockSymbol'])
@@ -53,11 +69,14 @@ def send(command, args, lineNum):
 		url = base_url + urls[command] % (args['userId'])
 		method = 'GET'
 
-	print method
-	print url
-	print data
-	r = requests.Request(method, url, data=data)
-	# print(r.status_code)
+	print(method)
+	print(url)
+	print(data)
+	if method == 'GET':
+		r = requests.get( url, data=data , verify=False)
+	else:
+		r = requests.post( url, data=data , verify=False)
+	print(r.status_code)
 
 async def sendRequests(userCommandList):
 	for command in userCommandList:
@@ -97,6 +116,7 @@ if __name__ == '__main__':
 		print('\033[1;32;40mpython3 testDriver.py <url> <file>')
 		print('example: python3 testDriver.py http://localhost:8000 2userWorkLoad.txt')
 		print('\033[0;37;40m')
+		print(sys.argv)
 	else:
 		base_url = sys.argv[1]
 		loop = asyncio.get_event_loop()
