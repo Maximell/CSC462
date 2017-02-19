@@ -25,14 +25,12 @@ urls = {
 def send(command, args, lineNum):
 	
 	url = base_url
-	data = {
-		'lineNum': lineNum
-	}
+	data = {'lineNum': lineNum}
 	if len(args) > 2:
-		args = {'userId':args[0] , 'stockSymbol':args[1], 'amount':args[2]
+		args = {'userId':args[0] , 'stockSymbol':args[1], 'cash':args[2]
 	}
 	elif len(args) == 2 and command in ['ADD']:
-		args = {'userId':args[0] , 'amount':args[1]
+		args = {'userId':args[0] , 'cash':args[1]
 	}
 	elif len(args) == 2:
 		args = {'userId':args[0] , 'stockSymbol':args[1]
@@ -46,11 +44,11 @@ def send(command, args, lineNum):
 
 	if command in ['ADD']:
 		url = base_url + urls[command] % (args['userId'])
-		data['amount'] = args['amount']
+		data['cash'] = args['cash']
 		method = 'POST'
 	if command in ['BUY', 'SELL', 'SET_BUY_AMOUNT', 'SET_BUY_TRIGGER', 'SET_SELL_AMOUNT', 'SET_SELL_TRIGGER']:
 		url = base_url + urls[command] % (args['userId'], args['stockSymbol'])
-		data['amount'] = args['amount']
+		data['cash'] = args['cash']
 		method = 'POST'
 	if command in ['QUOTE']:
 		url = base_url + urls[command] % (args['userId'], args['stockSymbol'])
