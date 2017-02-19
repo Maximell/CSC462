@@ -4,6 +4,7 @@ import time
 import json
 import queueNames
 import math
+import ast
 
 class databaseFunctions:
     ADD = 1
@@ -299,6 +300,10 @@ class database:
 def on_request(ch, method, props, body):
     payload = json.loads(body)
     function = payload["function"]
+    args = ast.literal_eval(body)
+    userId = args['userId']
+    if databaseServer.getUser(userId) == None:
+        databaseServer.addUser(userId)
 
     try:
         response = handleFunctionSwitch[function](payload)
@@ -323,7 +328,7 @@ def handleAdd(payload):
     amount = payload["amount"]
     userId = payload["userId"]
 
-    user = databaseServer.addCash(userId, amount)
+    user = databaseServer.addCash(userId, afmount)
     if user:
         return  create_response(200, user)
     return create_response(500, "unknown error")
@@ -332,6 +337,7 @@ def handleBuy(payload):
     symbol = payload["symbol"]
     amount = payload["amount"]
     userId = payload["userId"]
+    print databaseServer.getUser(userId)
 
     if databaseServer.getUser(userId)["cash"] >= amount:
         databaseServer.pushBuy(userId, symbol, amount)
@@ -339,7 +345,6 @@ def handleBuy(payload):
         return create_response(200, user)
     else:
         return create_response(400, "not enough money available")
-
 def handlePopBuy(payload):
     userId = payload["userId"]
 
