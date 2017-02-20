@@ -46,7 +46,7 @@ class databaseFunctions:
 
     @classmethod
     def createSellRequest(cls, userId, amount, symbol):
-        return {'function': cls.BUY, 'userId': userId, 'amount': amount, 'symbol': symbol}
+        return {'function': cls.SELL, 'userId': userId, 'amount': amount, 'symbol': symbol}
 
     @classmethod
     def createPopSellRequest(cls, userId):
@@ -159,16 +159,16 @@ class database:
             self.database[userId] = user
             return self.database.get(userId)
 
-    # returns {symbol, number, costPer, timestamp}
-    def pushBuy(self, userId, symbol, number, costPer):
+    # returns {symbol, number,  timestamp}
+    def pushBuy(self, userId, symbol, number):
         user = self.getUser(userId)
         if not user:
             return 0
-        newBuy = {'symbol': symbol, 'number': number, 'costPer': costPer, 'timestamp': int(time.time())}
+        newBuy = {'symbol': symbol, 'number': number, 'timestamp': int(time.time())}
         user.get('pendingBuys').append(newBuy)
         return newBuy
 
-    # returns {symbol, number, costPer, timestamp}
+    # returns {symbol, number,  timestamp}
     def popBuy(self, userId):
         user = self.getUser(userId)
         if not user:
@@ -178,16 +178,16 @@ class database:
             return 0
         return pendingBuys.pop()
 
-    # returns {symbol, number, costPer, timestamp}
-    def pushSell(self, userId, symbol, number, costPer):
+    # returns {symbol, number,  timestamp}
+    def pushSell(self, userId, symbol, number):
         user = self.getUser(userId)
         if not user:
             return 0
-        newSell = {'symbol': symbol, 'number': number, 'costPer': costPer, 'timestamp': int(time.time())}
+        newSell = {'symbol': symbol, 'number': number, 'timestamp': int(time.time())}
         user.get('pendingSells').append(newSell)
         return newSell
 
-    # returns {symbol, number, costPer, timestamp}
+    # returns {symbol, number,  timestamp}
     def popSell(self, userId):
         user = self.getUser(userId)
         if not user:
@@ -328,7 +328,7 @@ def handleAdd(payload):
     amount = payload["amount"]
     userId = payload["userId"]
 
-    user = databaseServer.addCash(userId, afmount)
+    user = databaseServer.addCash(userId, amount)
     if user:
         return  create_response(200, user)
     return create_response(500, "unknown error")
