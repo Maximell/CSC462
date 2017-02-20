@@ -73,7 +73,7 @@ def cancelSell(userId):
 	sendtoQueue(data)
 	return 'Cancelling sell for user %s.' % (userId)
 
-@app.route('/set-buy-cash/<string:userId>/<string:stockSymbol>/', methods=['POST'])
+@app.route('/set-buy-amount/<string:userId>/<string:stockSymbol>/', methods=['POST'])
 def setBuyAmount(userId, stockSymbol):
 	lineNum = int(request.form['lineNum'].decode('utf-8'))
 	cash = float(request.form['cash'].decode('utf-8'))
@@ -96,7 +96,7 @@ def setBuyTrigger(userId, stockSymbol):
 	sendtoQueue(data)
 	return 'Setting a buy trigger for user %s on stock %s for cash %f.' % (userId, stockSymbol, cash)
 
-@app.route('/set-sell-cash/<string:userId>/<string:stockSymbol>/', methods=['POST'])
+@app.route('/set-sell-amount/<string:userId>/<string:stockSymbol>/', methods=['POST'])
 def setSellAmount(userId, stockSymbol):
 	lineNum = int(request.form['lineNum'].decode('utf-8'))
 	cash = float(request.form['cash'].decode('utf-8'))

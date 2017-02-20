@@ -61,7 +61,7 @@ def send(command, args, lineNum):
 		method = 'POST'
 	if command in ['DUMPLOG']:
 		url = base_url + urls[command]
-		data['filename'] = args['fileName']
+		data['fileName'] = args['fileName']
 		method = 'POST'
 	if command in ['DISPLAY_SUMMARY']:
 		url = base_url + urls[command] % (args['userId'])
