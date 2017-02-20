@@ -1122,6 +1122,8 @@ def handleCommandQuote(args):
 
     request = createQuoteRequest(userId, symbol, transactionNumber)
     response = quote_rpc.call(request)
+    print response
+
 
 def handleCommandAdd(args):
     request = databaseFunctions.createAddRequest(args["userId"], args["cash"])
@@ -1143,9 +1145,10 @@ def handleCommandCommitBuy(args):
 
     popRequest = databaseFunctions.createPopBuyRequest(userId)
     popResponse = db_rpc.call(popRequest)
-    if popRequest["status"] == 200:
+    if popResponse["status"] == 200:
         buy = popResponse["body"]
         quote = createQuoteRequest(userId, buy["symbol"], transactionNumber)
+        quote = quote_rpc.call(quote)
         commitRequest = databaseFunctions.createCommitBuyRequest(userId, buy, quote["value"])
         commitResponse = db_rpc.call(commitRequest)
 
@@ -1173,9 +1176,10 @@ def handleCommandCommitSell(args):
 
     popRequest = databaseFunctions.createPopSellRequest(userId)
     popResponse = db_rpc.call(popRequest)
-    if popRequest["status"] == 200:
+    if popResponse["status"] == 200:
         sell = popResponse["body"]
         quote = createQuoteRequest(userId, sell["symbol"], transactionNumber)
+        quote = quote_rpc.call(quote)
         commitRequest = databaseFunctions.createCommitSellRequest(userId, sell, quote["value"])
         commitResponse = db_rpc.call(commitRequest)
 
@@ -1262,7 +1266,7 @@ def handleCommandCancelSetSell(args):
 def listenToRabbitQ():
     connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
     channel = connection.channel()
-    channel.queue_declare(queue='webserverIn')
+    channel.queue_declare(queue=queueNames.WEBSERVER)
     channel.basic_consume(delegate,queue="webserverIn", no_ack=True)
     print "Waiting for requests from queue."
     channel.start_consuming()
