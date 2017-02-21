@@ -174,12 +174,6 @@ class AuditServer:
     def __init__(self):
         self.logFile = []
 
-    '''
-#   TO BE IMPLEMENTED WHEN WE MOVE TO EVENTS
-    def log(self, event):
-        print 'Logging an event: ' + event + '.'
-        self.logFile.append(event)
-    '''
 
     # TODO: need a logAdminCommand which doesnt have userId (for dumplog command)
     def logUserCommand(self, timeStamp, server, transactionNum, userId, commandName, stockSymbol=None, fileName=None, amount=None):
@@ -729,16 +723,47 @@ class databaseServer:
         user = self.getUser(userId)
         return user.get('portfolio')
 
-
-
-
-
-
-
 '''
     new stuff here, eventually, class quote should be gone, but in the sense of not breaking abunch of other stuff, its still there
 '''
+# new RPC audit client using rabbitMQ
+class AuditRpcClient(object):
+    def __init__(self):
+        self.response = None
+        self.corr_id = None
 
+        self.connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+
+        self.channel = self.connection.channel()
+
+        result = self.channel.queue_declare(exclusive=True)
+        self.callback_queue = result.method.queue
+
+        self.channel.basic_consume(self.on_response, no_ack=True, queue=self.callback_queue)
+    def on_response(self, ch, method, props, body):
+        # make sure its the right package
+        if self.corr_id == props.correlation_id:
+            # self.response is essential the return of this function, because call() waits on it to be not None
+            self.response = json.loads(body)
+
+    def call(self, requestBody):
+        self.response = None
+        self.corr_id = str(uuid.uuid4())
+        print "sending quote request Id:", self.corr_id
+        self.channel.basic_publish(
+            exchange='',
+            routing_key=queueNames.AUDIT,
+            properties=pika.BasicProperties(
+                reply_to=self.callback_queue,
+                correlation_id=self.corr_id
+            ),
+            body=json.dumps(requestBody)
+        )
+        while self.response is None:
+            self.connection.process_data_events()
+        return self.response
+
+# new RPC client client using rabbitMQ
 class QuoteRpcClient(object):
     def __init__(self):
         self.response = None
@@ -776,7 +801,7 @@ class QuoteRpcClient(object):
             self.connection.process_data_events()
         return self.response
 
-
+# new RPC Database client using rabbitMQ
 class DatabaseRpcClient(object):
     def __init__(self):
         self.response = None
@@ -853,20 +878,13 @@ class TriggerRpcClient(object):
         return self.response
 
 
-
-
-
-
-
-
-
 # quote shape: symbol: {value: string, retrieved: epoch time, user: string, cryptoKey: string}
 class Quotes():
-    def __init__(self, auditServer, cacheExpire=60, testing=False):
+    def __init__(self, cacheExpire=60, testing=False):
         self.cacheExpire = cacheExpire
         self.quoteCache = {}
         self.testing = testing
-        self.auditServer = auditServer
+        # self.auditServer = auditServer
         # if not testing:
         #     self.quoteServerConnection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         #     self.quoteServerConnection.connect(('quoteserve.seng.uvic.ca', 4445))
@@ -913,17 +931,19 @@ class Quotes():
             # data = self.quoteServerConnection.recv(1024)
 
         newQuote = self._quoteStringToDictionary(data)
+        # LogQuoteServer
 
-        self.auditServer.logQuoteServer(
-            int(time.time() * 1000),
-            "quote",
-            transactionNumber,
-            user,
-            newQuote.get('serverTime'),
-            symbol,
-            newQuote.get('value'),
-            newQuote.get('cryptoKey')
-        )
+        # audit_rpc.call()
+        # self.auditServer.logQuoteServer(
+        #     int(time.time() * 1000),
+        #     "quote",
+        #     transactionNumber,
+        #     user,
+        #     newQuote.get('serverTime'),
+        #     symbol,
+        #     newQuote.get('value'),
+        #     newQuote.get('cryptoKey')
+        # )
 
         self.quoteCache[symbol] = newQuote
         return newQuote
@@ -958,103 +978,137 @@ class Quotes():
 
 
 def delegate(ch , method, properties, body):
-    # this is where we will figure what command we are dealing with
-    # and deligate from here to whatever function is needed
-    # to handle the request
-    # ----------------------------
-    # add
-    # quote
-    # buy
-    # commit_buy
-    # cancel_buy
-    # sell
-    # commit_sell
-    # cancel_sell
-    #
-    # set_buy_amount
-    # cancel_set_buy
-    # set_buy_trigger
-    #
-    # set_sell_amount
-    # cancel_set_sell
-    # set_sell_trigger
-    # ----------------------------
-    print body
     args = ast.literal_eval(body)
-    print args
-    # Call Quote
-    if "./testLOG" != args["userId"]:
-        # TODO: not sure how filename comes in
-        auditServer.logUserCommand(
-            int(time.time() * 1000),
-            "transaction",
-            args.get('lineNum'),
-            args.get('userId'),
-            args.get("command"),
-            stockSymbol=args.get('stockSymbol'),
-            fileName=None,
-            amount=args.get('cash')
-        )
-        localDB.addUser(args["userId"])
-    else:
-        # TODO: not sure how filename comes in
-        fileName = args.get('userId')
-        auditServer.logUserCommand(
-            int(time.time() * 1000),
-            "transaction",
-            args.get('lineNum'),
-            "TODO get user properly",
-            args.get("command"),
-            stockSymbol=args.get('stockSymbol'),
-            fileName=fileName,
-            amount=args.get('cash')
-        )
-        auditServer.writeLogs(fileName)
+    try:
+        # this is where we will figure what command we are dealing with
+        # and deligate from here to whatever function is needed
+        # to handle the request
+        # ----------------------------
+        # add
+        # quote
+        # buy
+        # commit_buy
+        # cancel_buy
+        # sell
+        # commit_sell
+        # cancel_sell
+        #
+        # set_buy_amount
+        # cancel_set_buy
+        # set_buy_trigger
+        #
+        # set_sell_amount
+        # cancel_set_sell
+        # set_sell_trigger
+        # ----------------------------
+        # args = ast.literal_eval(body)
+        print args
+        # Call Quote
+        # self, timeStamp, server, transactionNum, userId, commandName, stockSymbol=None, fileName=None, amount=None
+
+        if "./testLOG" != args["userId"]:
+            # TODO: not sure how filename comes in
+            # USER_COMMAND
+            # Create Requestbody to send to Audit Server
+            requestBody={"function":"USER_COMMAND","timeStamp": int(time.time() * 1000),
+                         "server":"transactionServer","transactionNum":args.get('lineNum'),"userId":args.get('userId'),
+                         "command":args.get("command"), "stockSymbol": args.get("stockSymbol"),
+                         "fileName":None,"amount":args.get("amount")
+                         }
+            # Log User Command Call
+            audit_rpc.call(requestBody)
+            # # auditServer.logUserCommand(
+            # #     int(time.time() * 1000),
+            # #     "transaction",
+            # #     args.get('lineNum'),
+            # #     args.get('userId'),
+            # #     args.get('command'),
+            # #     stockSymbol=args.get('stockSymbol'),
+            # #     fileName=None,
+            # #     amount=args.get('cash')
+            # # )
+            # localDB.addUser(args["userId"])
+        else:
+            # TODO: not sure how filename comes in
+            requestBody = {"function": "USER_COMMAND", "timeStamp": int(time.time() * 1000),
+                           "server": "transactionServer", "transactionNum": args.get('lineNum'), "userId": args.get('userId'),
+                           "command": args.get("command"), "stockSymbol": args.get("stockSymbol"),
+                           "fileName": args.get("userId"), "amount": args.get("amount")
+                           }
+            # Log User Command Call
+            audit_rpc.call(requestBody)
+            # Log DumpLog Call
+            requestBody = {"function": "USER_COMMAND","fileName": args.get("userId")}
+            audit_rpc.call(requestBody)
+
+            # auditServer.writeLogs(fileName)
 
 
 
-    if args["command"] == "QUOTE":
-        handleCommandQuote(args)
+        if args["command"] == "QUOTE":
+            handleCommandQuote(args)
 
-    elif args["command"] == "ADD":
-        handleCommandAdd(args)
+        elif args["command"] == "ADD":
+            handleCommandAdd(args)
 
-    elif args["command"] == "BUY":
-        handleCommandBuy(args)
+        elif args["command"] == "BUY":
+            handleCommandBuy(args)
 
-    elif args["command"] == "COMMIT_BUY":
-        handleCommandCommitBuy(args)
+        elif args["command"] == "COMMIT_BUY":
+            handleCommandCommitBuy(args)
 
-    elif args["command"] == "CANCEL_BUY":
-        handleCommandCancelBuy(args)
+        elif args["command"] == "CANCEL_BUY":
+            handleCommandCancelBuy(args)
 
-    elif args["command"] == "SELL":
-        handleCommandSell(args)
+        elif args["command"] == "SELL":
+            handleCommandSell(args)
 
-    elif args["command"] == "COMMIT_SELL":
-        handleCommandCommitSell(args)
+        elif args["command"] == "COMMIT_SELL":
+            handleCommandCommitSell(args)
 
-    elif args["command"] == "CANCEL_SELL":
-        handleCommandCancelSell(args)
+        elif args["command"] == "CANCEL_SELL":
+            handleCommandCancelSell(args)
 
-    # triggers
-    elif args["command"] == "SET_BUY_AMOUNT":
-        handleCommandSetBuyAmount(args)
+        # triggers
+        elif args["command"] == "SET_BUY_AMOUNT":
+            handleCommandSetBuyAmount(args)
 
-    elif args["command"] == "CANCEL_BUY_AMOUNT":
-        handleCommandCancelSetBuy(args)
+        elif args["command"] == "CANCEL_BUY_AMOUNT":
+            handleCommandCancelSetBuy(args)
 
-    elif args["command"] == "SET_BUY_TRIGGER":
-        handleCommandSetBuyTrigger(args)
+        elif args["command"] == "SET_BUY_TRIGGER":
+            handleCommandSetBuyTrigger(args)
 
-    elif args["command"] == "SET_SELL_AMOUNT":
-        handleCommandSetSellAmount(args)
-    elif args["command"] == "CANCEL_SELL_AMOUNT":
-        handleCommandCancelSetSell(args)
-    elif args["command"] == "SET_SELL_TRIGGER":
-        handleCommandSetSellTrigger(args)
-    else:
-        print "couldn't figure out command..."
+        elif args["command"] == "SET_SELL_AMOUNT":
+            handleCommandSetSellAmount(args)
+        elif args["command"] == "CANCEL_SELL_AMOUNT":
+            handleCommandCancelSetSell(args)
+        elif args["command"] == "SET_SELL_TRIGGER":
+            handleCommandSetSellTrigger(args)
+        else:
+            print "couldn't figure out command..."
+    except RuntimeError:
+        # (self, timeStamp, server, transactionNum, userId, commandName, errorMessage)
+        # errror msg being sent to audit server
+        requestBody = {"function": "ERROR_MESSAGE", "timeStamp": int(time.time() * 1000),
+                       "server": "transactionServer", "transactionNum": args.get('lineNum'),
+                       "userId": args.get('userId'),"command": args.get("command"), "errorMessage": RuntimeError
+                       }
+        audit_rpc.call(requestBody)
+    except TypeError:
+        # errror msg being sent to audit server
+        requestBody = {"function": "ERROR_MESSAGE", "timeStamp": int(time.time() * 1000),
+                       "server": "transactionServer", "transactionNum": args.get('lineNum'),
+                       "userId": args.get('userId'),"command": args.get("command"), "errorMessage": TypeError
+                       }
+        audit_rpc.call(requestBody)
+    except ArithmeticError:
+        # errror msg being sent to audit server
+        requestBody = {"function": "ERROR_MESSAGE", "timeStamp": int(time.time() * 1000),
+                       "server": "transactionServer", "transactionNum": args.get('lineNum'),
+                       "userId": args.get('userId'),"command": args.get("command"), "errorMessage": ArithmeticError
+                       }
+        audit_rpc.call(requestBody)
 
 def handleCommandQuote(args):
     symbol = args["stockSymbol"]
@@ -1232,12 +1286,13 @@ def incrementSocketNum(socketNum):
 if __name__ == '__main__':
     # Global vars
     # -----------------------
-    auditServer = AuditServer()
-    quoteObj = Quotes(auditServer)
+    # auditServer = AuditServer()
+    # quoteObj = Quotes(auditServer)
     localDB = databaseServer()
     localTriggers = Triggers()
 
     # rpc classes
+    audit_rpc = AuditRpcClient()
     quote_rpc = QuoteRpcClient()
     db_rpc = DatabaseRpcClient()
     trigger_rpc = TriggerRpcClient()
@@ -1245,8 +1300,8 @@ if __name__ == '__main__':
 
     # trigger threads
 
-    hammerQuoteServerToSell(quoteObj)
-    hammerQuoteServerToBuy(quoteObj)
+    # hammerQuoteServerToSell(quoteObj)
+    # hammerQuoteServerToBuy(quoteObj)
     # -----------------------
 
     main()

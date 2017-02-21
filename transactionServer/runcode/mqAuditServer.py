@@ -226,10 +226,23 @@ class AuditServer:
         file.close()
         print "Log file written."
 
+#  payload = {"function": "USER_COMMAND", "transactionNum": int(time.time() * 1000),
+#                            "server": "transactionServer", "lineNum": args.get('lineNum'), "userId": args.get('userId'),
+#                            "command": args.get("command"), "stockSymbol": args.get("stockSymbol"),
+#                            "fileName": args.get("userId"), "amount": args.get("amount")
+#                            }
+
 def handleUserCommand(payload):
+    # self, timeStamp, server, transactionNum, userId, commandName, stockSymbol=None, fileName=None, amount=None):
+    auditServer.logUserCommand(payload.get("timeStamp") , payload.get("server") , payload.get("transactionNum") ,
+                               payload.get("userId") , payload.get("command") , payload.get("stockSymbol"), payload.get("fileName"),
+                               payload.get("amount"))
     return "audit logging user command not implemented"
 
 def handleQuoteServer(payload):
+    auditServer.logQuoteServer(payload.get("timeStamp"), payload.get("server"), payload.get("transactionNum"),
+                               payload.get("userId"), payload.get("quoteServerTime"), payload.get("stockSymbol"),
+                               payload.get("price"),payload.get("cyptoKey"))
     return "audit logging quote server not implemented"
 
 def handleAccountTransaction(payload):
@@ -239,23 +252,28 @@ def handleSystemEvent(payload):
     return "audit logging system event not implemented"
 
 def handleErrorMessage(payload):
+    # (self, timeStamp, server, transactionNum, userId, commandName, errorMessage):
+    auditServer.logErrorMessage(payload.get("timeStamp"), payload.get("server"), payload.get("transactionNum"),
+                                payload.get("userId"), payload.get("command"), payload.get("errorMessage"))
     return "audit logging error message not implemented"
 
 def handleDebugMessage(payload):
     return "audit logging debug message not implemented"
 
 def handleWriteLogs(payload):
+    auditServer._dumpIntoFile(fileName=payload.get("fileName"))
     return "audit logging write logs not implemented"
 
 def on_request(ch, method, props, body):
+    print body
     payload = json.loads(body)
+    print payload
     function = payload["function"]
-    args = ast.literal_eval(body)
 
     try:
         response = handleFunctionSwitch[function](payload)
     except KeyError:
-        response = create_response(404, "function not found")
+        response = ch.create_response(404, "function not found")
 
     response = json.dumps(response)
 

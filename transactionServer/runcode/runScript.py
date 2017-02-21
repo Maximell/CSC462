@@ -10,6 +10,10 @@ if __name__ == '__main__':
         print('\033[0;37;40m')
     # start transaction server
     try:
+        os.system("python -u mqAuditServer.py > Auditoutput.txt &")
+    except:
+        print "Audit server failed to start"
+    try:
         os.system("python -u transactionServer.py > transOutput.txt &")
     except:
         print "transaction server failed to start"
