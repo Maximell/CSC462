@@ -5,6 +5,7 @@ import time
 from random import randint
 import json
 import queueNames
+import uuid
 
 
 class AuditRpcClient(object):
@@ -79,9 +80,12 @@ class Quotes():
             data = s.recv(1024)
             s.close()
             newQuote = self._quoteStringToDictionary(data)
-            audit_rpc.call(requestBody={"function": "QUOTE_SERVER","timeStamp":int(time.time()*1000),"server":"quoteServer",
-                                        "transactionNum": transactionNumber, "userId":user ,"quoteServerTime":newQuote.get('serverTime'),
-                                         "stockSymbol":symbol,"price":newQuote.get("value"),"cyptoKey":newQuote.get("cryptoKey")})
+            requestBody = {"function": "QUOTE_SERVER", "timeStamp": int(time.time() * 1000), "server": "quoteServer",
+                           "transactionNum": transactionNumber, "userId": user,
+                           "quoteServerTime": newQuote.get('serverTime'),
+                           "stockSymbol": symbol, "price": newQuote.get("value"), "cyptoKey": newQuote.get("cryptoKey")}
+            print requestBody
+            audit_rpc.call(requestBody)
         #     Sent auditServer Quote Log
 
         # auditServer.logQuoteServer(payload.get("timeStamp"), payload.get("server"), payload.get("transactionNum"),
@@ -137,9 +141,9 @@ def on_request(ch, method, props, body):
     try:
         # expected body: {symbol, userId, transactionNumber}
         payload = json.loads(body)
-        symbol = payload["symbol"]
+        symbol = payload["stockSymbol"]
         userId = payload["userId"]
-        transactionNumber = payload["transactionNumber"]
+        transactionNumber = payload["transactionNum"]
 
         quote = quoteServer.getQuote(symbol, userId, transactionNumber)
         response = json.dumps(quote)

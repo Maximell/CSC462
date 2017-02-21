@@ -384,6 +384,7 @@ def handleWriteLogs(payload):
     return "audit logging write logs not implemented"
     return auditServer.writeLogs(payload["fileName"])
 
+
 def on_request(ch, method, props, body):
     print body
     payload = json.loads(body)
@@ -393,7 +394,7 @@ def on_request(ch, method, props, body):
     try:
         response = handleFunctionSwitch[function](payload)
     except KeyError:
-        response = ch.create_response(404, "function not found")
+        response = create_response(404, "function not found")
 
     response = json.dumps(response)
 
