@@ -1162,12 +1162,12 @@ def handleCommandQuote(args):
 
     request = createQuoteRequest(userId, symbol, transactionNumber)
     response = quote_rpc.call(request)
-    print response
 
 
 def handleCommandAdd(args):
     request = databaseFunctions.createAddRequest(args["userId"], args["cash"])
     response = db_rpc.call(request)
+
 
 def handleCommandBuy(args):
     symbol = args["stockSymbol"]
@@ -1231,7 +1231,6 @@ def handleCommandCancelSell(args):
     response = db_rpc.call(request)
 
 
-# TODO: still need to do these with rabbitmq, db functions for reserve/release cash/portfolio are done
 def handleCommandSetBuyAmount(args):
     symbol = args.get("stockSymbol")
     amount = args.get("cash")
@@ -1242,7 +1241,7 @@ def handleCommandSetBuyAmount(args):
     reserveResponse = db_rpc.call(reserveRequest)
     if reserveResponse["status"] == 200:
         buyRequest = TriggerFunctions.createAddBuyRequest(userId, symbol, amount, transactionNumber)
-        trigger_rpc.call(buyRequest)
+        buyResponse = trigger_rpc.call(buyRequest)
 
 
 def handleCommandSetBuyTrigger(args):
@@ -1272,7 +1271,8 @@ def handleCommandSetSellAmount(args):
     userId = args.get("userId")
     transactionNumber = args.get("lineNum")
 
-    localTriggers.addSellTrigger(userId, symbol, amount, transactionNumber)
+    sellRequest = TriggerFunctions.createAddSellRequest(userId, symbol, amount, transactionNumber)
+    sellResponse = trigger_rpc.call(sellRequest)
 
 
 def handleCommandSetSellTrigger(args):
@@ -1319,30 +1319,7 @@ def listenToRabbitQ():
 
 
 def main():
-    #   starting httpserver and waiting for input
-    # spoolUpServer()
     listenToRabbitQ()
-
-
-
-# def spoolUpServer(handlerClass=httpsRequestHandler, serverClass=httpsServer):
-#     socknum = 4442
-#
-#     try:
-#         serverAddr = ('', socknum)  # our address and port
-#         httpd = serverClass(serverAddr, handlerClass)
-#     except socket.error:
-#         print "socket:" + str(socknum) + " busy."
-#         socknum = incrementSocketNum(socknum)
-#         serverAddr = ('', socknum)  # our address and port
-#         httpd = serverClass(serverAddr, handlerClass)
-#
-#     socketName = httpd.socket.getsockname()
-#     print "serving HTTPS on", socketName[0], "port number:", socketName[1],
-#     print "printing addr = " + str(serverAddr)
-#     print "waiting for request..."
-#     # this idles the server waiting for requests
-#     httpd.serve_forever()
 
 
 def incrementSocketNum(socketNum):
