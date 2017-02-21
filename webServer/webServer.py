@@ -77,7 +77,7 @@ def cancelSell(userId):
 def setBuyAmount(userId, stockSymbol):
 	lineNum = int(request.form['lineNum'].decode('utf-8'))
 	cash = float(request.form['cash'].decode('utf-8'))
-	data = json.dumps({"command": "SET_BUY_CASH", "userId": userId, "stockSymbol": stockSymbol, "cash": cash,"lineNum":lineNum})
+	data = json.dumps({"command": "SET_BUY_AMOUNT", "userId": userId, "stockSymbol": stockSymbol, "cash": cash,"lineNum":lineNum})
 	sendtoQueue(data)
 	return 'Setting buy of $%f on stock %s for user %s.' % (cash, stockSymbol, userId)
 
@@ -100,7 +100,7 @@ def setBuyTrigger(userId, stockSymbol):
 def setSellAmount(userId, stockSymbol):
 	lineNum = int(request.form['lineNum'].decode('utf-8'))
 	cash = float(request.form['cash'].decode('utf-8'))
-	data = json.dumps({"command": "SET_SELL_CASH", "userId": userId, "stockSymbol": stockSymbol, "cash": cash,"lineNum":lineNum})
+	data = json.dumps({"command": "SET_SELL_AMOUNT", "userId": userId, "stockSymbol": stockSymbol, "cash": cash,"lineNum":lineNum})
 	sendtoQueue(data)
 	return 'Setting a sell for user %s on stock %s for cash %f.' % (userId, stockSymbol, cash)
 
@@ -124,7 +124,7 @@ def dumpLog():
 	lineNum = int(request.form['lineNum'].decode('utf-8'))
 	fileName = request.form['fileName']
 	# print "dumplog"
-	data = json.dumps({"command": "DUMPLOG","lineNum":lineNum})
+	data = json.dumps({"command": "DUMPLOG","lineNum":lineNum,"userId":fileName})
 	sendtoQueue(data)
 	return 'Dumping log into file: %s.' % (fileName)
 

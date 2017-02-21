@@ -419,12 +419,12 @@ class Triggers:
             return self.sellTriggers[symbol][userId]
         return 0
 
-    def addBuyTrigger(self, userId, sym, cashReserved):
+    def addBuyTrigger(self, userId, sym, cashReserved, transactionNumber):
         if userId not in self.buyTriggers:
             self.buyTriggers[userId] = {}
         self.buyTriggers[userId][sym] = {"cashReserved": cashReserved, "active": False, "buyAt": 0, "transId": transactionNumber}
 
-    def addSellTrigger(self, userId, sym, maxSellAmount):
+    def addSellTrigger(self, userId, sym, maxSellAmount, transactionNumber):
         if userId not in self.sellTriggers:
             self.sellTriggers[userId] = {}
         self.sellTriggers[userId][sym] = {"maxSellAmount": maxSellAmount, "active": False, "sellAt": 0, "transId": transactionNumber}
@@ -1039,6 +1039,7 @@ def delegate(ch , method, properties, body):
     # cancel_set_sell
     # set_sell_trigger
     # ----------------------------
+    print body
     args = ast.literal_eval(body)
     print args
     # Call Quote
