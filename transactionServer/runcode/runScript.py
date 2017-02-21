@@ -36,4 +36,4 @@ if __name__ == '__main__':
         os.system("python3.5 ../../testDriver/runcode/testDriver.py http://127.0.0.1:5000 " + str(sys.argv[1]))
     except:
         print "test driver failed to start"
-    os.system("killall python")
+    #os.system("killall python")
