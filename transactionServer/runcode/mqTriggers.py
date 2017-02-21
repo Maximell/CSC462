@@ -1,21 +1,12 @@
-import math
 import socket
 import threading
 from threading import Thread
 import time
-import urlparse
-from BaseHTTPServer import HTTPServer
-from SimpleHTTPServer import SimpleHTTPRequestHandler
-from SocketServer import BaseServer
-from random import randint
-import uuid
 import pika
 import json
 import queueNames
 from mqDatabaseServer import databaseFunctions
-from mqQuoteServer import createQuoteRequest
-from OpenSSL import SSL
-import ast
+
 
 class TriggerFunctions:
     BUY = 1
