@@ -979,6 +979,7 @@ def delegate(ch , method, properties, body):
     # cancel_set_sell
     # set_sell_trigger
     # ----------------------------
+    print body
     args = ast.literal_eval(body)
     print args
     # Call Quote
