@@ -406,6 +406,9 @@ def on_request(ch, method, props, body):
     )
     ch.basic_ack(delivery_tag=method.delivery_tag)
 
+def create_response(status, response):
+    return {'status': status, 'body': response}
+
 if __name__ == '__main__':
     auditServer = AuditServer()
 
