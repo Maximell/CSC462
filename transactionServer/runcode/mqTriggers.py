@@ -196,38 +196,45 @@ class SellTriggerThread(Thread):
 
 def handleAddBuy(userId, symbol, amount, transactionNumber):
      trigger = triggers.addBuyTrigger(userId, symbol, amount, transactionNumber)
-     return create_response(200, trigger)
-
+     if trigger:
+         return create_response(200, trigger)
+     return create_response(400, "bad request")
 
 def handleSetBuyActive(userId, symbol, buyAt):
     trigger = triggers.setBuyActive(userId, symbol, buyAt)
-    return create_response(200, trigger)
-
+    if trigger:
+        return create_response(200, trigger)
+    return create_response(400, "trigger doesnt exist")
 
 def handleCancelBuy(userId, symbol):
     trigger = triggers.cancelBuyTrigger(userId, symbol)
-    return create_response(200, trigger)
-
+    if trigger:
+        return create_response(200, trigger)
+    return create_response(400, "trigger doesnt exist")
 
 def handleAddSell(userId, symbol, amount, transactionNumber):
     trigger = triggers.addSellTrigger(userId, symbol, amount, transactionNumber)
-    return create_response(200, trigger)
-
+    if trigger:
+        return create_response(200, trigger)
+    return create_response(400, "bad request")
 
 def handleSetSellActive(userId, symbol, sellAt):
     trigger = triggers.setSellActive(userId, symbol, sellAt)
-    return create_response(200, trigger)
-
+    if trigger:
+        return create_response(200, trigger)
+    return create_response(400, "trigger doesnt exist or is at a higher value than amount reserved for it")
 
 def handleCancelSell(userId, symbol):
     trigger = triggers.cancelSellTrigger(userId, symbol)
-    return create_response(200, trigger)
-
+    if trigger:
+        return create_response(200, trigger)
+    return create_response(400, "trigger doesnt exist")
 
 def handleGetSell(userId, symbol):
     trigger = triggers.localTriggers.getSellTrigger(userId, symbol)
-    return create_response(200, trigger)
-
+    if trigger:
+        return create_response(200, trigger)
+    return create_response(400, "trigger doesnt exist")
 
 def on_request(ch, method, props, body):
     payload = json.loads(body)

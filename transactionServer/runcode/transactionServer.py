@@ -1238,11 +1238,11 @@ def handleCommandSetBuyAmount(args):
     userId = args.get("userId")
     transactionNumber = args.get("lineNum")
 
-    if localDB.getUser(userId).get("cash") >= amount:
-        localDB.reserveCash(userId, amount)
-        localTriggers.addBuyTrigger(userId, symbol, amount, transactionNumber)
-    else:
-        return "not enough available cash"
+    reserveRequest = databaseFunctions.createReserveCashRequest(userId, amount)
+    reserveResponse = db_rpc.call(reserveRequest)
+    if reserveResponse["status"] == 200:
+        buyRequest = TriggerFunctions.createAddBuyRequest(userId, symbol, amount, transactionNumber)
+        trigger_rpc.call(buyRequest)
 
 
 def handleCommandSetBuyTrigger(args):
@@ -1250,20 +1250,21 @@ def handleCommandSetBuyTrigger(args):
     buyAt = args.get("cash")
     userId = args.get("userId")
 
-    success = localTriggers.setBuyActive(userId, symbol, buyAt)
-    if not success:
-        return "trigger doesnt exist or is at a higher value than amount reserved for it"
+    request = TriggerFunctions.createSetBuyActiveRequest(userId, symbol, buyAt)
+    response = trigger_rpc.call(request)
+
 
 def handleCommandCancelSetBuy(args):
     symbol = args["stockSymbol"]
     userId = args["userId"]
 
-    trigger = localTriggers.cancelBuyTrigger(userId, symbol)
-    if trigger:
-        reserved = trigger.get('cashReserved')
-        localDB.releaseCash(userId, reserved)
-    else:
-        return "no trigger to cancel"
+    cancelRequest = TriggerFunctions.createCancelBuyRequest(userId, symbol)
+    cancelResponse = trigger_rpc.call(cancelRequest)
+    if cancelResponse["status"] == 200:
+        trigger = cancelResponse["body"]
+        releaseRequest = databaseFunctions.createReleaseCashRequest(userId, trigger["cashReserved"])
+        releaseResponse = db_rpc.call(releaseRequest)
+
 
 def handleCommandSetSellAmount(args):
     symbol = args.get("stockSymbol")
@@ -1273,34 +1274,38 @@ def handleCommandSetSellAmount(args):
 
     localTriggers.addSellTrigger(userId, symbol, amount, transactionNumber)
 
+
 def handleCommandSetSellTrigger(args):
     symbol = args.get("stockSymbol")
     sellAt = args.get("cash")
     userId = args.get("userId")
 
-    trigger = localTriggers.getSellTrigger(userId, symbol)
-    if not trigger:
-        return "no trigger to activate"
+    getTriggerRequest = TriggerFunctions.createGetSellRequest(userId, symbol)
+    getTriggerResponse = trigger_rpc.call(getTriggerRequest)
+    if getTriggerResponse["status"] == 200:
+        trigger = getTriggerRequest["body"]
+        reserve = math.floor(trigger["maxSellAmount"] / sellAt)
 
-    reserve = math.floor(trigger.get('maxSellAmount') / sellAt)
-    if not localDB.reserveFromPortfolio(userId, symbol, reserve):
-        return "not enough available"
+        reservePortfolioRequest = databaseFunctions.createReservePortfolioRequest(userId, reserve, symbol)
+        reservePortfolioResponse = db_rpc.call(reservePortfolioRequest)
 
-    localTriggers.setSellActive(userId, symbol, sellAt)
+        if reservePortfolioResponse["status"] == 200:
+            setActiveRequest = TriggerFunctions.createSetSellActiveRequest(userId, symbol, sellAt)
+            setActiveResponse = trigger_rpc.call(setActiveRequest)
 
 
 def handleCommandCancelSetSell(args):
     symbol = args.get("stockSymbol")
     userId = args.get("userId")
 
-    trigger = localTriggers.cancelSellTrigger(userId, symbol)
-    if trigger:
-        # if its active, need to remove from reserved portfolio
-        if trigger.get('active'):
-            refund = math.floor( trigger.get('maxSellAmount') / trigger.get('sellAt') )
-            localDB.releasePortfolioReserves(userId, symbol, refund)
-        return
-    return "no trigger to cancel"
+    cancelTriggerRequest = TriggerFunctions.createCancelSellRequest(userId, symbol)
+    cancelTriggerResponse = trigger_rpc.call(cancelTriggerRequest)
+    if cancelTriggerResponse["status"] == 200:
+        trigger = cancelTriggerResponse["body"]
+        if trigger["active"]:
+            refund = math.floor(trigger["maxSellAmount"] / trigger["sellAt"])
+            releasePortfolioRequest = databaseFunctions.createReleasePortfolioRequest(userId, refund, symbol)
+            releasePortfolioResponse = db_rpc.call(releasePortfolioRequest)
 
 
 def listenToRabbitQ():

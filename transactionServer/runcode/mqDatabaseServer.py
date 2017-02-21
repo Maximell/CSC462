@@ -257,7 +257,7 @@ class database:
 
         user['portfolio'][symbol]['reserved'] += numberToReserve
         user['portfolio'][symbol]['amount'] -= numberToReserve
-        return user['portfolio'][symbol]
+        return user
 
     def releasePortfolioReserves(self, userId, symbol, numberToRelease):
         user = self.getUser(userId)
@@ -274,7 +274,7 @@ class database:
 
         user['portfolio'][symbol]['reserved'] -= numberToRelease
         user['portfolio'][symbol]['amount'] += numberToRelease
-        return user['portfolio'][symbol]
+        return user
 
     def commitReservedPortfolio(self, userId, symbol, numberToCommit):
         user = self.getUser(userId)
@@ -430,14 +430,18 @@ def handleReserveCash(payload):
     userId = payload["userId"]
 
     user = databaseServer.reserveCash(userId, amount)
-    return create_response(200, user)
+    if user:
+        return create_response(200, user)
+    return create_response(400, "not enough money")
 
 def handleReleaseCash(payload):
     amount = payload["amount"]
     userId = payload["userId"]
 
     user = databaseServer.releaseCash(userId, amount)
-    return create_response(200, user)
+    if user:
+        return create_response(200, user)
+    return create_response(400, "not enough reserved")
 
 def handleReservePortfolio(payload):
     symbol = payload["symbol"]
@@ -445,7 +449,9 @@ def handleReservePortfolio(payload):
     userId = payload["userId"]
 
     user = databaseServer.reserveFromPortfolio(userId, symbol, amount)
-    return create_response(200, user)
+    if user:
+        return create_response(200, user)
+    return create_response(400, "not enough portfolio")
 
 def handleReleasePortfolio(payload):
     symbol = payload["symbol"]
@@ -453,7 +459,9 @@ def handleReleasePortfolio(payload):
     userId = payload["userId"]
 
     user = databaseServer.releasePortfolioReserves(userId, symbol, amount)
-    return create_response(200, user)
+    if user:
+        return create_response(200, user)
+    return create_response(400, "not enough reserved")
 
 
 if __name__ == '__main__':
