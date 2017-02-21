@@ -32,6 +32,11 @@ class AuditRpcClient(object):
         self.response = None
         self.corr_id = str(uuid.uuid4())
         print "sending quote request Id:", self.corr_id
+        try:
+            json.dumps(requestBody)
+        except TypeError:
+            print requestBody
+            print type(requestBody)
         self.channel.basic_publish(
             exchange='',
             routing_key=queueNames.AUDIT,
@@ -142,49 +147,49 @@ class Quotes():
 
 def on_request(ch, method, props, body):
     payload = json.loads(body)
-    try:
-        # expected body: {symbol, userId, transactionNumber}
-        payload = json.loads(body)
-        symbol = payload["stockSymbol"]
-        userId = payload["userId"]
-        transactionNumber = payload["transactionNum"]
+    # try:
+    # expected body: {symbol, userId, transactionNumber}
+    payload = json.loads(body)
+    symbol = payload["stockSymbol"]
+    userId = payload["userId"]
+    transactionNumber = payload["transactionNum"]
 
-        quote = quoteServer.getQuote(symbol, userId, transactionNumber)
-        response = json.dumps(quote)
-        print "got", response, "for", props.correlation_id
+    quote = quoteServer.getQuote(symbol, userId, transactionNumber)
+    response = json.dumps(quote)
+    print "got", response, "for", props.correlation_id
 
-        ch.basic_publish(
-            exchange='',
-            routing_key=props.reply_to,
-            properties=pika.BasicProperties(correlation_id=props.correlation_id),
-            body=response
-        )
-        ch.basic_ack(delivery_tag=method.delivery_tag)
-    except RuntimeError:
-        # (self, timeStamp, server, transactionNum, userId, commandName, errorMessage)
-        # errror msg being sent to audit server
-        requestBody = {"function": "ERROR_MESSAGE", "timeStamp": int(time.time() * 1000),
-                       "server": "quoteServer", "transactionNum": payload.get('lineNum'),
-                       "userId": payload.get('userId'),"command": payload.get("command"),
-                       "errorMessage": RuntimeError
-                       }
-        audit_rpc.call(requestBody)
-    except TypeError:
-        # errror msg being sent to audit server
-        requestBody = {"function": "ERROR_MESSAGE", "timeStamp": int(time.time() * 1000),
-                       "server": "quoteServer", "transactionNum": payload.get('lineNum'),
-                       "userId": payload.get('userId'),"command": payload.get("command"),
-                       "errorMessage": TypeError
-                       }
-        audit_rpc.call(requestBody)
-    except ArithmeticError:
-        # errror msg being sent to audit server
-        requestBody = {"function": "ERROR_MESSAGE", "timeStamp": int(time.time() * 1000),
-                       "server": "quoteServer", "transactionNum": payload.get('lineNum'),
-                       "userId": payload.get('userId'),"command": payload.get("command"),
-                       "errorMessage": ArithmeticError
-                       }
-        audit_rpc.call(requestBody)
+    ch.basic_publish(
+        exchange='',
+        routing_key=props.reply_to,
+        properties=pika.BasicProperties(correlation_id=props.correlation_id),
+        body=response
+    )
+    ch.basic_ack(delivery_tag=method.delivery_tag)
+    # except RuntimeError:
+    #     # (self, timeStamp, server, transactionNum, userId, commandName, errorMessage)
+    #     # errror msg being sent to audit server
+    #     requestBody = {"function": "ERROR_MESSAGE", "timeStamp": int(time.time() * 1000),
+    #                    "server": "quoteServer", "transactionNum": payload.get('lineNum'),
+    #                    "userId": payload.get('userId'),"command": payload.get("command"),
+    #                    "errorMessage": str(RuntimeError)
+    #                    }
+    #     audit_rpc.call(requestBody)
+    # except TypeError:
+    #     # errror msg being sent to audit server
+    #     requestBody = {"function": "ERROR_MESSAGE", "timeStamp": int(time.time() * 1000),
+    #                    "server": "quoteServer", "transactionNum": payload.get('lineNum'),
+    #                    "userId": payload.get('userId'),"command": payload.get("command"),
+    #                    "errorMessage": str(TypeError)
+    #                    }
+    #     audit_rpc.call(requestBody)
+    # except ArithmeticError:
+    #     # errror msg being sent to audit server
+    #     requestBody = {"function": "ERROR_MESSAGE", "timeStamp": int(time.time() * 1000),
+    #                    "server": "quoteServer", "transactionNum": payload.get('lineNum'),
+    #                    "userId": payload.get('userId'),"command": payload.get("command"),
+    #                    "errorMessage": str(ArithmeticError)
+    #                    }
+    #     audit_rpc.call(requestBody)
 
 
 
