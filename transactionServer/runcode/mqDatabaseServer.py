@@ -345,6 +345,7 @@ def handleBuy(payload):
         return create_response(200, user)
     else:
         return create_response(400, "not enough money available")
+
 def handlePopBuy(payload):
     userId = payload["userId"]
 

@@ -15,6 +15,8 @@ import json
 import queueNames
 from mqDatabaseServer import databaseFunctions
 from mqQuoteServer import createQuoteRequest
+from mqTriggers import TriggerFunctions
+
 from OpenSSL import SSL
 import ast
 
@@ -419,12 +421,12 @@ class Triggers:
             return self.sellTriggers[symbol][userId]
         return 0
 
-    def addBuyTrigger(self, userId, sym, cashReserved):
+    def addBuyTrigger(self, userId, sym, cashReserved, transactionNumber):
         if userId not in self.buyTriggers:
             self.buyTriggers[userId] = {}
         self.buyTriggers[userId][sym] = {"cashReserved": cashReserved, "active": False, "buyAt": 0, "transId": transactionNumber}
 
-    def addSellTrigger(self, userId, sym, maxSellAmount):
+    def addSellTrigger(self, userId, sym, maxSellAmount, transactionNumber):
         if userId not in self.sellTriggers:
             self.sellTriggers[userId] = {}
         self.sellTriggers[userId][sym] = {"maxSellAmount": maxSellAmount, "active": False, "sellAt": 0, "transId": transactionNumber}
@@ -801,6 +803,44 @@ class DatabaseRpcClient(object):
         self.channel.basic_publish(
             exchange='',
             routing_key=queueNames.DATABASE,
+            properties=pika.BasicProperties(
+                reply_to=self.callback_queue,
+                correlation_id=self.corr_id
+            ),
+            body=json.dumps(requestBody)
+        )
+        while self.response is None:
+            self.connection.process_data_events()
+        return self.response
+
+
+class TriggerRpcClient(object):
+    def __init__(self):
+        self.response = None
+        self.corr_id = None
+
+        self.connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+
+        self.channel = self.connection.channel()
+
+        result = self.channel.queue_declare(exclusive=True)
+        self.callback_queue = result.method.queue
+
+        self.channel.basic_consume(self.on_response, no_ack=True, queue=self.callback_queue)
+
+    def on_response(self, ch, method, props, body):
+        # make sure its the right package
+        if self.corr_id == props.correlation_id:
+            # self.response is essential the return of this function, because call() waits on it to be not None
+            self.response = json.loads(body)
+
+    def call(self, requestBody):
+        self.response = None
+        self.corr_id = str(uuid.uuid4())
+        print "sending quote request Id:", self.corr_id
+        self.channel.basic_publish(
+            exchange='',
+            routing_key=queueNames.TRIGGERS,
             properties=pika.BasicProperties(
                 reply_to=self.callback_queue,
                 correlation_id=self.corr_id
@@ -1317,6 +1357,7 @@ if __name__ == '__main__':
     # rpc classes
     quote_rpc = QuoteRpcClient()
     db_rpc = DatabaseRpcClient()
+    trigger_rpc = TriggerRpcClient()
 
 
     # trigger threads
