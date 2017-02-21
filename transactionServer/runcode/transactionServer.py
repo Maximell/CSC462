@@ -317,10 +317,8 @@ class AuditServer:
         file.close()
         print "Log file written."
 
-
 # Here we want our trigger's threads
 # hitting the quote server for quotes every 15sec
-
 # TODO: triggers cant actually just be used as client, because they have stuff reserved for them.
 class hammerQuoteServerToBuy(Thread):
     def __init__(self, quoteServer):

@@ -85,6 +85,83 @@ class auditFunctions:
     def listOptions(cls):
         return [attr for attr in dir(auditFunctions) if not callable(attr) and not attr.startswith("__") and attr != "listOptions" ]
 
+
+# Class for a logging 'server'
+# In general, an event takes the form of:
+#   event = {
+#       'type': 'someType',
+#           userCommand
+#           accountTransaction
+#           systemEvent
+#           quoteServer
+#           errorEvent
+#       'timestamp': seconds since the epoch,
+#       'server': 'where the server originated from',
+#       'transactionNum': the transaction number the event is associated with,
+#       'username': 'userId of the user who triggered the event'
+#       'args': {} Some dictionary - specific for the type of event.
+#   }
+#   Valid 'type's and their arg values:
+#       userCommand
+#           args: {
+#               'command': {'name': ,
+#                           args{}}'string representing the user's command',
+#                   add
+#                   commit_buy
+#                   cancel_buy
+#                   commit_sell
+#                   cancel_sell
+#                   display_summary
+#                       no additional args
+#
+#                   quote
+#                   buy
+#                   sell
+#                   set_buy_amount
+#                   cancel_set_buy
+#                   set_buy_trigger
+#                   set_sell_amount
+#                   set_sell_trigger
+#                   cancel_set_sell
+#                       need stockSymbol
+#
+#                   dumplog
+#                       fileName
+#
+#                   add
+#                   buy
+#                   sell
+#                   set_buy_amount
+#                   set_buy_trigger
+#                   set_sell_amount
+#                   set_sell_trigger
+#                       funds
+#           }
+#       accountTransaction
+#           args: {
+#               'action': string corresponding to type of account transaction
+#                   add
+#                   remove
+#                   reserve
+#                   free
+#               'funds': amount of money being moved
+#           }
+#       systemEvent
+#           args: {
+#               'command': same as in userCommand
+#           }
+#       quoteServer
+#           args: {
+#               'quoteServerTime': time the quote was received from the quote server,
+#               'stockSymbol': 'stcksymbl',
+#               'price': price of the stock at the time the server quoted it,
+#               'cryptokey': 'cryptographic key the server returns'
+#           }
+#       errorEvent
+#           args: {
+#               'command': same as in userCommand,
+#               'errorMessage': message associated with the error
+#           }
 class AuditServer:
     def __init__(self):
         self.logFile = []
@@ -106,6 +183,7 @@ class AuditServer:
         if amount:
             dictionary = dict(dictionary, amount=amount)
         self.logFile.append(dictionary)
+        return dictionary
 
     def logQuoteServer(self, timeStamp, server, transactionNum, userId, quoteServerTime, stockSymbol, price, cryptoKey):
         dictionary = {
@@ -224,16 +302,10 @@ class AuditServer:
             file.write('\t</'+ logType +'>\n')
         file.write('\n</log>\n')
         file.close()
-        print "Log file written."
-
-#  payload = {"function": "USER_COMMAND", "transactionNum": int(time.time() * 1000),
-#                            "server": "transactionServer", "lineNum": args.get('lineNum'), "userId": args.get('userId'),
-#                            "command": args.get("command"), "stockSymbol": args.get("stockSymbol"),
-#                            "fileName": args.get("userId"), "amount": args.get("amount")
-#                            }
+        print "Log file written to file: " + str(fileName)
+        return "Log file written to file: " + str(fileName)
 
 def handleUserCommand(payload):
-    # self, timeStamp, server, transactionNum, userId, commandName, stockSymbol=None, fileName=None, amount=None):
     auditServer.logUserCommand(payload.get("timeStamp") , payload.get("server") , payload.get("transactionNum") ,
                                payload.get("userId") , payload.get("command") , payload.get("stockSymbol"), payload.get("fileName"),
                                payload.get("amount"))
@@ -245,24 +317,72 @@ def handleQuoteServer(payload):
                                payload.get("price"),payload.get("cyptoKey"))
     return "audit logging quote server not implemented"
 
+#     return auditServer.logUserCommand(
+#         payload["timeStamp"],
+#         payload["server"],
+#         payload["transactionNum"],
+#         payload["userId"],
+#         payload["commandName"],
+#         stockSymbol=payload.get("stockSymbol"),
+#         fileName=payload.get("fileName"),
+#         amount=payload.get("amount")
+#     )
+
+# def handleQuoteServer(payload):
+#     return auditServer.logQuoteServer(
+#         payload["timeStamp"],
+#         payload["server"],
+#         payload["transactionNum"],
+#         payload["userId"],
+#         payload["quoteServerTime"],
+#         payload["stockSymbol"],
+#         payload["price"],
+#         payload["cryptoKey"]
+#     )
+
 def handleAccountTransaction(payload):
-    return "audit logging account transaction not implemented"
+    return auditServer.logUserCommand(
+        payload["timeStamp"],
+        payload["server"],
+        payload["transactionNum"],
+        payload["userId"],
+        payload["commandName"],
+        stockSymbol=payload.get("stockSymbol"),
+        fileName=payload.get("fileName"),
+        amount=payload.get("amount")
+    )
 
 def handleSystemEvent(payload):
-    return "audit logging system event not implemented"
+    return auditServer.logUserCommand(
+        payload["timeStamp"],
+        payload["server"],
+        payload["transactionNum"],
+        payload["userId"],
+        payload["commandName"],
+        stockSymbol=payload.get("stockSymbol"),
+        fileName=payload.get("fileName"),
+        amount=payload.get("amount")
+    )
 
 def handleErrorMessage(payload):
-    # (self, timeStamp, server, transactionNum, userId, commandName, errorMessage):
     auditServer.logErrorMessage(payload.get("timeStamp"), payload.get("server"), payload.get("transactionNum"),
                                 payload.get("userId"), payload.get("command"), payload.get("errorMessage"))
     return "audit logging error message not implemented"
 
 def handleDebugMessage(payload):
-    return "audit logging debug message not implemented"
+    return auditServer.logUserCommand(
+        payload["timeStamp"],
+        payload["server"],
+        payload["transactionNum"],
+        payload["userId"],
+        payload["commandName"],
+        payload["debugMessage"]
+    )
 
 def handleWriteLogs(payload):
     auditServer._dumpIntoFile(fileName=payload.get("fileName"))
     return "audit logging write logs not implemented"
+    return auditServer.writeLogs(payload["fileName"])
 
 def on_request(ch, method, props, body):
     print body
