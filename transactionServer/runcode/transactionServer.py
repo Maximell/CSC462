@@ -622,14 +622,6 @@ class TriggerRpcClient(object):
             self.connection.process_data_events()
         return self.response
 
-
-
-
-
-
-
-
-
 # quote shape: symbol: {value: string, retrieved: epoch time, user: string, cryptoKey: string}
 class Quotes():
     def __init__(self, auditServer, cacheExpire=60, testing=False):
