@@ -6,6 +6,7 @@ from random import randint
 import json
 import queueNames
 import uuid
+from mqAuditServer import auditFunctions
 
 
 class AuditRpcClient(object):
@@ -80,11 +81,14 @@ class Quotes():
             data = s.recv(1024)
             s.close()
             newQuote = self._quoteStringToDictionary(data)
-            requestBody = {"function": "QUOTE_SERVER", "timeStamp": int(time.time() * 1000), "server": "quoteServer",
-                           "transactionNum": transactionNumber, "userId": user,
-                           "quoteServerTime": newQuote.get('serverTime'),
-                           "stockSymbol": symbol, "price": newQuote.get("value"), "cyptoKey": newQuote.get("cryptoKey")}
-            print requestBody
+            requestBody = auditFunctions.createQuoteServer(int(time.time() * 1000),"quoteServer", transactionNumber,user, newQuote['serverTime'],
+                                             symbol,newQuote['value'],newQuote['cryptoKey'] )
+            # (cls, timeStamp, server, transactionNum, userId, quoteServerTime, stockSymbol, price, cryptoKey)
+            # requestBody = {"function": "QUOTE_SERVER", "timeStamp": int(time.time() * 1000), "server": "quoteServer",
+            #                "transactionNum": transactionNumber, "userId": user,
+            #                "quoteServerTime": newQuote.get('serverTime'),
+            #                "stockSymbol": symbol, "price": newQuote.get("value"), "cyptoKey": newQuote.get("cryptoKey")}
+            # print requestBody
             audit_rpc.call(requestBody)
         #     Sent auditServer Quote Log
 
