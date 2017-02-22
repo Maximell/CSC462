@@ -322,7 +322,7 @@ if __name__ == '__main__':
     triggers = Triggers()
     db_rpc = DatabaseRpcClient()
     handleFunctionSwitch = {
-        TriggerFunctions.BUY: handleAddBuy,
+        TriggerFunctions.BUY: handleBuy,
         TriggerFunctions.ACTIVATE_BUY: handleSetBuyActive,
         TriggerFunctions.CANCEL_BUY: handleCancelBuy,
         TriggerFunctions.SELL: handleAddSell,
