@@ -32,11 +32,8 @@ class AuditRpcClient(object):
         self.response = None
         self.corr_id = str(uuid.uuid4())
         print "sending quote request Id:", self.corr_id
-        try:
-            json.dumps(requestBody)
-        except TypeError:
-            print requestBody
-            print type(requestBody)
+        print requestBody
+        # print type(requestBody)
         self.channel.basic_publish(
             exchange='',
             routing_key=queueNames.AUDIT,
@@ -44,7 +41,7 @@ class AuditRpcClient(object):
                 reply_to=self.callback_queue,
                 correlation_id=self.corr_id
             ),
-            body=json.dumps(requestBody)
+            body=requestBody
         )
         while self.response is None:
             self.connection.process_data_events()
