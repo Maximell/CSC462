@@ -288,7 +288,7 @@ def handleCancelSell(payload):
 def handleGetSell(payload):
     symbol = payload["symbol"]
     userId = payload["userId"]
-    trigger = triggers.localTriggers.getSellTrigger(userId, symbol)
+    trigger = triggers.getSellTrigger(userId, symbol)
     if trigger:
         return create_response(200, trigger)
     return create_response(400, "trigger doesnt exist")
