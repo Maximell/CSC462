@@ -88,34 +88,9 @@ class Quotes():
             newQuote = self._quoteStringToDictionary(data)
             requestBody = auditFunctions.createQuoteServer(int(time.time() * 1000),"quoteServer", transactionNumber,user, newQuote['serverTime'],
                                              symbol,newQuote['value'],newQuote['cryptoKey'] )
-            # (cls, timeStamp, server, transactionNum, userId, quoteServerTime, stockSymbol, price, cryptoKey)
-            # requestBody = {"function": "QUOTE_SERVER", "timeStamp": int(time.time() * 1000), "server": "quoteServer",
-            #                "transactionNum": transactionNumber, "userId": user,
-            #                "quoteServerTime": newQuote.get('serverTime'),
-            #                "stockSymbol": symbol, "price": newQuote.get("value"), "cyptoKey": newQuote.get("cryptoKey")}
-            # print requestBody
             audit_rpc.call(requestBody)
-        #     Sent auditServer Quote Log
 
-        # auditServer.logQuoteServer(payload.get("timeStamp"), payload.get("server"), payload.get("transactionNum"),
-        #                            payload.get("userId"), payload.get("quoteServerTime"), payload.get("stockSymbol"),
-        #                            payload.get("amount"), payload.get("cyptoKey"))
-        # requestBody = {"function": "USER_COMMAND", "transactionNum": int(time.time() * 1000),
-        #                "server": "transactionServer", "lineNum": args.get('lineNum'), "userId": args.get('userId'),
-        #                "command": args.get("command"), "stockSymbol": args.get("stockSymbol"),
-        #                "fileName": None, "amount": args.get("amount")
-        #                }
-        # TODO: send to audit server
-        # self.auditServer.logQuoteServer(
-        #     int(time.time() * 1000),
-        #     "quote",
-        #     transactionNumber,
-        #     user,
-        #     newQuote.get('serverTime'),
-        #     symbol,
-        #     newQuote.get('value'),
-        #     newQuote.get('cryptoKey')
-        # )
+
         self.quoteCache[symbol] = newQuote
         return newQuote
 
@@ -168,27 +143,18 @@ def on_request(ch, method, props, body):
     except RuntimeError:
         # (self, timeStamp, server, transactionNum, userId, commandName, errorMessage)
         # errror msg being sent to audit server
-        requestBody = {"function": "ERROR_MESSAGE", "timeStamp": int(time.time() * 1000),
-                       "server": "quoteServer", "transactionNum": payload.get('lineNum'),
-                       "userId": payload.get('userId'),"command": payload.get("command"),
-                       "errorMessage": str(RuntimeError)
-                       }
+        requestBody = auditFunctions.createErrorMessage(int(time.time() * 1000), "QuoteServer", payload["lineNum"],
+                                                            payload["userId"], payload["command"], str(RuntimeError))
         audit_rpc.call(requestBody)
     except TypeError:
         # errror msg being sent to audit server
-        requestBody = {"function": "ERROR_MESSAGE", "timeStamp": int(time.time() * 1000),
-                       "server": "quoteServer", "transactionNum": payload.get('lineNum'),
-                       "userId": payload.get('userId'),"command": payload.get("command"),
-                       "errorMessage": str(TypeError)
-                       }
+        requestBody = auditFunctions.createErrorMessage(int(time.time() * 1000), "QuoteServer", payload["lineNum"],
+                                                            payload["userId"], payload["command"], str(TypeError))
         audit_rpc.call(requestBody)
     except ArithmeticError:
         # errror msg being sent to audit server
-        requestBody = {"function": "ERROR_MESSAGE", "timeStamp": int(time.time() * 1000),
-                       "server": "quoteServer", "transactionNum": payload.get('lineNum'),
-                       "userId": payload.get('userId'),"command": payload.get("command"),
-                       "errorMessage": str(ArithmeticError)
-                       }
+        requestBody = auditFunctions.createErrorMessage(int(time.time() * 1000), "QuoteServer", payload["lineNum"],
+                                                            payload["userId"], payload["command"], str(ArithmeticError))
         audit_rpc.call(requestBody)
 
 

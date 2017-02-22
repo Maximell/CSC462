@@ -1006,43 +1006,18 @@ def delegate(ch , method, properties, body):
         # self, timeStamp, server, transactionNum, userId, commandName, stockSymbol=None, fileName=None, amount=None
 
         if "./testLOG" != args["userId"]:
-            # TODO: not sure how filename comes in
-            # USER_COMMAND
-            # Create Requestbody to send to Audit Server
-            # # requestBody= {("timeStamp": int(time.time() * 1000),
-            #              "server":"transactionServer","transactionNum":args.get('lineNum'),"userId":args.get('userId'),
-            #              "command":args.get("command"), "stockSymbol": args.get("stockSymbol"),
-            #              "fileName":None,"amount":args.get("amount")
-            #              }
+
             requestBody = auditFunctions.createUserCommand(int(time.time() * 1000),"transactionServer", args["lineNum"],
                                                 args["userId"], args["command"],args.get("stockSymbol"),None,args.get("cash"))
             # Log User Command Call
             audit_rpc.call(requestBody)
-            # # auditServer.logUserCommand(
-            # #     int(time.time() * 1000),
-            # #     "transaction",
-            # #     args.get('lineNum'),
-            # #     args.get('userId'),
-            # #     args.get('command'),
-            # #     stockSymbol=args.get('stockSymbol'),
-            # #     fileName=None,
-            # #     amount=args.get('cash')
-            # # )
-            # localDB.addUser(args["userId"])
+
         else:
-            # TODO: not sure how filename comes in
             requestBody = auditFunctions.createUserCommand(int(time.time() * 1000), "transactionServer", args["lineNum"],
                                                                args["userId"], args["command"], args.get("stockSymbol"),
                                                                args["userId"], args.get("cash"))
             # Log User Command Call
             audit_rpc.call(requestBody)
-            # Log DumpLog Call
-            # requestBody = {"function": "WRITE_LOGS","fileName": args.get("userId")}
-            # audit_rpc.call(requestBody)
-
-            # auditServer.writeLogs(fileName)
-
-
 
         if args["command"] == "QUOTE":
             handleCommandQuote(args)
@@ -1068,7 +1043,6 @@ def delegate(ch , method, properties, body):
         elif args["command"] == "CANCEL_SELL":
             handleCommandCancelSell(args)
 
-        # triggers
         elif args["command"] == "SET_BUY_AMOUNT":
             handleCommandSetBuyAmount(args)
 
@@ -1080,8 +1054,10 @@ def delegate(ch , method, properties, body):
 
         elif args["command"] == "SET_SELL_AMOUNT":
             handleCommandSetSellAmount(args)
+
         elif args["command"] == "CANCEL_SELL_AMOUNT":
             handleCommandCancelSetSell(args)
+
         elif args["command"] == "SET_SELL_TRIGGER":
             handleCommandSetSellTrigger(args)
         else:
@@ -1093,18 +1069,18 @@ def delegate(ch , method, properties, body):
                        "server": "transactionServer", "transactionNum": args.get('lineNum'),
                        "userId": args.get('userId'),"command": args.get("command"), "errorMessage": RuntimeError
                        }
-        requestBody = auditFunctions.createErrorMessage(int(time.time() * 1000, "transactionServer", args["lineNum"],
-                                                               args["userId"], args["command"],str(RuntimeError)))
+        requestBody = auditFunctions.createErrorMessage(int(time.time() * 1000), "transactionServer", args["lineNum"],
+                                                               args["userId"], args["command"],str(RuntimeError))
         audit_rpc.call(requestBody)
     except TypeError:
         # errror msg being sent to audit server
-        requestBody = auditFunctions.createErrorMessage(int(time.time() * 1000, "transactionServer", args["lineNum"],
-                                                            args["userId"], args["command"], str(RuntimeError)))
+        requestBody = auditFunctions.createErrorMessage(int(time.time() * 1000), "transactionServer", args["lineNum"],
+                                                            args["userId"], args["command"], str(RuntimeError))
         audit_rpc.call(requestBody)
     except ArithmeticError:
         # errror msg being sent to audit server
-        requestBody = auditFunctions.createErrorMessage(int(time.time() * 1000, "transactionServer", args["lineNum"],
-                                                            args["userId"], args["command"], str(RuntimeError)))
+        requestBody = auditFunctions.createErrorMessage(int(time.time() * 1000), "transactionServer", args["lineNum"],
+                                                            args["userId"], args["command"], str(RuntimeError))
         audit_rpc.call(requestBody)
 
 def handleCommandQuote(args):
