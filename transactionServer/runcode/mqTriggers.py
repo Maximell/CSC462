@@ -229,48 +229,71 @@ class SellTriggerThread(Thread):
             time.sleep(1)
 
 
-def handleAddBuy(userId, symbol, amount, transactionNumber):
-     trigger = triggers.addBuyTrigger(userId, symbol, amount, transactionNumber)
-     if trigger:
-         return create_response(200, trigger)
-     return create_response(400, "bad request")
+def handleBuy(payload):
+    symbol = payload["symbol"]
+    amount = payload["amount"]
+    userId = payload["userId"]
+    transactionNumber = payload["transactionNum"]
+    trigger = triggers.addBuyTrigger(userId, symbol, amount, transactionNumber)
+    if trigger:
+        return create_response(200, trigger)
+    return create_response(400, "bad request")
 
-def handleSetBuyActive(userId, symbol, buyAt):
+def handleSetBuyActive(payload):
+    symbol = payload["symbol"]
+    amount = payload["amount"]
+    userId = payload["userId"]
+    # transactionNumber = payload["transactionNum"]
     trigger = triggers.setBuyActive(userId, symbol, buyAt)
     if trigger:
         return create_response(200, trigger)
     return create_response(400, "trigger doesnt exist")
 
-def handleCancelBuy(userId, symbol):
+def handleCancelBuy(payload):
+    symbol = payload["symbol"]
+    userId = payload["userId"]
     trigger = triggers.cancelBuyTrigger(userId, symbol)
     if trigger:
         return create_response(200, trigger)
     return create_response(400, "trigger doesnt exist")
 
-def handleAddSell(userId, symbol, amount, transactionNumber):
+def handleAddSell(payload):
+    symbol = payload["symbol"]
+    amount = payload["amount"]
+    userId = payload["userId"]
+    transactionNumber = payload["transactionNum"]
     trigger = triggers.addSellTrigger(userId, symbol, amount, transactionNumber)
     if trigger:
         return create_response(200, trigger)
     return create_response(400, "bad request")
 
-def handleSetSellActive(userId, symbol, sellAt):
+def handleSetSellActive(payload):
+    symbol = payload["symbol"]
+    sellAt = payload["amount"]
+    userId = payload["userId"]
+    transactionNumber = payload["transactionNum"]
     trigger = triggers.setSellActive(userId, symbol, sellAt)
     if trigger:
         return create_response(200, trigger)
     return create_response(400, "trigger doesnt exist or is at a higher value than amount reserved for it")
 
-def handleCancelSell(userId, symbol):
+def handleCancelSell(payload):
+    symbol = payload["symbol"]
+    userId = payload["userId"]
     trigger = triggers.cancelSellTrigger(userId, symbol)
     if trigger:
         return create_response(200, trigger)
     return create_response(400, "trigger doesnt exist")
 
-def handleGetSell(userId, symbol):
+def handleGetSell(payload):
+    symbol = payload["symbol"]
+    userId = payload["userId"]
     trigger = triggers.localTriggers.getSellTrigger(userId, symbol)
     if trigger:
         return create_response(200, trigger)
     return create_response(400, "trigger doesnt exist")
 
+# --------------------------------------------------------------- ^ handlers ^
 def on_request(ch, method, props, body):
     payload = json.loads(body)
     function = payload["function"]
