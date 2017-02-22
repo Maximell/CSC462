@@ -369,8 +369,6 @@ def handleDebugMessage(payload):
     )
 
 def handleWriteLogs(payload):
-    auditServer._dumpIntoFile(fileName=payload.get("fileName"))
-    return "audit logging write logs not implemented"
     return auditServer.writeLogs(payload["fileName"])
 
 
