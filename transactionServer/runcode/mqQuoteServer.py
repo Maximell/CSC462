@@ -119,9 +119,10 @@ class Quotes():
 
 def on_request(ch, method, props, body):
     payload = json.loads(body)
+    print payload
     try:
         # expected body: {symbol, userId, transactionNumber}
-        payload = json.loads(body)
+        # payload = json.loads(body)
         symbol = payload["stockSymbol"]
         userId = payload["userId"]
         transactionNumber = payload["transactionNum"]
@@ -140,17 +141,17 @@ def on_request(ch, method, props, body):
     except RuntimeError:
         # (self, timeStamp, server, transactionNum, userId, commandName, errorMessage)
         # errror msg being sent to audit server
-        requestBody = auditFunctions.createErrorMessage(int(time.time() * 1000), "QuoteServer", payload["lineNum"],
+        requestBody = auditFunctions.createErrorMessage(int(time.time() * 1000), "QuoteServer", payload["transactionNum"],
                                                             payload["userId"], payload["command"], str(RuntimeError))
         audit_rpc.call(requestBody)
     except TypeError:
         # errror msg being sent to audit server
-        requestBody = auditFunctions.createErrorMessage(int(time.time() * 1000), "QuoteServer", payload["lineNum"],
+        requestBody = auditFunctions.createErrorMessage(int(time.time() * 1000), "QuoteServer", payload["transactionNum"],
                                                             payload["userId"], payload["command"], str(TypeError))
         audit_rpc.call(requestBody)
     except ArithmeticError:
         # errror msg being sent to audit server
-        requestBody = auditFunctions.createErrorMessage(int(time.time() * 1000), "QuoteServer", payload["lineNum"],
+        requestBody = auditFunctions.createErrorMessage(int(time.time() * 1000), "QuoteServer", payload["transactionNum"],
                                                             payload["userId"], payload["command"], str(ArithmeticError))
         audit_rpc.call(requestBody)
 
