@@ -1015,7 +1015,7 @@ def delegate(ch , method, properties, body):
             #              "fileName":None,"amount":args.get("amount")
             #              }
             requestBody = auditFunctions.createUserCommand(int(time.time() * 1000,"transactionServer", args["lineNum"],
-                                                               args["userId"], args["command"],args["stockSymbol"],None,args["amount"]))
+                                                args["userId"], args["command"],args.get("stockSymbol"),None,args.get("cash")))
             # Log User Command Call
             audit_rpc.call(requestBody)
             # # auditServer.logUserCommand(
@@ -1032,8 +1032,8 @@ def delegate(ch , method, properties, body):
         else:
             # TODO: not sure how filename comes in
             requestBody = auditFunctions.createUserCommand(int(time.time() * 1000, "transactionServer", args["lineNum"],
-                                                               args["userId"], args["command"], args["stockSymbol"],
-                                                               args["userId"], args["amount"]))
+                                                               args["userId"], args["command"], args.get("stockSymbol"),
+                                                               args["userId"], args.get("cash")))
             # Log User Command Call
             audit_rpc.call(requestBody)
             # Log DumpLog Call
