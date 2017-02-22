@@ -43,8 +43,8 @@ class AuditRpcClient(object):
             ),
             body=requestBody
         )
-        while self.response is None:
-            self.connection.process_data_events()
+        # while self.response is None:
+        #     self.connection.process_data_events()
         return self.response
 
 def createQuoteRequest(userId, symbol, transactionNumber):
