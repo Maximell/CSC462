@@ -6,6 +6,45 @@ import pika
 import json
 import queueNames
 from mqDatabaseServer import databaseFunctions
+import uuid
+
+class DatabaseRpcClient(object):
+    def __init__(self):
+        self.response = None
+        self.corr_id = None
+
+        self.connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+
+        self.channel = self.connection.channel()
+
+        result = self.channel.queue_declare(exclusive=True)
+        self.callback_queue = result.method.queue
+
+        self.channel.basic_consume(self.on_response, no_ack=True, queue=self.callback_queue)
+
+    def on_response(self, ch, method, props, body):
+        # make sure its the right package
+        if self.corr_id == props.correlation_id:
+            # self.response is essential the return of this function, because call() waits on it to be not None
+            self.response = json.loads(body)
+
+    def call(self, requestBody):
+        self.response = None
+        self.corr_id = str(uuid.uuid4())
+        print "sending Database request Id:", self.corr_id
+        self.channel.basic_publish(
+            exchange='',
+            routing_key=queueNames.DATABASE,
+            properties=pika.BasicProperties(
+                reply_to=self.callback_queue,
+                correlation_id=self.corr_id
+            ),
+            body=json.dumps(requestBody)
+        )
+        while self.response is None:
+            self.connection.process_data_events()
+        return self.response
+
 
 
 class TriggerFunctions:
@@ -145,11 +184,14 @@ class BuyTriggerThread(Thread):
                         trigger = triggers.buyTriggers[symbol][userId]
                         if trigger["active"]:
                             if quoteValue <= trigger["buyAt"]:
-                                args = {"sym": symbol, "userId": userId, "cash": trigger["maxSellAmount"]}
+                                # args = {"sym": symbol, "userId": userId, "cash": trigger["maxSellAmount"]}
                                 # TODO: this will call db queue to take from reserved
-                                handleCommandBuy(args)
-                                handleCommandCommitBuy(args)
-
+                                buy = databaseFunctions.createBuyRequest(someonesUserId, trigger["maxBuyAmount"] ,symbol)
+                                commitBuy = databaseFunctions.createCommitBuyRequest(someonesUserId , buy, quoteValue )
+                                db_rpc.call(buy)
+                                db_rpc.call(commitBuy)
+                                # handleCommandBuy(args)
+                                # handleCommandCommitBuy(args)
             time.sleep(1)
 
 
@@ -179,8 +221,10 @@ class SellTriggerThread(Thread):
                             if quoteValue >= trigger["sellAt"]:
                                 args = {"sym": symbol, "userId": userId, "cash": trigger["maxSellAmount"]}
                                 # TODO: this will call db queue to take from reserved
-                                handleCommandSell(args)
-                                handleCommandCommitSell(args)
+                                sell = databaseFunctions.createBuyRequest(someonesUserId, trigger["maxSellAmount"],symbol)
+                                commitSell = databaseFunctions.createCommitSellRequest(someonesUserId, sell, quoteValue)
+                                db_rpc.call(sell)
+                                db_rpc.call(commitSell)
 
             time.sleep(1)
 
@@ -253,7 +297,7 @@ def create_response(status, response):
 
 if __name__ == '__main__':
     triggers = Triggers()
-
+    db_rpc = DatabaseRpcClient()
     handleFunctionSwitch = {
         TriggerFunctions.BUY: handleAddBuy,
         TriggerFunctions.ACTIVATE_BUY: handleSetBuyActive,
