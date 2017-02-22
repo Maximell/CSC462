@@ -1036,7 +1036,7 @@ def delegate(ch , method, properties, body):
             # Log User Command Call
             audit_rpc.call(requestBody)
             # Log DumpLog Call
-            requestBody = {"function": "USER_COMMAND","fileName": args.get("userId")}
+            requestBody = {"function": "WRITE_LOGS","fileName": args.get("userId")}
             audit_rpc.call(requestBody)
 
             # auditServer.writeLogs(fileName)

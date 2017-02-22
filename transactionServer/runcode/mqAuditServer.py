@@ -306,39 +306,28 @@ class AuditServer:
         return "Log file written to file: " + str(fileName)
 
 def handleUserCommand(payload):
-    auditServer.logUserCommand(payload.get("timeStamp") , payload.get("server") , payload.get("transactionNum") ,
-                               payload.get("userId") , payload.get("command") , payload.get("stockSymbol"), payload.get("fileName"),
-                               payload.get("amount"))
-    return "audit logging user command not implemented"
+    return auditServer.logUserCommand(
+        payload["timeStamp"],
+        payload["server"],
+        payload["transactionNum"],
+        payload["userId"],
+        payload["commandName"],
+        stockSymbol=payload.get("stockSymbol"),
+        fileName=payload.get("fileName"),
+        amount=payload.get("amount")
+    )
 
 def handleQuoteServer(payload):
-    auditServer.logQuoteServer(payload.get("timeStamp"), payload.get("server"), payload.get("transactionNum"),
-                               payload.get("userId"), payload.get("quoteServerTime"), payload.get("stockSymbol"),
-                               payload.get("price"),payload.get("cyptoKey"))
-    return "audit logging quote server not implemented"
-
-#     return auditServer.logUserCommand(
-#         payload["timeStamp"],
-#         payload["server"],
-#         payload["transactionNum"],
-#         payload["userId"],
-#         payload["commandName"],
-#         stockSymbol=payload.get("stockSymbol"),
-#         fileName=payload.get("fileName"),
-#         amount=payload.get("amount")
-#     )
-
-# def handleQuoteServer(payload):
-#     return auditServer.logQuoteServer(
-#         payload["timeStamp"],
-#         payload["server"],
-#         payload["transactionNum"],
-#         payload["userId"],
-#         payload["quoteServerTime"],
-#         payload["stockSymbol"],
-#         payload["price"],
-#         payload["cryptoKey"]
-#     )
+    return auditServer.logQuoteServer(
+        payload["timeStamp"],
+        payload["server"],
+        payload["transactionNum"],
+        payload["userId"],
+        payload["quoteServerTime"],
+        payload["stockSymbol"],
+        payload["price"],
+        payload["cryptoKey"]
+    )
 
 def handleAccountTransaction(payload):
     return auditServer.logUserCommand(
