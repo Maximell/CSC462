@@ -14,7 +14,7 @@ if __name__ == '__main__':
     except:
         print "Audit server failed to start"
     try:
-        os.system("python -u mqTriggers.py > Auditoutput.txt &")
+        os.system("python -u mqTriggers.py > triggersOutput.txt &")
     except:
         print "Audit server failed to start"
     try:

@@ -276,7 +276,7 @@ def on_request(ch, method, props, body):
     function = payload["function"]
 
     try:
-        response = handleFunctionSwitch[function](**payload)
+        response = handleFunctionSwitch[function](payload)
     except KeyError:
         response = create_response(404, "function not found")
 
