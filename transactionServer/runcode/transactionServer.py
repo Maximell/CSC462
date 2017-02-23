@@ -767,6 +767,8 @@ def delegate(ch , method, properties, body):
 
         elif args["command"] == "SET_SELL_TRIGGER":
             handleCommandSetSellTrigger(args)
+        elif args["command"] == "DUMPLOG":
+            handleCommandDumplog(args)
         else:
             print "couldn't figure out command..."
     except RuntimeError:
@@ -941,6 +943,11 @@ def handleCommandCancelSetSell(args):
             refund = math.floor(trigger["maxSellAmount"] / trigger["sellAt"])
             releasePortfolioRequest = databaseFunctions.createReleasePortfolioRequest(userId, refund, symbol)
             releasePortfolioResponse = db_rpc.call(releasePortfolioRequest)
+
+def handleCommandDumplog(args):
+    requestBody = auditFunctions.createWriteLogs(int(time.time() * 1000), "transactionServer", args["lineNum"],
+                                                 args["userId"], args["command"])
+    audit_rpc.call(requestBody)
 
 
 def listenToRabbitQ():

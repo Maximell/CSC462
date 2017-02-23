@@ -82,6 +82,16 @@ class auditFunctions:
         }
 
     @classmethod
+    def createWriteLogs(cls, timeStamp, server, transactionNum, userId, command):
+        return {
+            'function': cls.WRITE_LOGS,
+            'timeStamp': timeStamp,
+            'transactionNum': transactionNum,
+            'userId': userId,
+            'command': command
+        }
+
+    @classmethod
     def listOptions(cls):
         return [attr for attr in dir(auditFunctions) if not callable(attr) and not attr.startswith("__") and attr != "listOptions" ]
 
