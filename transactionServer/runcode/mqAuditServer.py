@@ -363,14 +363,9 @@ def handleSystemEvent(payload):
     )
 
 def handleErrorMessage(payload):
-    return auditServer.logUserCommand(
-        payload["timeStamp"],
-        payload["server"],
-        payload["transactionNum"],
-        payload["userId"],
-        payload["commandName"],
-        payload["errorMessage"]
-    )
+    auditServer.logErrorMessage(payload.get("timeStamp"), payload.get("server"), payload.get("transactionNum"),
+                                payload.get("userId"), payload.get("command"), payload.get("errorMessage"))
+    return "audit logging error message not implemented"
 
 def handleDebugMessage(payload):
     return auditServer.logUserCommand(
@@ -385,10 +380,12 @@ def handleDebugMessage(payload):
 def handleWriteLogs(payload):
     return auditServer.writeLogs(payload["fileName"])
 
+
 def on_request(ch, method, props, body):
+    print body
     payload = json.loads(body)
+    print payload
     function = payload["function"]
-    args = ast.literal_eval(body)
 
     try:
         response = handleFunctionSwitch[function](payload)
@@ -404,6 +401,9 @@ def on_request(ch, method, props, body):
         body=response
     )
     ch.basic_ack(delivery_tag=method.delivery_tag)
+
+def create_response(status, response):
+    return {'status': status, 'body': response}
 
 if __name__ == '__main__':
     auditServer = AuditServer()

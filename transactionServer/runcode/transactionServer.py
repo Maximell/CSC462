@@ -16,6 +16,7 @@ import queueNames
 from mqDatabaseServer import databaseFunctions
 from mqQuoteServer import createQuoteRequest
 from mqTriggers import TriggerFunctions
+from mqAuditServer import auditFunctions
 
 from OpenSSL import SSL
 import ast
@@ -94,6 +95,228 @@ import ast
 #
 # method add arguments
 
+# Class for a logging 'server'
+# In general, an event takes the form of:
+#   event = {
+#       'type': 'someType',
+#           userCommand
+#           accountTransaction
+#           systemEvent
+#           quoteServer
+#           errorEvent
+#       'timestamp': seconds since the epoch,
+#       'server': 'where the server originated from',
+#       'transactionNum': the transaction number the event is associated with,
+#       'username': 'userId of the user who triggered the event'
+#       'args': {} Some dictionary - specific for the type of event.
+#   }
+#   Valid 'type's and their arg values:
+#       userCommand
+#           args: {
+#               'command': {'name': ,
+#                           args{}}'string representing the user's command',
+#                   add
+#                   commit_buy
+#                   cancel_buy
+#                   commit_sell
+#                   cancel_sell
+#                   display_summary
+#                       no additional args
+#
+#                   quote
+#                   buy
+#                   sell
+#                   set_buy_amount
+#                   cancel_set_buy
+#                   set_buy_trigger
+#                   set_sell_amount
+#                   set_sell_trigger
+#                   cancel_set_sell
+#                       need stockSymbol
+#
+#                   dumplog
+#                       fileName
+#
+#                   add
+#                   buy
+#                   sell
+#                   set_buy_amount
+#                   set_buy_trigger
+#                   set_sell_amount
+#                   set_sell_trigger
+#                       funds
+#           }
+#       accountTransaction
+#           args: {
+#               'action': string corresponding to type of account transaction
+#                   add
+#                   remove
+#                   reserve
+#                   free
+#               'funds': amount of money being moved
+#           }
+#       systemEvent
+#           args: {
+#               'command': same as in userCommand
+#           }
+#       quoteServer
+#           args: {
+#               'quoteServerTime': time the quote was received from the quote server,
+#               'stockSymbol': 'stcksymbl',
+#               'price': price of the stock at the time the server quoted it,
+#               'cryptokey': 'cryptographic key the server returns'
+#           }
+#       errorEvent
+#           args: {
+#               'command': same as in userCommand,
+#               'errorMessage': message associated with the error
+#           }
+class AuditServer:
+    def __init__(self):
+        self.logFile = []
+
+
+    # TODO: need a logAdminCommand which doesnt have userId (for dumplog command)
+    def logUserCommand(self, timeStamp, server, transactionNum, userId, commandName, stockSymbol=None, fileName=None, amount=None):
+        dictionary = {
+            'timeStamp': timeStamp,
+            'server': server,
+            'transactionNum': transactionNum,
+            'userId': userId,
+            'commandName': commandName,
+            'logType': 'userCommand'
+        }
+        if stockSymbol:
+            dictionary = dict(dictionary, stockSymbol=stockSymbol)
+        if fileName:
+            dictionary = dict(dictionary, fileName=fileName)
+        if amount:
+            dictionary = dict(dictionary, amount=amount)
+        self.logFile.append(dictionary)
+
+    def logQuoteServer(self, timeStamp, server, transactionNum, userId, quoteServerTime, stockSymbol, price, cryptoKey):
+        dictionary = {
+            'timeStamp': timeStamp,
+            'server': server,
+            'transactionNum': transactionNum,
+            'userId': userId,
+            'logType': 'quoteServer',
+            'quoteServerTime': quoteServerTime,
+            'stockSymbol': stockSymbol,
+            'price': price,
+            'cryptoKey': cryptoKey
+        }
+        self.logFile.append(dictionary)
+
+    def logAccountTransaction(self, timeStamp, server, transactionNum, userId, commandName, action, funds):
+        dictionary = {
+            'timeStamp': timeStamp,
+            'server': server,
+            'transactionNum': transactionNum,
+            'userId': userId,
+            'logType': 'accountTransaction',
+            'action': action,
+            'funds': funds
+        }
+        self.logFile.append(dictionary)
+
+    def logSystemEvent(self, timeStamp, server, transactionNum, userId, commandName, stockSymbol=None, fileName=None, amount=None):
+        dictionary = {
+            'timeStamp': timeStamp,
+            'server': server,
+            'transactionNum': transactionNum,
+            'userId': userId,
+            'commandName': commandName,
+            'logType': 'systemEvent'
+        }
+        if stockSymbol:
+            dictionary = dict(dictionary, stockSymbol=stockSymbol)
+        if fileName:
+            dictionary = dict(dictionary, fileName=fileName)
+        if amount:
+            dictionary = dict(dictionary, amount=amount)
+        self.logFile.append(dictionary)
+
+    def logErrorMessage(self, timeStamp, server, transactionNum, userId, commandName, errorMessage):
+        dictionary = {
+            'timeStamp': timeStamp,
+            'server': server,
+            'transactionNum': transactionNum,
+            'userId': userId,
+            'commandName': commandName,
+            'logType': 'errorEvent',
+            'errorMessage': errorMessage
+        }
+        self.logFile.append(dictionary)
+
+    def logDebugMessage(self, timeStamp, server, transactionNum, userId, commandName, debugMessage):
+        dictionary = {
+            'timeStamp': timeStamp,
+            'server': server,
+            'transactionNum': transactionNum,
+            'userId': userId,
+            'commandName': commandName,
+            'logType': 'debugEvent',
+            'debugMessage': debugMessage
+        }
+        self.logFile.append(dictionary)
+
+    # def logUserCommand(self, **kwargs):
+    #     self.logFile.append(dict(kwargs,
+    #                              logType='userCommand'
+    #                              ))
+
+    def writeLogs(self, fileName):
+        self._dumpIntoFile(fileName)
+
+    # dumps the logs to a given file
+    def _dumpIntoFile(self, fileName):
+        try:
+            file = open(fileName, 'w')
+        except IOError:
+            print 'Attempted to save into file %s but couldn\'t open file for writing.' % (fileName)
+
+        file.write('<?xml version="1.0"?>\n')
+        file.write('<log>\n\n')
+        for log in self.logFile:
+            logType = log['logType']
+            file.write('\t<' + logType + '>\n')
+            file.write('\t\t<timestamp>' + str(log['timeStamp']) + '</timestamp>\n')
+            file.write('\t\t<server>' + str(log['server']) + '</server>\n')
+            file.write('\t\t<transactionNum>' + str(log['transactionNum']) + '</transactionNum>\n')
+            file.write('\t\t<username>' + str(log['userId']) + '</username>\n')
+            if logType == 'userCommand':
+                file.write('\t\t<command>' + str(log['commandName']) + '</command>\n')
+                if log.get('stockSymbol'):
+                    file.write('\t\t<stockSymbol>' + str(log['stockSymbol']) + '</stockSymbol>\n')
+                if log.get('fileName'):
+                    file.write('\t\t<filename>' + str(log['fileName']) + '</filename>\n')
+                if log.get('amount'):
+                    file.write('\t\t<funds>' + str(log['amount']) + '</funds>\n')
+            elif logType == 'quoteServer':
+                file.write('\t\t<quoteServerTime>' + str(log['quoteServerTime']) + '</quoteServerTime>\n')
+                file.write('\t\t<stockSymbol>' + str(log['stockSymbol']) + '</stockSymbol>\n')
+                file.write('\t\t<price>' + str(log['price']) + '</price>\n')
+                file.write('\t\t<cryptokey>' + str(log['cryptoKey']) + '</cryptokey>\n')
+            elif logType == 'accountTransaction':
+                file.write('\t\t<action>' + str(log['action']) + '</action>')
+                file.write('\t\t<funds>' + str(log['amount']) + '</funds>')
+            elif logType == 'systemEvent':
+                file.write('\t\t<command>' + str(log['commandName']) + '</command>\n')
+                if log.get('stockSymbol'):
+                    file.write('\t\t<stockSymbol>' + str(log['stockSymbol']) + '</stockSymbol>\n')
+                if log.get('fileName'):
+                    file.write('\t\t<filename>' + str(log['fileName']) + '</filename>\n')
+                if log.get('amount'):
+                    file.write('\t\t<funds>' + str(log['amount']) + '</funds>\n')
+            elif logType == 'errorMessage':
+                file.write('\t\t<errorMessage>' + str(log['errorMessage']) + '</errorMessage>\n')
+            elif logType == 'debugMessage':
+                file.write('\t\t<debugMessage>' + str(log['debugMessage']) + '</debugMessage>\n')
+            file.write('\t</'+ logType +'>\n')
+        file.write('\n</log>\n')
+        file.close()
+        print "Log file written."
 
 # Here we want our trigger's threads
 # hitting the quote server for quotes every 15sec
@@ -499,16 +722,48 @@ class databaseServer:
         user = self.getUser(userId)
         return user.get('portfolio')
 
-
-
-
-
-
-
 '''
     new stuff here, eventually, class quote should be gone, but in the sense of not breaking abunch of other stuff, its still there
 '''
+# new RPC audit client using rabbitMQ
+class AuditRpcClient(object):
+    def __init__(self):
+        self.response = None
+        self.corr_id = None
 
+        self.connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+
+        self.channel = self.connection.channel()
+
+        result = self.channel.queue_declare(exclusive=True)
+        self.callback_queue = result.method.queue
+
+        self.channel.basic_consume(self.on_response, no_ack=True, queue=self.callback_queue)
+    def on_response(self, ch, method, props, body):
+        # make sure its the right package
+        if self.corr_id == props.correlation_id:
+            # self.response is essential the return of this function, because call() waits on it to be not None
+            self.response = json.loads(body)
+
+    def call(self, requestBody):
+        self.response = None
+        self.corr_id = str(uuid.uuid4())
+        print "sending Audit request Id:", self.corr_id
+        self.channel.basic_publish(
+            exchange='',
+            routing_key=queueNames.AUDIT,
+            properties=pika.BasicProperties(
+                reply_to=self.callback_queue,
+                correlation_id=self.corr_id
+            ),
+            body=json.dumps(requestBody)
+        )
+        while self.response is None:
+            self.connection.process_data_events()
+            print "From Audit server: ",  self.response
+        return self.response
+
+# new RPC client client using rabbitMQ
 class QuoteRpcClient(object):
     def __init__(self):
         self.response = None
@@ -544,9 +799,10 @@ class QuoteRpcClient(object):
         )
         while self.response is None:
             self.connection.process_data_events()
+            print "From Quote server: ",  self.response
         return self.response
 
-
+# new RPC Database client using rabbitMQ
 class DatabaseRpcClient(object):
     def __init__(self):
         self.response = None
@@ -570,7 +826,7 @@ class DatabaseRpcClient(object):
     def call(self, requestBody):
         self.response = None
         self.corr_id = str(uuid.uuid4())
-        print "sending quote request Id:", self.corr_id
+        print "sending Database request Id:", self.corr_id
         self.channel.basic_publish(
             exchange='',
             routing_key=queueNames.DATABASE,
@@ -582,6 +838,7 @@ class DatabaseRpcClient(object):
         )
         while self.response is None:
             self.connection.process_data_events()
+            print "From Database server: ",  self.response
         return self.response
 
 
@@ -608,7 +865,7 @@ class TriggerRpcClient(object):
     def call(self, requestBody):
         self.response = None
         self.corr_id = str(uuid.uuid4())
-        print "sending quote request Id:", self.corr_id
+        print "sending Trigger request Id:", self.corr_id
         self.channel.basic_publish(
             exchange='',
             routing_key=queueNames.TRIGGERS,
@@ -622,13 +879,14 @@ class TriggerRpcClient(object):
             self.connection.process_data_events()
         return self.response
 
+
 # quote shape: symbol: {value: string, retrieved: epoch time, user: string, cryptoKey: string}
 class Quotes():
-    def __init__(self, auditServer, cacheExpire=60, testing=False):
+    def __init__(self, cacheExpire=60, testing=False):
         self.cacheExpire = cacheExpire
         self.quoteCache = {}
         self.testing = testing
-        self.auditServer = auditServer
+        # self.auditServer = auditServer
         # if not testing:
         #     self.quoteServerConnection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         #     self.quoteServerConnection.connect(('quoteserve.seng.uvic.ca', 4445))
@@ -675,17 +933,19 @@ class Quotes():
             # data = self.quoteServerConnection.recv(1024)
 
         newQuote = self._quoteStringToDictionary(data)
+        # LogQuoteServer
 
-        self.auditServer.logQuoteServer(
-            int(time.time() * 1000),
-            "quote",
-            transactionNumber,
-            user,
-            newQuote.get('serverTime'),
-            symbol,
-            newQuote.get('value'),
-            newQuote.get('cryptoKey')
-        )
+        # audit_rpc.call()
+        # self.auditServer.logQuoteServer(
+        #     int(time.time() * 1000),
+        #     "quote",
+        #     transactionNumber,
+        #     user,
+        #     newQuote.get('serverTime'),
+        #     symbol,
+        #     newQuote.get('value'),
+        #     newQuote.get('cryptoKey')
+        # )
 
         self.quoteCache[symbol] = newQuote
         return newQuote
@@ -720,103 +980,111 @@ class Quotes():
 
 
 def delegate(ch , method, properties, body):
-    # this is where we will figure what command we are dealing with
-    # and deligate from here to whatever function is needed
-    # to handle the request
-    # ----------------------------
-    # add
-    # quote
-    # buy
-    # commit_buy
-    # cancel_buy
-    # sell
-    # commit_sell
-    # cancel_sell
-    #
-    # set_buy_amount
-    # cancel_set_buy
-    # set_buy_trigger
-    #
-    # set_sell_amount
-    # cancel_set_sell
-    # set_sell_trigger
-    # ----------------------------
-    print body
     args = ast.literal_eval(body)
-    print args
-    # Call Quote
-    if "./testLOG" != args["userId"]:
-        # TODO: not sure how filename comes in
-        auditServer.logUserCommand(
-            int(time.time() * 1000),
-            "transaction",
-            args.get('lineNum'),
-            args.get('userId'),
-            args.get("command"),
-            stockSymbol=args.get('stockSymbol'),
-            fileName=None,
-            amount=args.get('cash')
-        )
-        localDB.addUser(args["userId"])
-    else:
-        # TODO: not sure how filename comes in
-        fileName = args.get('userId')
-        auditServer.logUserCommand(
-            int(time.time() * 1000),
-            "transaction",
-            args.get('lineNum'),
-            "TODO get user properly",
-            args.get("command"),
-            stockSymbol=args.get('stockSymbol'),
-            fileName=fileName,
-            amount=args.get('cash')
-        )
-        auditServer.writeLogs(fileName)
+    try:
+        # this is where we will figure what command we are dealing with
+        # and deligate from here to whatever function is needed
+        # to handle the request
+        # ----------------------------
+        # add
+        # quote
+        # buy
+        # commit_buy
+        # cancel_buy
+        # sell
+        # commit_sell
+        # cancel_sell
+        #
+        # set_buy_amount
+        # cancel_set_buy
+        # set_buy_trigger
+        #
+        # set_sell_amount
+        # cancel_set_sell
+        # set_sell_trigger
+        # ----------------------------
+        # args = ast.literal_eval(body)
+        print args
+        # Call Quote
+        # self, timeStamp, server, transactionNum, userId, commandName, stockSymbol=None, fileName=None, amount=None
 
+        if "./testLOG" != args["userId"]:
 
+            requestBody = auditFunctions.createUserCommand(int(time.time() * 1000),"transactionServer", args["lineNum"],
+                                                args["userId"], args["command"],args.get("stockSymbol"),None,args.get("cash"))
+            # Log User Command Call
+            audit_rpc.call(requestBody)
 
-    if args["command"] == "QUOTE":
-        handleCommandQuote(args)
+        else:
+            requestBody = auditFunctions.createUserCommand(int(time.time() * 1000), "transactionServer", args["lineNum"],
+                                                               args["userId"], args["command"], args.get("stockSymbol"),
+                                                               args["userId"], args.get("cash"))
+            # Log User Command Call
+            audit_rpc.call(requestBody)
 
-    elif args["command"] == "ADD":
-        handleCommandAdd(args)
+        if args["command"] == "QUOTE":
+            handleCommandQuote(args)
 
-    elif args["command"] == "BUY":
-        handleCommandBuy(args)
+        elif args["command"] == "ADD":
+            handleCommandAdd(args)
 
-    elif args["command"] == "COMMIT_BUY":
-        handleCommandCommitBuy(args)
+        elif args["command"] == "BUY":
+            handleCommandBuy(args)
 
-    elif args["command"] == "CANCEL_BUY":
-        handleCommandCancelBuy(args)
+        elif args["command"] == "COMMIT_BUY":
+            handleCommandCommitBuy(args)
 
-    elif args["command"] == "SELL":
-        handleCommandSell(args)
+        elif args["command"] == "CANCEL_BUY":
+            handleCommandCancelBuy(args)
 
-    elif args["command"] == "COMMIT_SELL":
-        handleCommandCommitSell(args)
+        elif args["command"] == "SELL":
+            handleCommandSell(args)
 
-    elif args["command"] == "CANCEL_SELL":
-        handleCommandCancelSell(args)
+        elif args["command"] == "COMMIT_SELL":
+            handleCommandCommitSell(args)
 
-    # triggers
-    elif args["command"] == "SET_BUY_AMOUNT":
-        handleCommandSetBuyAmount(args)
+        elif args["command"] == "CANCEL_SELL":
+            handleCommandCancelSell(args)
 
-    elif args["command"] == "CANCEL_BUY_AMOUNT":
-        handleCommandCancelSetBuy(args)
+        elif args["command"] == "SET_BUY_AMOUNT":
+            handleCommandSetBuyAmount(args)
 
-    elif args["command"] == "SET_BUY_TRIGGER":
-        handleCommandSetBuyTrigger(args)
+        elif args["command"] == "CANCEL_BUY_AMOUNT":
+            handleCommandCancelSetBuy(args)
 
-    elif args["command"] == "SET_SELL_AMOUNT":
-        handleCommandSetSellAmount(args)
-    elif args["command"] == "CANCEL_SELL_AMOUNT":
-        handleCommandCancelSetSell(args)
-    elif args["command"] == "SET_SELL_TRIGGER":
-        handleCommandSetSellTrigger(args)
-    else:
-        print "couldn't figure out command..."
+        elif args["command"] == "SET_BUY_TRIGGER":
+            handleCommandSetBuyTrigger(args)
+
+        elif args["command"] == "SET_SELL_AMOUNT":
+            handleCommandSetSellAmount(args)
+
+        elif args["command"] == "CANCEL_SELL_AMOUNT":
+            handleCommandCancelSetSell(args)
+
+        elif args["command"] == "SET_SELL_TRIGGER":
+            handleCommandSetSellTrigger(args)
+        else:
+            print "couldn't figure out command..."
+    except RuntimeError:
+        # (self, timeStamp, server, transactionNum, userId, commandName, errorMessage)
+        # errror msg being sent to audit server
+        # requestBody = {"function": "ERROR_MESSAGE", "timeStamp": int(time.time() * 1000),
+        #                "server": "transactionServer", "transactionNum": args.get('lineNum'),
+        #                "userId": args.get('userId'),"command": args.get("command"), "errorMessage": RuntimeError
+        #                }
+        requestBody = auditFunctions.createErrorMessage(int(time.time() * 1000), "transactionServer", args["lineNum"],
+                                                               args["userId"], args["command"],str(RuntimeError))
+        audit_rpc.call(requestBody)
+    except TypeError:
+        # errror msg being sent to audit server
+        requestBody = auditFunctions.createErrorMessage(int(time.time() * 1000), "transactionServer", args["lineNum"],
+                                                            args["userId"], args["command"], str(TypeError))
+        audit_rpc.call(requestBody)
+    except ArithmeticError:
+        # errror msg being sent to audit server
+        requestBody = auditFunctions.createErrorMessage(int(time.time() * 1000), "transactionServer", args["lineNum"],
+                                                            args["userId"], args["command"], str(ArithmeticError))
+        audit_rpc.call(requestBody)
 
 def handleCommandQuote(args):
     symbol = args["stockSymbol"]
@@ -994,12 +1262,13 @@ def incrementSocketNum(socketNum):
 if __name__ == '__main__':
     # Global vars
     # -----------------------
-    auditServer = AuditServer()
-    quoteObj = Quotes(auditServer)
+    # auditServer = AuditServer()
+    # quoteObj = Quotes(auditServer)
     localDB = databaseServer()
     localTriggers = Triggers()
 
     # rpc classes
+    audit_rpc = AuditRpcClient()
     quote_rpc = QuoteRpcClient()
     db_rpc = DatabaseRpcClient()
     trigger_rpc = TriggerRpcClient()
@@ -1007,8 +1276,8 @@ if __name__ == '__main__':
 
     # trigger threads
 
-    hammerQuoteServerToSell(quoteObj)
-    hammerQuoteServerToBuy(quoteObj)
+    # hammerQuoteServerToSell(quoteObj)
+    # hammerQuoteServerToBuy(quoteObj)
     # -----------------------
 
     main()
