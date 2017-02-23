@@ -1065,22 +1065,22 @@ def delegate(ch , method, properties, body):
     except RuntimeError:
         # (self, timeStamp, server, transactionNum, userId, commandName, errorMessage)
         # errror msg being sent to audit server
-        requestBody = {"function": "ERROR_MESSAGE", "timeStamp": int(time.time() * 1000),
-                       "server": "transactionServer", "transactionNum": args.get('lineNum'),
-                       "userId": args.get('userId'),"command": args.get("command"), "errorMessage": RuntimeError
-                       }
+        # requestBody = {"function": "ERROR_MESSAGE", "timeStamp": int(time.time() * 1000),
+        #                "server": "transactionServer", "transactionNum": args.get('lineNum'),
+        #                "userId": args.get('userId'),"command": args.get("command"), "errorMessage": RuntimeError
+        #                }
         requestBody = auditFunctions.createErrorMessage(int(time.time() * 1000), "transactionServer", args["lineNum"],
                                                                args["userId"], args["command"],str(RuntimeError))
         audit_rpc.call(requestBody)
     except TypeError:
         # errror msg being sent to audit server
         requestBody = auditFunctions.createErrorMessage(int(time.time() * 1000), "transactionServer", args["lineNum"],
-                                                            args["userId"], args["command"], str(RuntimeError))
+                                                            args["userId"], args["command"], str(TypeError))
         audit_rpc.call(requestBody)
     except ArithmeticError:
         # errror msg being sent to audit server
         requestBody = auditFunctions.createErrorMessage(int(time.time() * 1000), "transactionServer", args["lineNum"],
-                                                            args["userId"], args["command"], str(RuntimeError))
+                                                            args["userId"], args["command"], str(ArithmeticError))
         audit_rpc.call(requestBody)
 
 def handleCommandQuote(args):

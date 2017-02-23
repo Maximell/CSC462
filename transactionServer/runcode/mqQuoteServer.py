@@ -85,6 +85,8 @@ class Quotes():
             newQuote = self._quoteStringToDictionary(data)
             requestBody = auditFunctions.createQuoteServer(int(time.time() * 1000),"quoteServer", transactionNumber,user, newQuote['serverTime'],
                                              symbol,newQuote['value'],newQuote['cryptoKey'] )
+            print requestBody
+            print type(requestBody)
             audit_rpc.call(requestBody)
 
 
