@@ -198,6 +198,7 @@ class AuditServer:
             'cryptoKey': cryptoKey
         }
         self.logFile.append(dictionary)
+        return dictionary
 
     def logAccountTransaction(self, timeStamp, server, transactionNum, userId, commandName, action, funds):
         dictionary = {
@@ -205,11 +206,13 @@ class AuditServer:
             'server': server,
             'transactionNum': transactionNum,
             'userId': userId,
+            'commandName': commandName,
             'logType': 'accountTransaction',
             'action': action,
             'funds': funds
         }
         self.logFile.append(dictionary)
+        return dictionary
 
     def logSystemEvent(self, timeStamp, server, transactionNum, userId, commandName, stockSymbol=None, fileName=None, amount=None):
         dictionary = {
@@ -227,6 +230,7 @@ class AuditServer:
         if amount:
             dictionary = dict(dictionary, amount=amount)
         self.logFile.append(dictionary)
+        return dictionary
 
     def logErrorMessage(self, timeStamp, server, transactionNum, userId, commandName, errorMessage):
         dictionary = {
@@ -239,6 +243,7 @@ class AuditServer:
             'errorMessage': errorMessage
         }
         self.logFile.append(dictionary)
+        return dictionary
 
     def logDebugMessage(self, timeStamp, server, transactionNum, userId, commandName, debugMessage):
         dictionary = {
@@ -251,9 +256,13 @@ class AuditServer:
             'debugMessage': debugMessage
         }
         self.logFile.append(dictionary)
+        return dictionary
 
     def writeLogs(self, fileName):
         self._dumpIntoFile(fileName)
+        return {
+            "success": True
+        }
 
     # dumps the logs to a given file
     def _dumpIntoFile(self, fileName):
