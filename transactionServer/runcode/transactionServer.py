@@ -760,6 +760,7 @@ class AuditRpcClient(object):
         )
         while self.response is None:
             self.connection.process_data_events()
+            print "From Audit server: ",  self.response
         return self.response
 
 # new RPC client client using rabbitMQ
@@ -798,6 +799,7 @@ class QuoteRpcClient(object):
         )
         while self.response is None:
             self.connection.process_data_events()
+            print "From Quote server: ",  self.response
         return self.response
 
 # new RPC Database client using rabbitMQ
@@ -836,6 +838,7 @@ class DatabaseRpcClient(object):
         )
         while self.response is None:
             self.connection.process_data_events()
+            print "From Database server: ",  self.response
         return self.response
 
 
