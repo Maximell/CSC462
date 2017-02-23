@@ -32,7 +32,7 @@ class AuditRpcClient(object):
         self.response = None
         self.corr_id = str(uuid.uuid4())
         print "sending quote request Id:", self.corr_id
-        print requestBody
+        requestBody = json.dumps(requestBody)
         # print type(requestBody)
         self.channel.basic_publish(
             exchange='',
