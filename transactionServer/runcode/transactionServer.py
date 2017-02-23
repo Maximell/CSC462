@@ -758,8 +758,8 @@ class AuditRpcClient(object):
             ),
             body=json.dumps(requestBody)
         )
-        # while self.response is None:
-        #     self.connection.process_data_events()
+        while self.response is None:
+            self.connection.process_data_events()
         return self.response
 
 # new RPC client client using rabbitMQ
