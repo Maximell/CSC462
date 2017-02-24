@@ -269,18 +269,23 @@ class AuditServer:
         return dictionary
 
     def writeLogs(self, fileName):
+        print "in writeLogs"
         self._dumpIntoFile(fileName)
+        print "done writeLogs"
         return {
             "success": True
         }
 
     # dumps the logs to a given file
     def _dumpIntoFile(self, fileName):
+        print "in dump file"
         try:
             file = open(fileName, 'w')
+            print "opened file"
         except IOError:
             print 'Attempted to save into file %s but couldn\'t open file for writing.' % (fileName)
 
+        print "writing"
         file.write('<?xml version="1.0"?>\n')
         file.write('<log>\n\n')
         for log in self.logFile:
@@ -399,6 +404,10 @@ def on_request(ch, method, props, body):
     function = payload["function"]
     print "donehere"
     try:
+        print "before"
+        print handleFunctionSwitch[function]
+        print payload
+        print "after"
         response = handleFunctionSwitch[function](payload)
     except KeyError:
         response = create_response(404, "function not found")
