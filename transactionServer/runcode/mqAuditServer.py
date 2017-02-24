@@ -393,7 +393,7 @@ def handleDebugMessage(payload):
     )
 
 def handleWriteLogs(payload):
-    return auditServer.writeLogs(payload["fileName"])
+    return auditServer.writeLogs(payload["userId"])
 
 
 def on_request(ch, method, props, body):
@@ -409,6 +409,7 @@ def on_request(ch, method, props, body):
         print payload
         print "after"
         response = handleFunctionSwitch[function](payload)
+        print "after after"
     except KeyError:
         response = create_response(404, "function not found")
 
