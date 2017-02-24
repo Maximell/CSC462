@@ -392,11 +392,12 @@ def handleWriteLogs(payload):
 
 
 def on_request(ch, method, props, body):
+    print "here"
     print body
     payload = json.loads(body)
     print payload
     function = payload["function"]
-
+    print "donehere"
     try:
         response = handleFunctionSwitch[function](payload)
     except KeyError:
