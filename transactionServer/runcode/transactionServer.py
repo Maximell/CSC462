@@ -581,7 +581,7 @@ class TriggerRpcClient(object):
         )
         while self.response is None:
             self.connection.process_data_events()
-        print "From Database server: ",  self.response
+        print "From Trigger server: ",  self.response
         return self.response
 
 

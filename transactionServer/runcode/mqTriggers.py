@@ -296,11 +296,14 @@ def handleGetSell(payload):
 # --------------------------------------------------------------- ^ handlers ^
 def on_request(ch, method, props, body):
     payload = json.loads(body)
+    print "Got request: ", payload
+
     function = payload["function"]
 
     try:
         response = handleFunctionSwitch[function](payload)
     except KeyError:
+        print "Error in handleFunction: ",function , payload
         response = create_response(404, "function not found")
 
     response = json.dumps(response)
@@ -331,8 +334,8 @@ if __name__ == '__main__':
         TriggerFunctions.GET_SELL: handleGetSell
     }
 
-    # BuyTriggerThread()
-    # SellTriggerThread()
+    BuyTriggerThread()
+    SellTriggerThread()
 
     connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
     channel = connection.channel()
