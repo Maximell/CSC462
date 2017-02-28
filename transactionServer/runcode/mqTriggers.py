@@ -311,7 +311,7 @@ def handleCancelSell(userId, symbol):
     return create_response(400, "trigger doesnt exist")
 
 def handleGetSell(userId, symbol):
-    trigger = triggers.localTriggers.getSellTrigger(userId, symbol)
+    trigger = triggers.getSellTrigger(userId, symbol)
     if trigger:
         return create_response(200, trigger)
     return create_response(400, "trigger doesnt exist")
