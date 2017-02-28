@@ -113,7 +113,7 @@ class TriggerFunctions:
 
     @classmethod
     def createSetSellActiveRequest(cls, userId, symbol, sellAt):
-        return {'function': cls.ACTIVATE_SELL, 'userId': userId, 'symbol': symbol, 'buyAt': sellAt}
+        return {'function': cls.ACTIVATE_SELL, 'userId': userId, 'symbol': symbol, 'sellAt': sellAt}
 
     @classmethod
     def createCancelSellRequest(cls, userId, symbol):
