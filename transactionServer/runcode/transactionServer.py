@@ -922,7 +922,7 @@ def handleCommandSetSellTrigger(args):
     getTriggerRequest = TriggerFunctions.createGetSellRequest(userId, symbol)
     getTriggerResponse = trigger_rpc.call(getTriggerRequest)
     if getTriggerResponse["status"] == 200:
-        trigger = getTriggerRequest["body"]
+        trigger = getTriggerResponse["body"]
         reserve = math.floor(trigger["maxSellAmount"] / sellAt)
 
         reservePortfolioRequest = databaseFunctions.createReservePortfolioRequest(userId, reserve, symbol)
