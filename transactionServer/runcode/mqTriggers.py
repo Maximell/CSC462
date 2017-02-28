@@ -164,18 +164,22 @@ class Triggers:
     def setBuyActive(self, userId, symbol, buyAt):
         if self._triggerExists(userId, symbol, self.buyTriggers):
             trigger = self.buyTriggers.get(symbol).get(userId)
-            if buyAt <= trigger.get('cashReserved'):
+            if buyAt <= trigger['cashReserved']:
                 trigger["active"] = True
                 trigger["buyAt"] = buyAt
                 return trigger
+            else:
+                print "not enough in cashReserved"
 
     def setSellActive(self, userId, symbol, sellAt):
         if self._triggerExists(userId, symbol, self.sellTriggers):
             trigger = self.sellTriggers.get(symbol).get(userId)
-            if sellAt <= trigger.get('cashReserved'):
+            if sellAt >= trigger['maxSellAmount']:
                 trigger["active"] = True
                 trigger["sellAt"] = sellAt
                 return trigger
+            else:
+                print "sellat less than maxSellAmount"
 
     def cancelBuyTrigger(self, userId, symbol):
         # danger here'

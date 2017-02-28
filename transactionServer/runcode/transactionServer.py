@@ -569,7 +569,7 @@ class TriggerRpcClient(object):
     def call(self, requestBody):
         self.response = None
         self.corr_id = str(uuid.uuid4())
-        print "sending Trigger request Id:", self.corr_id
+        print "sending Trigger request Id:", self.corr_id , requestBody
         self.channel.basic_publish(
             exchange='',
             routing_key=queueNames.TRIGGERS,
