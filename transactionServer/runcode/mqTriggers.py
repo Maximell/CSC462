@@ -200,6 +200,10 @@ class Triggers:
             return removedTrigger
 
     def _triggerExists(self, userId, symbol, triggers):
+        print triggers
+        print userId
+        print symbol
+        print triggers.get(symbol, {}).get(userId)
         return bool(triggers.get(symbol, {}).get(userId))
 
 
