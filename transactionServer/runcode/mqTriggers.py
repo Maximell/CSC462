@@ -148,17 +148,17 @@ class Triggers:
             return self.sellTriggers[symbol][userId]
 
     def addBuyTrigger(self, userId, sym, cashReserved, transactionNum):
-        if userId not in self.buyTriggers:
-            self.buyTriggers[userId] = {}
+        if sym not in self.buyTriggers:
+            self.buyTriggers[sym] = {}
         trigger = {"cashReserved": cashReserved, "active": False, "buyAt": 0, "transId": transactionNum}
-        self.buyTriggers[userId][sym] = trigger
+        self.buyTriggers[sym][userId] = trigger
         return trigger
 
     def addSellTrigger(self, userId, sym, maxSellAmount, transactionNum):
-        if userId not in self.sellTriggers:
-            self.sellTriggers[userId] = {}
+        if sym not in self.sellTriggers:
+            self.sellTriggers[sym] = {}
         trigger = {"maxSellAmount": maxSellAmount, "active": False, "sellAt": 0, "transId": transactionNum}
-        self.sellTriggers[userId][sym] = trigger
+        self.sellTriggers[sym][userId] = trigger
         return trigger
 
     def setBuyActive(self, userId, symbol, buyAt):
@@ -200,10 +200,10 @@ class Triggers:
             return removedTrigger
 
     def _triggerExists(self, userId, symbol, triggers):
-        print triggers
-        print userId
-        print symbol
-        print triggers.get(symbol, {}).get(userId)
+        # print triggers
+        # print userId
+        # print symbol
+        # print triggers.get(userId, {}).get(userId)
         return bool(triggers.get(symbol, {}).get(userId))
 
 
