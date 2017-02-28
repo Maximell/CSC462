@@ -20,6 +20,8 @@ class databaseFunctions:
     RELEASE_CASH = 11
     RESERVE_PORTFOLIO = 12
     RELEASE_PORTFOLIO = 13
+    BUY_TRIGGER = 14
+    SELL_TRIGGER = 15
 
     # @classmethod makes it so you dont have to instantiate the class. just call databaseFunctions.createAddRequest()
 
@@ -76,6 +78,27 @@ class databaseFunctions:
     def createReleasePortfolioRequest(cls, userId, amount, symbol):
         return {'function': cls.RELEASE_PORTFOLIO, 'userId': userId, 'amount': amount, 'symbol': symbol}
 
+    @classmethod
+    def createBuyTriggerRequest(cls, userId, cashCommitAmount, cashReleaseAmount, portfolioAmount, symbol):
+        return {
+            'function': cls.BUY_TRIGGER,
+            'userId': userId,
+            'cashCommitAmount': cashCommitAmount,
+            'cashReleaseAmount': cashReleaseAmount,
+            'portfolioAmount': portfolioAmount,
+            'symbol': symbol
+        }
+
+    @classmethod
+    def createSellTriggerRequest(cls, userId, costPer, portfolioCommitAmount, portfolioReleaseAmount, symbol):
+        return {
+            'function': cls.SELL_TRIGGER,
+            'userId': userId,
+            'costPer': costPer,
+            'portfolioCommitAmount': portfolioCommitAmount,
+            'portfolioReleaseAmount': portfolioReleaseAmount,
+            'symbol': symbol
+        }
 
     @classmethod
     def listOptions(cls):
@@ -290,7 +313,7 @@ class database:
             return False
 
         user['portfolio'][symbol]['reserved'] -= numberToCommit
-        return user['portfolio'][symbol]
+        return user
 
     def checkPortfolio(self, userId):
         user = self.getUser(userId)
@@ -463,6 +486,36 @@ def handleReleasePortfolio(payload):
         return create_response(200, user)
     return create_response(400, "not enough reserved")
 
+def handleTriggerBuy(payload):
+    symbol = payload["symbol"]
+    cashCommitAmount = payload["cashCommitAmount"]
+    cashReleaseAmount = payload["cashReleaseAmount"]
+    portfolioAmount = payload["portfolioAmount"]
+    userId = payload["userId"]
+
+    user = databaseServer.commitReserveCash(userId, cashCommitAmount)
+    if user:
+        user = databaseServer.releaseCash(userId, cashReleaseAmount)
+        if user:
+            databaseServer.addToPortfolio(userId, symbol, portfolioAmount)
+            return create_response(200, user)
+    return create_response(400, "not enough money reserved")
+
+def handleTriggerSell(payload):
+    symbol = payload["symbol"]
+    costPer = payload["costPer"]
+    portfolioCommitAmount = payload["portfolioCommitAmount"]
+    portfolioReleaseAmount = payload["portfolioReleaseAmount"]
+    userId = payload["userId"]
+
+    user = databaseServer.commitReservedPortfolio(userId, symbol, portfolioCommitAmount)
+    if user:
+        user = databaseServer.releasePortfolioReserves(userId, symbol, portfolioReleaseAmount)
+        if user:
+            databaseServer.addCash(userId, portfolioCommitAmount * costPer)
+            return create_response(200, user)
+    return create_response(400, "not enough portfolio reserved")
+
 
 if __name__ == '__main__':
     databaseServer = database()
@@ -480,7 +533,9 @@ if __name__ == '__main__':
         databaseFunctions.RESERVE_CASH: handleReserveCash,
         databaseFunctions.RELEASE_CASH: handleReleaseCash,
         databaseFunctions.RESERVE_PORTFOLIO: handleReservePortfolio,
-        databaseFunctions.RELEASE_PORTFOLIO: handleReleasePortfolio
+        databaseFunctions.RELEASE_PORTFOLIO: handleReleasePortfolio,
+        databaseFunctions.BUY_TRIGGER: handleTriggerBuy,
+        databaseFunctions.SELL_TRIGGER: handleTriggerSell,
     }
 
     connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
