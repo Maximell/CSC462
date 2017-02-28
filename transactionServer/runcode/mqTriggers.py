@@ -96,8 +96,8 @@ class TriggerFunctions:
     GET_SELL = 7
 
     @classmethod
-    def createAddBuyRequest(cls, userId, symbol, amount, transactionNumber):
-        return {'function': cls.BUY, 'userId': userId, 'symbol': symbol, 'amount': amount, 'transactionNumber': transactionNumber}
+    def createAddBuyRequest(cls, userId, symbol, amount, transactionNum):
+        return {'function': cls.BUY, 'userId': userId, 'symbol': symbol, 'amount': amount, 'transactionNum': transactionNum}
 
     @classmethod
     def createSetBuyActiveRequest(cls, userId, symbol, buyAt):
@@ -108,8 +108,8 @@ class TriggerFunctions:
         return {'function': cls.CANCEL_BUY, 'userId': userId, 'symbol': symbol}
 
     @classmethod
-    def createAddSellRequest(cls, userId, symbol, amount, transactionNumber):
-        return {'function': cls.SELL, 'userId': userId, 'symbol': symbol, 'amount': amount, 'transactionNumber': transactionNumber}
+    def createAddSellRequest(cls, userId, symbol, amount, transactionNum):
+        return {'function': cls.SELL, 'userId': userId, 'symbol': symbol, 'amount': amount, 'transactionNum': transactionNum}
 
     @classmethod
     def createSetSellActiveRequest(cls, userId, symbol, sellAt):
@@ -147,17 +147,17 @@ class Triggers:
         if self._triggerExists(userId, symbol, self.sellTriggers):
             return self.sellTriggers[symbol][userId]
 
-    def addBuyTrigger(self, userId, sym, cashReserved, transactionNumber):
+    def addBuyTrigger(self, userId, sym, cashReserved, transactionNum):
         if userId not in self.buyTriggers:
             self.buyTriggers[userId] = {}
-        trigger = {"cashReserved": cashReserved, "active": False, "buyAt": 0, "transId": transactionNumber}
+        trigger = {"cashReserved": cashReserved, "active": False, "buyAt": 0, "transId": transactionNum}
         self.buyTriggers[userId][sym] = trigger
         return trigger
 
-    def addSellTrigger(self, userId, sym, maxSellAmount, transactionNumber):
+    def addSellTrigger(self, userId, sym, maxSellAmount, transactionNum):
         if userId not in self.sellTriggers:
             self.sellTriggers[userId] = {}
-        trigger = {"maxSellAmount": maxSellAmount, "active": False, "sellAt": 0, "transId": transactionNumber}
+        trigger = {"maxSellAmount": maxSellAmount, "active": False, "sellAt": 0, "transId": transactionNum}
         self.sellTriggers[userId][sym] = trigger
         return trigger
 
@@ -274,8 +274,8 @@ class SellTriggerThread(Thread):
             time.sleep(15)
 
 
-def handleAddBuy(userId, symbol, amount, transactionNumber):
-     trigger = triggers.addBuyTrigger(userId, symbol, amount, transactionNumber)
+def handleAddBuy(userId, symbol, amount, transactionNum):
+     trigger = triggers.addBuyTrigger(userId, symbol, amount, transactionNum)
      if trigger:
          return create_response(200, trigger)
      return create_response(400, "bad request")
@@ -292,8 +292,8 @@ def handleCancelBuy(userId, symbol):
         return create_response(200, trigger)
     return create_response(400, "trigger doesnt exist")
 
-def handleAddSell(userId, symbol, amount, transactionNumber):
-    trigger = triggers.addSellTrigger(userId, symbol, amount, transactionNumber)
+def handleAddSell(userId, symbol, amount, transactionNum):
+    trigger = triggers.addSellTrigger(userId, symbol, amount, transactionNum)
     if trigger:
         return create_response(200, trigger)
     return create_response(400, "bad request")
