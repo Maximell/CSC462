@@ -49,8 +49,8 @@ class AuditRpcClient(object):
         print "From Audit Server: ", self.response
         return self.response
 
-def createQuoteRequest(userId, symbol, transactionNumber):
-    return {"userId": userId, "stockSymbol": symbol, "transactionNum": transactionNumber}
+def createQuoteRequest(userId, symbol, transactionNum):
+    return {"userId": userId, "stockSymbol": symbol, "transactionNum": transactionNum}
 
 # quote shape: symbol: {value: string, retrieved: epoch time, user: string, cryptoKey: string}
 class Quotes():
@@ -59,7 +59,7 @@ class Quotes():
         self.quoteCache = {}
         self.testing = testing
 
-    def getQuote(self, symbol, user, transactionNumber):
+    def getQuote(self, symbol, user, transactionNum):
         self._testPrint(True, "current cache state: ", self.quoteCache)
 
         cache = self.quoteCache.get(symbol)
@@ -68,10 +68,10 @@ class Quotes():
                 self._testPrint(False, "from cache")
                 return cache
             self._testPrint(False, "expired cache")
-        return self._hitQuoteServerAndCache(symbol, user, transactionNumber)
+        return self._hitQuoteServerAndCache(symbol, user, transactionNum)
 
 
-    def _hitQuoteServerAndCache(self, symbol, user, transactionNumber):
+    def _hitQuoteServerAndCache(self, symbol, user, transactionNum):
         self._testPrint(False, "not from cache")
         request = symbol + "," + user + "\n"
 
@@ -85,7 +85,7 @@ class Quotes():
             data = s.recv(1024)
             s.close()
             newQuote = self._quoteStringToDictionary(data)
-            requestBody = auditFunctions.createQuoteServer(int(time.time() * 1000),"quoteServer", transactionNumber,user, newQuote['serverTime'],
+            requestBody = auditFunctions.createQuoteServer(int(time.time() * 1000),"quoteServer", transactionNum,user, newQuote['serverTime'],
                                              symbol,newQuote['value'],newQuote['cryptoKey'] )
             print requestBody
             print type(requestBody)
@@ -124,13 +124,13 @@ class Quotes():
 def on_request(ch, method, props, body):
     payload = json.loads(body)
     print payload
-    # expected body: {symbol, userId, transactionNumber}
+    # expected body: {symbol, userId, transactionNum}
     # payload = json.loads(body)
     symbol = payload["stockSymbol"]
     userId = payload["userId"]
-    transactionNumber = payload["transactionNum"]
+    transactionNum = payload["transactionNum"]
 
-    quote = quoteServer.getQuote(symbol, userId, transactionNumber)
+    quote = quoteServer.getQuote(symbol, userId, transactionNum)
     response = json.dumps(quote)
     print "got", response, "for", props.correlation_id
 

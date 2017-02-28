@@ -118,15 +118,15 @@ class Triggers:
             return self.sellTriggers[symbol][userId]
         return 0
 
-    def addBuyTrigger(self, userId, sym, cashReserved, transactionNumber):
+    def addBuyTrigger(self, userId, sym, cashReserved, transactionNum):
         if userId not in self.buyTriggers:
             self.buyTriggers[userId] = {}
-        self.buyTriggers[userId][sym] = {"cashReserved": cashReserved, "active": False, "buyAt": 0, "transId": transactionNumber}
+        self.buyTriggers[userId][sym] = {"cashReserved": cashReserved, "active": False, "buyAt": 0, "transId": transactionNum}
 
-    def addSellTrigger(self, userId, sym, maxSellAmount, transactionNumber):
+    def addSellTrigger(self, userId, sym, maxSellAmount, transactionNum):
         if userId not in self.sellTriggers:
             self.sellTriggers[userId] = {}
-        self.sellTriggers[userId][sym] = {"maxSellAmount": maxSellAmount, "active": False, "sellAt": 0, "transId": transactionNumber}
+        self.sellTriggers[userId][sym] = {"maxSellAmount": maxSellAmount, "active": False, "sellAt": 0, "transId": transactionNum}
 
     def setBuyActive(self, userId, symbol, buyAt):
         if self._triggerExists(userId, symbol, self.buyTriggers):
@@ -596,7 +596,7 @@ class Quotes():
         #     self.quoteServerConnection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         #     self.quoteServerConnection.connect(('quoteserve.seng.uvic.ca', 4445))
 
-    def getQuote(self, symbol, user, transactionNumber):
+    def getQuote(self, symbol, user, transactionNum):
         self._testPrint(True, "current cache state: ", self.quoteCache)
 
         cache = self.quoteCache.get(symbol)
@@ -609,7 +609,7 @@ class Quotes():
             self._testPrint(False, "expired cache")
             # print "not active"
         # print "not from cache"
-        return self._hitQuoteServerAndCache(symbol, user, transactionNumber)
+        return self._hitQuoteServerAndCache(symbol, user, transactionNum)
 
     '''
         this can be used on buy commands
@@ -617,10 +617,10 @@ class Quotes():
         if we use cache, the quote could be 119 seconds old when they commit, and that breaks the requirements
     '''
 
-    def getQuoteNoCache(self, symbol, user, transactionNumber):
-        return self._hitQuoteServerAndCache(symbol, user, transactionNumber)
+    def getQuoteNoCache(self, symbol, user, transactionNum):
+        return self._hitQuoteServerAndCache(symbol, user, transactionNum)
 
-    def _hitQuoteServerAndCache(self, symbol, user, transactionNumber):
+    def _hitQuoteServerAndCache(self, symbol, user, transactionNum):
         self._testPrint(False, "not from cache")
         request = symbol + "," + user + "\n"
 
@@ -644,7 +644,7 @@ class Quotes():
         # self.auditServer.logQuoteServer(
         #     int(time.time() * 1000),
         #     "quote",
-        #     transactionNumber,
+        #     transactionNum,
         #     user,
         #     newQuote.get('serverTime'),
         #     symbol,
@@ -797,9 +797,9 @@ def delegate(ch , method, properties, body):
 def handleCommandQuote(args):
     symbol = args["stockSymbol"]
     userId = args["userId"]
-    transactionNumber = args["lineNum"]
+    transactionNum = args["lineNum"]
 
-    request = createQuoteRequest(userId, symbol, transactionNumber)
+    request = createQuoteRequest(userId, symbol, transactionNum)
     response = quote_rpc.call(request)
 
 
@@ -820,13 +820,13 @@ def handleCommandBuy(args):
 
 def handleCommandCommitBuy(args):
     userId = args["userId"]
-    transactionNumber = args["lineNum"]
+    transactionNum = args["lineNum"]
 
     popRequest = databaseFunctions.createPopBuyRequest(userId)
     popResponse = db_rpc.call(popRequest)
     if popResponse["status"] == 200:
         buy = popResponse["body"]
-        quote = createQuoteRequest(userId, buy["symbol"], transactionNumber)
+        quote = createQuoteRequest(userId, buy["symbol"], transactionNum)
         quote = quote_rpc.call(quote)
         commitRequest = databaseFunctions.createCommitBuyRequest(userId, buy, quote["value"])
         commitResponse = db_rpc.call(commitRequest)
@@ -851,13 +851,13 @@ def handleCommandSell(args):
 
 def handleCommandCommitSell(args):
     userId = args["userId"]
-    transactionNumber = args["lineNum"]
+    transactionNum = args["lineNum"]
 
     popRequest = databaseFunctions.createPopSellRequest(userId)
     popResponse = db_rpc.call(popRequest)
     if popResponse["status"] == 200:
         sell = popResponse["body"]
-        quote = createQuoteRequest(userId, sell["symbol"], transactionNumber)
+        quote = createQuoteRequest(userId, sell["symbol"], transactionNum)
         quote = quote_rpc.call(quote)
         commitRequest = databaseFunctions.createCommitSellRequest(userId, sell, quote["value"])
         commitResponse = db_rpc.call(commitRequest)
@@ -874,12 +874,12 @@ def handleCommandSetBuyAmount(args):
     symbol = args.get("stockSymbol")
     amount = args.get("cash")
     userId = args.get("userId")
-    transactionNumber = args.get("lineNum")
+    transactionNum = args.get("lineNum")
 
     reserveRequest = databaseFunctions.createReserveCashRequest(userId, amount)
     reserveResponse = db_rpc.call(reserveRequest)
     if reserveResponse["status"] == 200:
-        buyRequest = TriggerFunctions.createAddBuyRequest(userId, symbol, amount, transactionNumber)
+        buyRequest = TriggerFunctions.createAddBuyRequest(userId, symbol, amount, transactionNum)
         buyResponse = trigger_rpc.call(buyRequest)
 
 
@@ -908,9 +908,9 @@ def handleCommandSetSellAmount(args):
     symbol = args.get("stockSymbol")
     amount = args.get("cash")
     userId = args.get("userId")
-    transactionNumber = args.get("lineNum")
+    transactionNum = args.get("lineNum")
 
-    sellRequest = TriggerFunctions.createAddSellRequest(userId, symbol, amount, transactionNumber)
+    sellRequest = TriggerFunctions.createAddSellRequest(userId, symbol, amount, transactionNum)
     sellResponse = trigger_rpc.call(sellRequest)
 
 
