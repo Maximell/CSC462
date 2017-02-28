@@ -972,6 +972,7 @@ def incrementSocketNum(socketNum):
 
 
 if __name__ == '__main__':
+    print "starting TransactionServer"
     # Global vars
     # -----------------------
     # auditServer = AuditServer()

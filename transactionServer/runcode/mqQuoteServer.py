@@ -161,6 +161,7 @@ def on_request(ch, method, props, body):
 
 
 if __name__ == '__main__':
+    print "starting QuoteServer"
     quoteServer = Quotes()
     audit_rpc = AuditRpcClient()
 
