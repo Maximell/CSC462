@@ -722,8 +722,7 @@ def delegate(ch , method, properties, body):
 
         else:
             requestBody = auditFunctions.createUserCommand(int(time.time() * 1000), "transactionServer", args["lineNum"],
-                                                               args["userId"], args["command"], args.get("stockSymbol"),
-                                                               args["userId"], args.get("cash"))
+                                                args["userId"], args["command"], args.get("stockSymbol"), args["userId"], args.get("cash"))
             # Log User Command Call
             audit_rpc.call(requestBody)
 
