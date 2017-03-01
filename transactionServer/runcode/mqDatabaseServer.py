@@ -331,7 +331,7 @@ def on_request(ch, method, props, body):
     try:
         response = handleFunctionSwitch[function](payload)
     except KeyError:
-        response = create_response(404, "function not found")
+        response = create_response(404, "function not found" + str(payload))
 
     response = json.dumps(response)
 
