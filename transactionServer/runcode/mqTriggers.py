@@ -1,14 +1,14 @@
 import socket
 import threading
-from threading import Thread
 import time
 import pika
 import json
-import queueNames
-from mqDatabaseServer import databaseFunctions
-from mqQuoteServer import createQuoteRequest
 import uuid
 import math
+from threading import Thread
+from rabbitMQClient import RabbitMQClient
+from mqDatabaseServer import databaseFunctions
+from mqQuoteServer import createQuoteRequest
 
 class DatabaseRpcClient(object):
     def __init__(self):
@@ -36,7 +36,7 @@ class DatabaseRpcClient(object):
         print "sending Database request Id:", self.corr_id
         self.channel.basic_publish(
             exchange='',
-            routing_key=queueNames.DATABASE,
+            routing_key=RabbitMQClient.DATABASE,
             properties=pika.BasicProperties(
                 reply_to=self.callback_queue,
                 correlation_id=self.corr_id
@@ -74,7 +74,7 @@ class QuoteRpcClient(object):
         print "sending quote request Id:", self.corr_id
         self.channel.basic_publish(
             exchange='',
-            routing_key=queueNames.QUOTE,
+            routing_key=RabbitMQClient.QUOTE,
             properties=pika.BasicProperties(
                 reply_to=self.callback_queue,
                 correlation_id=self.corr_id

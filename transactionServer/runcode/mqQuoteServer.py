@@ -2,10 +2,10 @@
 import pika
 import socket
 import time
-from random import randint
 import json
-import queueNames
 import uuid
+from random import randint
+from rabbitMQClient import RabbitMQClient
 from mqAuditServer import auditFunctions
 
 
@@ -36,7 +36,7 @@ class AuditRpcClient(object):
         # print type(requestBody)
         self.channel.basic_publish(
             exchange='',
-            routing_key=queueNames.AUDIT,
+            routing_key=RabbitMQClient.AUDIT,
             properties=pika.BasicProperties(
                 reply_to=self.callback_queue,
                 correlation_id=self.corr_id
@@ -167,9 +167,9 @@ if __name__ == '__main__':
 
     connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
     channel = connection.channel()
-    channel.queue_declare(queue=queueNames.QUOTE)
+    channel.queue_declare(queue=RabbitMQClient.QUOTE)
     channel.basic_qos(prefetch_count=1)
-    channel.basic_consume(on_request, queue=queueNames.QUOTE)
+    channel.basic_consume(on_request, queue=rabbitMQClient.QUOTE)
 
     print("awaiting quote requests")
     channel.start_consuming()

@@ -2,9 +2,10 @@
 import pika
 import time
 import json
-import queueNames
 import math
 import ast
+
+from rabbitMQClient import RabbitMQClient
 
 class auditFunctions:
     USER_COMMAND = 1
@@ -429,9 +430,9 @@ if __name__ == '__main__':
 
     connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
     channel = connection.channel()
-    channel.queue_declare(queue=queueNames.AUDIT)
+    channel.queue_declare(queue=RabbitMQClient.AUDIT)
     channel.basic_qos(prefetch_count=1)
-    channel.basic_consume(on_request, queue=queueNames.AUDIT)
+    channel.basic_consume(on_request, queue=RabbitMQClient.AUDIT)
 
     print("awaiting audit requests")
     channel.start_consuming()
