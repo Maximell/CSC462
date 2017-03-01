@@ -182,16 +182,16 @@ class database:
             self.database[userId] = user
             return self.database.get(userId)
 
-    # returns {symbol, number,  timestamp}
-    def pushBuy(self, userId, symbol, number):
+    # returns {symbol, amount,  timestamp}
+    def pushBuy(self, userId, symbol, amount):
         user = self.getUser(userId)
         if not user:
             return 0
-        newBuy = {'symbol': symbol, 'number': number, 'timestamp': int(time.time())}
+        newBuy = {'symbol': symbol, 'amount': amount, 'timestamp': int(time.time())}
         user.get('pendingBuys').append(newBuy)
         return newBuy
 
-    # returns {symbol, number,  timestamp}
+    # returns {symbol, amount,  timestamp}
     def popBuy(self, userId):
         user = self.getUser(userId)
         if not user:
@@ -201,16 +201,16 @@ class database:
             return 0
         return pendingBuys.pop()
 
-    # returns {symbol, number,  timestamp}
-    def pushSell(self, userId, symbol, number):
+    # returns {symbol, amount,  timestamp}
+    def pushSell(self, userId, symbol, amount):
         user = self.getUser(userId)
         if not user:
             return 0
-        newSell = {'symbol': symbol, 'number': number, 'timestamp': int(time.time())}
+        newSell = {'symbol': symbol, 'amount': amount, 'timestamp': int(time.time())}
         user.get('pendingSells').append(newSell)
         return newSell
 
-    # returns {symbol, number,  timestamp}
+    # returns {symbol, amount,  timestamp}
     def popSell(self, userId):
         user = self.getUser(userId)
         if not user:
@@ -328,10 +328,10 @@ def on_request(ch, method, props, body):
     if databaseServer.getUser(userId) == None:
         databaseServer.addUser(userId)
 
-    try:
-        response = handleFunctionSwitch[function](payload)
-    except KeyError:
-        response = create_response(404, "function not found" + str(payload))
+        # try:
+    response = handleFunctionSwitch[function](payload)
+    # except KeyError:
+    #     response = create_response(404, "function not found" + str(payload))
 
     response = json.dumps(response)
 
