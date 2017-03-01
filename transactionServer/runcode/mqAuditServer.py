@@ -4,7 +4,6 @@ import time
 import json
 import math
 import ast
-
 from rabbitMQClient import RabbitMQClient
 
 class auditFunctions:

@@ -169,7 +169,7 @@ if __name__ == '__main__':
     channel = connection.channel()
     channel.queue_declare(queue=RabbitMQClient.QUOTE)
     channel.basic_qos(prefetch_count=1)
-    channel.basic_consume(on_request, queue=rabbitMQClient.QUOTE)
+    channel.basic_consume(on_request, queue=RabbitMQClient.QUOTE)
 
     print("awaiting quote requests")
     channel.start_consuming()

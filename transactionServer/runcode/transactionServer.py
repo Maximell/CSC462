@@ -1,4 +1,3 @@
-# demonstrate talking to the quote server
 import math
 import time
 import uuid
@@ -296,6 +295,10 @@ def handleCommandQuote(args):
     userId = args["userId"]
     transactionNum = args["lineNum"]
 
+    # quoteClient.send(
+    #     createQuoteRequest(userId, symbol, transactionNum)
+    # )
+
     request = createQuoteRequest(userId, symbol, transactionNum)
     response = quote_rpc.call(request)
 
@@ -471,6 +474,8 @@ def incrementSocketNum(socketNum):
 
 if __name__ == '__main__':
     print "starting TransactionServer"
+
+    quoteClient = RabbitMQClient(RabbitMQClient.QUOTE)
 
     # rpc classes
     audit_rpc = AuditRpcClient()
