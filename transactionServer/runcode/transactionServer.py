@@ -751,23 +751,23 @@ def delegate(ch , method, properties, body):
         elif args["command"] == "CANCEL_SELL":
             handleCommandCancelSell(args)
 
-        # elif args["command"] == "SET_BUY_AMOUNT":
-        #     handleCommandSetBuyAmount(args)
-        #
-        # elif args["command"] == "CANCEL_BUY_AMOUNT":
-        #     handleCommandCancelSetBuy(args)
-        #
-        # elif args["command"] == "SET_BUY_TRIGGER":
-        #     handleCommandSetBuyTrigger(args)
-        #
-        # elif args["command"] == "SET_SELL_AMOUNT":
-        #     handleCommandSetSellAmount(args)
-        #
-        # elif args["command"] == "CANCEL_SELL_AMOUNT":
-        #     handleCommandCancelSetSell(args)
-        #
-        # elif args["command"] == "SET_SELL_TRIGGER":
-        #     handleCommandSetSellTrigger(args)
+        elif args["command"] == "SET_BUY_AMOUNT":
+            handleCommandSetBuyAmount(args)
+
+        elif args["command"] == "CANCEL_BUY_AMOUNT":
+            handleCommandCancelSetBuy(args)
+
+        elif args["command"] == "SET_BUY_TRIGGER":
+            handleCommandSetBuyTrigger(args)
+
+        elif args["command"] == "SET_SELL_AMOUNT":
+            handleCommandSetSellAmount(args)
+
+        elif args["command"] == "CANCEL_SELL_AMOUNT":
+            handleCommandCancelSetSell(args)
+
+        elif args["command"] == "SET_SELL_TRIGGER":
+            handleCommandSetSellTrigger(args)
         elif args["command"] == "DUMPLOG":
             handleCommandDumplog(args)
         else:

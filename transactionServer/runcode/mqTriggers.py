@@ -350,32 +350,32 @@ def create_response(status, response):
     return {'status': status, 'body': response}
 
 
-# if __name__ == '__main__':
-#     triggers = Triggers()
-#
-#     handleFunctionSwitch = {
-#         TriggerFunctions.BUY: handleAddBuy,
-#         TriggerFunctions.ACTIVATE_BUY: handleSetBuyActive,
-#         TriggerFunctions.CANCEL_BUY: handleCancelBuy,
-#         TriggerFunctions.SELL: handleAddSell,
-#         TriggerFunctions.ACTIVATE_SELL: handleSetSellActive,
-#         TriggerFunctions.CANCEL_SELL: handleCancelSell,
-#         TriggerFunctions.GET_SELL: handleGetSell
-#     }
-#
-#     quote_rpc = QuoteRpcClient()
-#     db_rpc = DatabaseRpcClient()
-#
-#     BuyTriggerThread()
-#     SellTriggerThread()
-#
-#     connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
-#     channel = connection.channel()
-#     channel.queue_declare(queue=queueNames.TRIGGERS)
-#     channel.basic_qos(prefetch_count=1)
-#     channel.basic_consume(on_request, queue=queueNames.TRIGGERS)
-#
-#     print("awaiting trigger requests")
-#     channel.start_consuming()
+if __name__ == '__main__':
+    triggers = Triggers()
+
+    handleFunctionSwitch = {
+        TriggerFunctions.BUY: handleAddBuy,
+        TriggerFunctions.ACTIVATE_BUY: handleSetBuyActive,
+        TriggerFunctions.CANCEL_BUY: handleCancelBuy,
+        TriggerFunctions.SELL: handleAddSell,
+        TriggerFunctions.ACTIVATE_SELL: handleSetSellActive,
+        TriggerFunctions.CANCEL_SELL: handleCancelSell,
+        TriggerFunctions.GET_SELL: handleGetSell
+    }
+
+    quote_rpc = QuoteRpcClient()
+    db_rpc = DatabaseRpcClient()
+
+    BuyTriggerThread()
+    SellTriggerThread()
+
+    connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+    channel = connection.channel()
+    channel.queue_declare(queue=queueNames.TRIGGERS)
+    channel.basic_qos(prefetch_count=1)
+    channel.basic_consume(on_request, queue=queueNames.TRIGGERS)
+
+    print("awaiting trigger requests")
+    channel.start_consuming()
 
 
