@@ -50,7 +50,7 @@ class AuditRpcClient(object):
         return self.response
 
 def createQuoteRequest(userId, symbol, transactionNum):
-    return {"userId": userId, "stockSymbol": symbol, "transactionNum": transactionNum}
+    return {"userId": userId, "stockSymbol": symbol, "lineNum": transactionNum}
 
 # quote shape: symbol: {value: string, retrieved: epoch time, user: string, cryptoKey: string}
 class Quotes():
