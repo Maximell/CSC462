@@ -28,7 +28,7 @@ def add(userId):
 @app.route('/quote/<string:userId>/<string:stockSymbol>/', methods=['GET'])
 def quote(userId, stockSymbol):
     lineNum = int(request.form['lineNum'].decode('utf-8'))
-    data = json.dumps({"lineNum": lineNum, "command": "QUOTE", "userId": userId, "stockSymbol": stockSymbol})
+    data = {"lineNum": lineNum, "command": "QUOTE", "userId": userId, "stockSymbol": stockSymbol}
     transactionClient.send(data, priority=1)
     return 'Getting a quote for user %s on stock %s.' % (userId, stockSymbol)
 

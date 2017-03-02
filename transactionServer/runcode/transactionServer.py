@@ -259,6 +259,7 @@ def delegate(ch , method, properties, body):
         )
         audit_rpc.call(requestBody)
     except TypeError:
+        print args
         # errror msg being sent to audit server
         requestBody = auditFunctions.createErrorMessage(
             int(time.time() * 1000),
