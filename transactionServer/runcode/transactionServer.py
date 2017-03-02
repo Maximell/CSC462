@@ -4,7 +4,7 @@ import uuid
 import pika
 import json
 import ast
-from rabbitMQSetups import RabbitMQClient
+from rabbitMQSetups import RabbitMQClient, RabbitMQReceiver
 from mqDatabaseServer import databaseFunctions
 from mqQuoteServer import createQuoteRequest
 from mqTriggers import TriggerFunctions
@@ -469,6 +469,7 @@ if __name__ == '__main__':
     print "starting TransactionServer"
 
     quoteClient = RabbitMQClient(RabbitMQClient.QUOTE)
+    RabbitMQReceiver(delegate, RabbitMQReceiver.TRANSACTION)
 
     # rpc classes
     audit_rpc = AuditRpcClient()
