@@ -477,4 +477,4 @@ if __name__ == '__main__':
 
     quoteClient = RabbitMQClient(RabbitMQClient.QUOTE)
     RabbitMQReceiver(delegate, RabbitMQReceiver.TRANSACTION)
-    main()
+    # main()

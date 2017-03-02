@@ -11,8 +11,8 @@ app = Flask(__name__)
 def sendtoQueue(data):
     connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
     channel = connection.channel()
-    channel.queue_declare(queue='webserverIn')
-    channel.basic_publish(exchange='', routing_key='webserverIn', body=data)
+    channel.queue_declare(queue=RabbitMQClient.TRANSACTION)
+    channel.basic_publish(exchange='', routing_key=RabbitMQClient.TRANSACTION, body=data)
     connection.close
 
 
