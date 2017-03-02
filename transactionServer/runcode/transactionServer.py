@@ -286,13 +286,13 @@ def delegate(ch , method, properties, body):
 def handleCommandQuote(args):
     symbol = args["stockSymbol"]
     userId = args["userId"]
-    transactionNum = args["transactionNum"]
+    lineNum = args["lineNum"]
 
     if args.get("quote") and args.get("cryptoKey"):
         pass #TODO: Add return to webServer
     else:
         quoteClient.send(
-            createQuoteRequest(userId, symbol, transactionNum)
+            createQuoteRequest(userId, symbol, lineNum)
         )
 
 

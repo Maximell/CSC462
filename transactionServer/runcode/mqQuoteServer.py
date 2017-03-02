@@ -128,9 +128,9 @@ def on_request(ch, method, props, body):
     # payload = json.loads(body)
     symbol = payload["stockSymbol"]
     userId = payload["userId"]
-    transactionNum = payload["transactionNum"]
+    lineNum = payload["lineNum"]
 
-    quote = quoteServer.getQuote(symbol, userId, transactionNum)
+    quote = quoteServer.getQuote(symbol, userId, lineNum)
 
     payload["quote"] = quote["value"]
     payload["cryptoKey"] = quote["cryptoKey"]
