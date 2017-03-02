@@ -289,6 +289,8 @@ def handleCommandQuote(args):
     userId = args["userId"]
     lineNum = args["lineNum"]
 
+    print "***GOT A QUOTE REQUEST: ", args
+
     if args.get("quote") and args.get("cryptoKey"):
         pass #TODO: Add return to webServer
     else:
