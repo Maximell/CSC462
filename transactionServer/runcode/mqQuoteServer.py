@@ -85,11 +85,11 @@ class Quotes():
             data = s.recv(1024)
             s.close()
             newQuote = self._quoteStringToDictionary(data)
-            requestBody = auditFunctions.createQuoteServer(int(time.time() * 1000),"quoteServer", transactionNum,user, newQuote['serverTime'],
-                                             symbol,newQuote['value'],newQuote['cryptoKey'] )
-            print requestBody
-            print type(requestBody)
-            audit_rpc.call(requestBody)
+            # requestBody = auditFunctions.createQuoteServer(int(time.time() * 1000),"quoteServer", transactionNum,user, newQuote['serverTime'],
+            #                                  symbol,newQuote['value'],newQuote['cryptoKey'] )
+            # print requestBody
+            # print type(requestBody)
+            # audit_rpc.call(requestBody)
 
 
         self.quoteCache[symbol] = newQuote
