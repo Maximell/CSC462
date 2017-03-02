@@ -8,12 +8,12 @@ import uuid
 from random import randint
 
 import pika
+from AuditServer.runcode.mqAuditServer import auditFunctions
+from QuoteCacheServer.runcode.mqQuoteServer import createQuoteRequest
 
-import queueNames
-from AuditServer.mqAuditServer import auditFunctions
-from QuoteCacheServer import createQuoteRequest
-from mqDatabaseServer import databaseFunctions
-from mqTriggers import TriggerFunctions
+import transactionServer.runcode.queueNames
+from transactionServer.runcode.mqDatabaseServer import databaseFunctions
+from transactionServer.runcode.mqTriggers import TriggerFunctions
 
 
 # took out old class structures
@@ -44,7 +44,7 @@ class AuditRpcClient(object):
         print "sending Audit request Id:", self.corr_id
         self.channel.basic_publish(
             exchange='',
-            routing_key=queueNames.AUDIT,
+            routing_key=transactionServer.runcode.queueNames.AUDIT,
             properties=pika.BasicProperties(
                 reply_to=self.callback_queue,
                 correlation_id=self.corr_id
@@ -83,7 +83,7 @@ class QuoteRpcClient(object):
         print "sending quote request Id:", self.corr_id
         self.channel.basic_publish(
             exchange='',
-            routing_key=queueNames.QUOTE,
+            routing_key=transactionServer.runcode.queueNames.QUOTE,
             properties=pika.BasicProperties(
                 reply_to=self.callback_queue,
                 correlation_id=self.corr_id
@@ -122,7 +122,7 @@ class DatabaseRpcClient(object):
         print "sending Database request Id:", self.corr_id
         self.channel.basic_publish(
             exchange='',
-            routing_key=queueNames.DATABASE,
+            routing_key=transactionServer.runcode.queueNames.DATABASE,
             properties=pika.BasicProperties(
                 reply_to=self.callback_queue,
                 correlation_id=self.corr_id
@@ -161,7 +161,7 @@ class TriggerRpcClient(object):
         print "sending Trigger request Id:", self.corr_id , requestBody
         self.channel.basic_publish(
             exchange='',
-            routing_key=queueNames.TRIGGERS,
+            routing_key=transactionServer.runcode.queueNames.TRIGGERS,
             properties=pika.BasicProperties(
                 reply_to=self.callback_queue,
                 correlation_id=self.corr_id
@@ -544,7 +544,7 @@ def handleCommandDumplog(args):
 def listenToRabbitQ():
     connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
     channel = connection.channel()
-    channel.queue_declare(queue=queueNames.WEBSERVER)
+    channel.queue_declare(queue=transactionServer.runcode.queueNames.WEBSERVER)
     channel.basic_consume(delegate,queue="webserverIn", no_ack=True)
     print "Waiting for requests from queue."
     channel.start_consuming()

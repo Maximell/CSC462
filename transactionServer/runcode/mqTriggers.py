@@ -9,7 +9,7 @@ from threading import Thread
 import pika
 
 import queueNames
-from QuoteCacheServer import createQuoteRequest
+from QuoteCacheServer.runcode.mqQuoteServer import createQuoteRequest
 from mqDatabaseServer import databaseFunctions
 
 

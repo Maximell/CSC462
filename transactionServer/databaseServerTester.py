@@ -1,5 +1,6 @@
-from transactionServer import databaseServer
 import time
+
+from transactionServer.runcode.transactionServer import databaseServer
 
 print databaseServer
 database = databaseServer(transactionExpire=2)

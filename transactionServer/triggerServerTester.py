@@ -1,4 +1,4 @@
-from transactionServer import Triggers
+from transactionServer.runcode.transactionServer import Triggers
 
 triggers = Triggers()
 

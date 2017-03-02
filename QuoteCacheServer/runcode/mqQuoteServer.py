@@ -8,7 +8,7 @@ from random import randint
 import pika
 
 import transactionServer.runcode.queueNames
-from AuditServer.mqAuditServer import auditFunctions
+from AuditServer.runcode.mqAuditServer import auditFunctions
 
 
 class AuditRpcClient(object):
