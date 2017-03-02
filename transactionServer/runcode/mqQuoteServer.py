@@ -5,7 +5,7 @@ import time
 import json
 import uuid
 from random import randint
-from rabbitMQClient import RabbitMQClient
+from rabbitMQSetups import RabbitMQClient, RabbitMQReceiver
 from mqAuditServer import auditFunctions
 
 
@@ -131,45 +131,18 @@ def on_request(ch, method, props, body):
     transactionNum = payload["transactionNum"]
 
     quote = quoteServer.getQuote(symbol, userId, transactionNum)
-    response = json.dumps(quote)
-    print "got", response, "for", props.correlation_id
 
-    ch.basic_publish(
-        exchange='',
-        routing_key=props.reply_to,
-        properties=pika.BasicProperties(correlation_id=props.correlation_id),
-        body=response
-    )
-    ch.basic_ack(delivery_tag=method.delivery_tag)
-    # except RuntimeError:
-    #     # (self, timeStamp, server, transactionNum, userId, commandName, errorMessage)
-    #     # errror msg being sent to audit server
-    #     requestBody = auditFunctions.createErrorMessage(int(time.time() * 1000), "QuoteServer", payload["transactionNum"],
-    #                                                         payload["userId"], payload["command"], str(RuntimeError))
-    #     audit_rpc.call(requestBody)
-    # except TypeError:
-    #     # errror msg being sent to audit server
-    #     requestBody = auditFunctions.createErrorMessage(int(time.time() * 1000), "QuoteServer", payload["transactionNum"],
-    #                                                         payload["userId"], payload["command"], str(TypeError))
-    #     audit_rpc.call(requestBody)
-    # except ArithmeticError:
-    #     # errror msg being sent to audit server
-    #     requestBody = auditFunctions.createErrorMessage(int(time.time() * 1000), "QuoteServer", payload["transactionNum"],
-    #                                                         payload["userId"], payload["command"], str(ArithmeticError))
-    #     audit_rpc.call(requestBody)
+    payload["quote"] = quote["value"]
+    payload["cryptoKey"] = quote["cryptoKey"]
 
+    transactionClient.send(payload)
 
 
 if __name__ == '__main__':
     print "starting QuoteServer"
     quoteServer = Quotes()
     audit_rpc = AuditRpcClient()
+    transactionClient = RabbitMQClient(RabbitMQClient.TRANSACTION)
 
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
-    channel = connection.channel()
-    channel.queue_declare(queue=RabbitMQClient.QUOTE)
-    channel.basic_qos(prefetch_count=1)
-    channel.basic_consume(on_request, queue=RabbitMQClient.QUOTE)
+    RabbitMQReceiver(on_request, RabbitMQReceiver.QUOTE)
 
-    print("awaiting quote requests")
-    channel.start_consuming()

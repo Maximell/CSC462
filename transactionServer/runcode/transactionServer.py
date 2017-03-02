@@ -4,7 +4,7 @@ import uuid
 import pika
 import json
 import ast
-from rabbitMQClient import RabbitMQClient
+from rabbitMQSetups import RabbitMQClient
 from mqDatabaseServer import databaseFunctions
 from mqQuoteServer import createQuoteRequest
 from mqTriggers import TriggerFunctions
@@ -171,43 +171,34 @@ class TriggerRpcClient(object):
 
 def delegate(ch , method, properties, body):
     args = ast.literal_eval(body)
+    print args
     try:
-        # this is where we will figure what command we are dealing with
-        # and deligate from here to whatever function is needed
-        # to handle the request
-        # ----------------------------
-        # add
-        # quote
-        # buy
-        # commit_buy
-        # cancel_buy
-        # sell
-        # commit_sell
-        # cancel_sell
-        #
-        # set_buy_amount
-        # cancel_set_buy
-        # set_buy_trigger
-        #
-        # set_sell_amount
-        # cancel_set_sell
-        # set_sell_trigger
-        # ----------------------------
-        # args = ast.literal_eval(body)
-        print args
-        # Call Quote
-        # self, timeStamp, server, transactionNum, userId, commandName, stockSymbol=None, fileName=None, amount=None
-
         if "./testLOG" != args["userId"]:
 
-            requestBody = auditFunctions.createUserCommand(int(time.time() * 1000),"transactionServer", args["lineNum"],
-                                                args["userId"], args["command"],args.get("stockSymbol"),None,args.get("cash"))
+            requestBody = auditFunctions.createUserCommand(
+                int(time.time() * 1000),
+                "transactionServer",
+                args["lineNum"],
+                args["userId"],
+                args["command"],
+                args.get("stockSymbol"),
+                None,
+                args.get("cash")
+            )
             # Log User Command Call
             audit_rpc.call(requestBody)
 
         else:
-            requestBody = auditFunctions.createUserCommand(int(time.time() * 1000), "transactionServer", args["lineNum"],
-                                                args["userId"], args["command"], args.get("stockSymbol"), args["userId"], args.get("cash"))
+            requestBody = auditFunctions.createUserCommand(
+                int(time.time() * 1000),
+                "transactionServer",
+                args["lineNum"],
+                args["userId"],
+                args["command"],
+                args.get("stockSymbol"),
+                args["userId"],
+                args.get("cash")
+            )
             # Log User Command Call
             audit_rpc.call(requestBody)
 
@@ -290,17 +281,19 @@ def delegate(ch , method, properties, body):
         )
         audit_rpc.call(requestBody)
 
+# From webServer: {"transactionNum": lineNum, "command": "QUOTE", "userId": userId, "stockSymbol": stockSymbol}
+# From quoteServer: + "quote:, "cryptoKey"
 def handleCommandQuote(args):
     symbol = args["stockSymbol"]
     userId = args["userId"]
-    transactionNum = args["lineNum"]
+    transactionNum = args["transactionNum"]
 
-    # quoteClient.send(
-    #     createQuoteRequest(userId, symbol, transactionNum)
-    # )
-
-    request = createQuoteRequest(userId, symbol, transactionNum)
-    response = quote_rpc.call(request)
+    if args.get("quote") and args.get("cryptoKey"):
+        pass #TODO: Add return to webServer
+    else:
+        quoteClient.send(
+            createQuoteRequest(userId, symbol, transactionNum)
+        )
 
 
 def handleCommandAdd(args):

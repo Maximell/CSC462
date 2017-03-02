@@ -6,7 +6,7 @@ import json
 import uuid
 import math
 from threading import Thread
-from rabbitMQClient import RabbitMQClient
+from rabbitMQSetups import RabbitMQClient
 from mqDatabaseServer import databaseFunctions
 from mqQuoteServer import createQuoteRequest
 

@@ -5,16 +5,15 @@ import sys
 
 if __name__ == '__main__':
     if len(sys.argv) != 2:
-        print('\033[1;31;40mINCORRECT PARAMETERS FOR TESTDRIVER\n')
+        print('INCORRECT PARAMETERS FOR TESTDRIVER\n')
         print('example: python3 testDriver.py http://localhost:8000 2userWorkLoad.txt')
-        print('\033[0;37;40m')
     # start transaction server
     try:
-        os.system("python -u mqAuditServer.py > Auditoutput.txt &")
+        os.system("python -u mqAuditServer.py > auditOutput.txt &")
     except:
         print "Audit server failed to start"
     try:
-        os.system("python -u mqTriggers.py > triggersOutput.txt &")
+        os.system("python -u mqTriggers.py > triggerOutput.txt &")
     except:
         print "Audit server failed to start"
     try:
@@ -23,16 +22,16 @@ if __name__ == '__main__':
         print "transaction server failed to start"
     # start database
     try:
-        os.system("python -u mqDatabaseServer.py > DBoutput.txt &")
+        os.system("python -u mqDatabaseServer.py > databaseOutput.txt &")
     except:
         print "Database Server failed to start"
     # start Quote server
     try:
-        os.system("python -u mqQuoteServer.py > QSoutput.txt &")
+        os.system("python -u mqQuoteServer.py > quoteOutput.txt &")
     except:
         print "quote server failed to start"
     try:
-        os.system("python -u ../../webServer/webServer.py > webserverOutput.txt &")
+        os.system("python -u webServer.py > webserverOutput.txt &")
     except:
         print "quote server failed to start"
 

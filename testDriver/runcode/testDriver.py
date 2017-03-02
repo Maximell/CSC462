@@ -110,10 +110,9 @@ async def main():
 
 if __name__ == '__main__':
 	if len(sys.argv) < 3:
-		print('\033[1;31;40mINCORRECT PARAMETERS\n')
-		print('\033[1;32;40mpython3 testDriver.py <url> <file>')
+		print('INCORRECT PARAMETERS\n')
+		print('python3 testDriver.py <url> <file>')
 		print('example: python3 testDriver.py http://localhost:8000 2userWorkLoad.txt')
-		print('\033[0;37;40m')
 		print(sys.argv)
 	else:
 		base_url = sys.argv[1]

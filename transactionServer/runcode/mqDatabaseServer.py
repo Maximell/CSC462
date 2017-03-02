@@ -4,7 +4,7 @@ import time
 import json
 import math
 import ast
-from rabbitMQClient import RabbitMQClient
+from rabbitMQSetups import RabbitMQClient
 
 class databaseFunctions:
     ADD = 1
