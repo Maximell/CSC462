@@ -469,13 +469,12 @@ def incrementSocketNum(socketNum):
 if __name__ == '__main__':
     print "starting TransactionServer"
 
-    quoteClient = RabbitMQClient(RabbitMQClient.QUOTE)
-    RabbitMQReceiver(delegate, RabbitMQReceiver.TRANSACTION)
-
     # rpc classes
     audit_rpc = AuditRpcClient()
     quote_rpc = QuoteRpcClient()
     db_rpc = DatabaseRpcClient()
     trigger_rpc = TriggerRpcClient()
 
+    quoteClient = RabbitMQClient(RabbitMQClient.QUOTE)
+    RabbitMQReceiver(delegate, RabbitMQReceiver.TRANSACTION)
     main()
