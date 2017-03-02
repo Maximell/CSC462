@@ -9,11 +9,12 @@ app = Flask(__name__)
 # args now has keys: userId , sym , lineNum , command , cash
 
 def sendtoQueue(data):
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
-    channel = connection.channel()
-    channel.queue_declare(queue=RabbitMQClient.TRANSACTION)
-    channel.basic_publish(exchange='', routing_key=RabbitMQClient.TRANSACTION, body=data)
-    connection.close
+    # connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+    # channel = connection.channel()
+    # channel.queue_declare(queue=RabbitMQClient.TRANSACTION)
+    # channel.basic_publish(exchange='', routing_key=RabbitMQClient.TRANSACTION, body=data)
+    # connection.close
+    transactionClient.send(json.loads(data), priority=1)
 
 
 @app.route('/add/<string:userId>/', methods=['POST'])
