@@ -10,7 +10,7 @@ if __name__ == '__main__':
         print('\033[0;37;40m')
     # start transaction server
     try:
-        os.system("python -u mqAuditServer.py > Auditoutput.txt &")
+        os.system("python -u AuditServer/runcode/mqAuditServer.py > Auditoutput.txt &")
     except:
         print "Audit server failed to start"
     try:
@@ -28,7 +28,7 @@ if __name__ == '__main__':
         print "Database Server failed to start"
     # start Quote server
     try:
-        os.system("python -u mqQuoteServer.py > QSoutput.txt &")
+        os.system("python -u QuoteCacheServer/runcode/mqQuoteServer.py > QSoutput.txt &")
     except:
         print "quote server failed to start"
     try:
