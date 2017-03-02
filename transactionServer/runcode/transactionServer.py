@@ -476,5 +476,12 @@ if __name__ == '__main__':
     trigger_rpc = TriggerRpcClient()
 
     quoteClient = RabbitMQClient(RabbitMQClient.QUOTE)
-    RabbitMQReceiver(delegate, RabbitMQReceiver.TRANSACTION)
+    # RabbitMQReceiver(delegate, RabbitMQReceiver.TRANSACTION)
+
+    connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+    channel = connection.channel()
+    args = {'x-max-priority': 2}
+    channel.queue_declare(queue=RabbitMQReceiver.TRANSACTION, arguments=args)
+    channel.basic_consume(delegate, queue=RabbitMQReceiver.TRANSACTION)
+    channel.start_consuming()
     # main()
