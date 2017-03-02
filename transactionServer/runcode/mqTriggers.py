@@ -1,14 +1,17 @@
+import json
+import math
 import socket
 import threading
-from threading import Thread
 import time
-import pika
-import json
-import queueNames
-from mqDatabaseServer import databaseFunctions
-from mqQuoteServer import createQuoteRequest
 import uuid
-import math
+from threading import Thread
+
+import pika
+
+import queueNames
+from QuoteCacheServer import createQuoteRequest
+from mqDatabaseServer import databaseFunctions
+
 
 class DatabaseRpcClient(object):
     def __init__(self):
@@ -182,7 +185,7 @@ class Triggers:
                 print "sellat less than maxSellAmount"
 
     def cancelBuyTrigger(self, userId, symbol):
-        # danger here'
+        # Locks here incase trigger is looking at list while updating
         if self._triggerExists(userId, symbol, self.buyTriggers):
             BuyTriggerThread.buyLock.acquire()
             removedTrigger = self.buyTriggers[symbol][userId]
@@ -191,7 +194,7 @@ class Triggers:
             return removedTrigger
 
     def cancelSellTrigger(self, userId, symbol):
-        # danger here
+        # Locks here incase trigger is looking at list while updating
         if self._triggerExists(userId, symbol, self.sellTriggers):
             SellTriggerThread.sellLock.acquire()
             removedTrigger = self.sellTriggers[symbol][userId]
@@ -200,10 +203,6 @@ class Triggers:
             return removedTrigger
 
     def _triggerExists(self, userId, symbol, triggers):
-        # print triggers
-        # print userId
-        # print symbol
-        # print triggers.get(userId, {}).get(userId)
         return bool(triggers.get(symbol, {}).get(userId))
 
 

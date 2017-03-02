@@ -1,12 +1,14 @@
 #!/usr/bin/env python
-import pika
+import json
 import socket
 import time
-from random import randint
-import json
-import queueNames
 import uuid
-from mqAuditServer import auditFunctions
+from random import randint
+
+import pika
+
+import transactionServer.runcode.queueNames
+from AuditServer.mqAuditServer import auditFunctions
 
 
 class AuditRpcClient(object):
@@ -36,7 +38,7 @@ class AuditRpcClient(object):
         # print type(requestBody)
         self.channel.basic_publish(
             exchange='',
-            routing_key=queueNames.AUDIT,
+            routing_key=transactionServer.runcode.queueNames.AUDIT,
             properties=pika.BasicProperties(
                 reply_to=self.callback_queue,
                 correlation_id=self.corr_id
@@ -167,9 +169,9 @@ if __name__ == '__main__':
 
     connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
     channel = connection.channel()
-    channel.queue_declare(queue=queueNames.QUOTE)
+    channel.queue_declare(queue=transactionServer.runcode.queueNames.QUOTE)
     channel.basic_qos(prefetch_count=1)
-    channel.basic_consume(on_request, queue=queueNames.QUOTE)
+    channel.basic_consume(on_request, queue=transactionServer.runcode.queueNames.QUOTE)
 
     print("awaiting quote requests")
     channel.start_consuming()

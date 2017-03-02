@@ -2,7 +2,7 @@
 import pika
 import time
 import json
-import queueNames
+import transactionServer.runcode.queueNames
 import math
 import ast
 
@@ -441,9 +441,9 @@ if __name__ == '__main__':
 
     connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
     channel = connection.channel()
-    channel.queue_declare(queue=queueNames.AUDIT)
+    channel.queue_declare(queue=transactionServer.runcode.queueNames.AUDIT)
     channel.basic_qos(prefetch_count=1)
-    channel.basic_consume(on_request, queue=queueNames.AUDIT)
+    channel.basic_consume(on_request, queue=transactionServer.runcode.queueNames.AUDIT)
 
     print("awaiting audit requests")
     channel.start_consuming()
