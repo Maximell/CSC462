@@ -4,7 +4,7 @@ import time
 import json
 import math
 import ast
-from rabbitMQSetups import RabbitMQClient
+from rabbitMQSetups import RabbitMQClient, RabbitMQReceiver
 
 class databaseFunctions:
     ADD = 1
@@ -320,30 +320,6 @@ class database:
         return user.get('portfolio')
 
 
-def on_request(ch, method, props, body):
-    payload = json.loads(body)
-    function = payload["function"]
-    args = ast.literal_eval(body)
-    userId = args['userId']
-    if databaseServer.getUser(userId) == None:
-        databaseServer.addUser(userId)
-
-    try:
-        response = handleFunctionSwitch[function](payload)
-    except KeyError:
-        response = create_response(404, "function not found" + str(payload))
-
-    response = json.dumps(response)
-
-    ch.basic_publish(
-        exchange='',
-        routing_key=props.reply_to,
-        properties=pika.BasicProperties(correlation_id=props.correlation_id),
-        body=response
-    )
-    ch.basic_ack(delivery_tag=method.delivery_tag)
-
-
 def create_response(status, response):
     return {'status': status, 'body': response}
 
@@ -517,6 +493,32 @@ def handleTriggerSell(payload):
     return create_response(400, "not enough portfolio reserved")
 
 
+def on_request(ch, method, props, body):
+    payload = json.loads(body)
+    print "payload: ", payload
+    function = payload["function"]
+    args = ast.literal_eval(body)
+    print "args: ", args
+    userId = args['userId']
+    if databaseServer.getUser(userId) == None:
+        databaseServer.addUser(userId)
+
+    try:
+        response = handleFunctionSwitch[function](payload)
+    except KeyError:
+        response = create_response(404, "function not found" + str(payload))
+
+    response = json.dumps(response)
+
+    ch.basic_publish(
+        exchange='',
+        routing_key=props.reply_to,
+        properties=pika.BasicProperties(correlation_id=props.correlation_id),
+        body=response
+    )
+    ch.basic_ack(delivery_tag=method.delivery_tag)
+
+
 if __name__ == '__main__':
     databaseServer = database()
 
@@ -538,11 +540,13 @@ if __name__ == '__main__':
         databaseFunctions.SELL_TRIGGER: handleTriggerSell,
     }
 
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
-    channel = connection.channel()
-    channel.queue_declare(queue=RabbitMQClient.DATABASE)
-    channel.basic_qos(prefetch_count=1)
-    channel.basic_consume(on_request, queue=RabbitMQClient.DATABASE)
+    #connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+    #channel = connection.channel()
+    #channel.queue_declare(queue=RabbitMQClient.DATABASE)
+    #channel.basic_qos(prefetch_count=1)
+    #channel.basic_consume(on_request, queue=RabbitMQClient.DATABASE)
 
+    transactionClient = RabbitMQClient(RabbitMQClient.TRANSACTION)
     print("awaiting database requests")
-    channel.start_consuming()
+    RabbitMQReceiver(on_request, RabbitMQReceiver.DATABASE)
+    #channel.start_consuming()

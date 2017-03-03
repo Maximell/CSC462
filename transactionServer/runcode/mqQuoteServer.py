@@ -108,5 +108,6 @@ if __name__ == '__main__':
 
     auditClient = RabbitMQClient(RabbitMQClient.AUDIT)
     transactionClient = RabbitMQClient(RabbitMQClient.TRANSACTION)
+    print "Awaiting quote requests"
     RabbitMQReceiver(on_request, RabbitMQReceiver.QUOTE)
 
