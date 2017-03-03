@@ -115,16 +115,16 @@ if __name__ == '__main__':
         print('example: python3 testDriver.py http://localhost:8000 2userWorkLoad.txt')
         print(sys.argv)
     else:
-        # get last line number. if file cant fit in memory, this will break. how large a file can fit in memory?
-        # for line in reversed(open(sys.argv[2]).readlines()):
-        #     splitLine = line.split(" ")
-        #     lastLineNumber = splitLine[0].strip("[]")
+        #get last line number. if file cant fit in memory, this will break. how large a file can fit in memory?
+        for line in reversed(open(sys.argv[2]).readlines()):
+             splitLine = line.split(" ")
+             lastLineNumber = splitLine[0].strip("[]")
 
         base_url = sys.argv[1]
         loop = asyncio.get_event_loop()
         loop.run_until_complete(main())
         loop.close()
         # TODO: need to integrate this properly. currently its ignored. BUT its always last command, so just hard code it here
-        # send('DUMPLOG', ['./testLOG'], lastLineNumber)
+        send('DUMPLOG', ['./testLOG'], lastLineNumber)
         print('completed')
 		
