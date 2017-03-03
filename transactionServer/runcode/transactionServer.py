@@ -271,6 +271,9 @@ def handleCommandQuote(args):
     symbol = args["stockSymbol"]
     userId = args["userId"]
     lineNum = args["lineNum"]
+    command = args["command"]
+
+
 
     print "Quote request:", args
 
@@ -280,7 +283,7 @@ def handleCommandQuote(args):
     else:
         print "no quote, call quote server"
         quoteClient.send(
-            createQuoteRequest(userId, symbol, lineNum)
+            createQuoteRequest(userId, symbol, lineNum, command)
         )
 
 
