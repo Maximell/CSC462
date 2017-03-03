@@ -392,6 +392,7 @@ def on_request(ch, method, props, body):
     print "received payload", payload
 
     function = payload["function"]
+    print "function: ", function
     try:
         handleFunctionSwitch[function](payload)
     except KeyError as error:
@@ -399,6 +400,7 @@ def on_request(ch, method, props, body):
 
 
 if __name__ == '__main__':
+    print "starting AuditServer"
     auditServer = AuditServer()
 
     handleFunctionSwitch = {
