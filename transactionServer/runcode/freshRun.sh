@@ -3,7 +3,9 @@
 if [ "$1" != "" ]; then
     killall python
 
-    # need to also reset the rabbitMQ queues
+    rabbitmqctl stop_app
+    rabbitmqctl reset
+    rabbitmqctl start_app
 
     python runScript.py $1
 else
