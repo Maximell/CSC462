@@ -273,23 +273,29 @@ def handleCommandQuote(args):
     lineNum = args["lineNum"]
     command = args["command"]
 
-
-
-    print "Quote request:", args
-
     if args.get("quote") and args.get("cryptoKey"):
-        print "have quote, return to webserver"
-        pass # TODO: Add return to webServer
+        print "Quote return: ", args # TODO: Add return to webServer
     else:
-        print "no quote, call quote server"
         quoteClient.send(
             createQuoteRequest(userId, symbol, lineNum, command)
         )
 
 
 def handleCommandAdd(args):
-    request = databaseFunctions.createAddRequest(args["userId"], args["cash"])
-    response = db_rpc.call(request)
+    command = args["command"]
+    userId = args["userId"]
+    lineNum = args["lineNum"]
+    cash = args["cash"]
+
+    reserve = args.get("reserve")
+
+    # if the command has 'reserve' associated with it, then it is being returned from the db
+    if reserve:
+        print "Add return: ", args #TODO: return to webserver
+    else:
+        databaseClient.send(
+            databaseFunctions.createAddRequest(command, userId, lineNum, cash)
+        )
 
 
 def handleCommandBuy(args):
@@ -459,20 +465,12 @@ if __name__ == '__main__':
     print "starting TransactionServer"
 
     # rpc classes
-    audit_rpc = AuditRpcClient()
-    quote_rpc = QuoteRpcClient()
+    #quote_rpc = QuoteRpcClient()
     db_rpc = DatabaseRpcClient()
     trigger_rpc = TriggerRpcClient()
 
     quoteClient = RabbitMQClient(RabbitMQClient.QUOTE)
     auditClient = RabbitMQClient(RabbitMQClient.AUDIT)
+    databaseClient = RabbitMQClient(RabbitMQClient.DATABASE)
 
     RabbitMQReceiver(delegate, RabbitMQReceiver.TRANSACTION)
-
-    # connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
-    # channel = connection.channel()
-    # args = {'x-max-priority': 2}
-    # channel.queue_declare(queue=RabbitMQReceiver.TRANSACTION, arguments=args)
-    # channel.basic_consume(delegate, queue=RabbitMQReceiver.TRANSACTION)
-    # channel.start_consuming()
-    # main()

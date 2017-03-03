@@ -26,8 +26,14 @@ class databaseFunctions:
     # @classmethod makes it so you dont have to instantiate the class. just call databaseFunctions.createAddRequest()
 
     @classmethod
-    def createAddRequest(cls, userId, amount):
-        return {'function': cls.ADD, 'userId': userId, 'amount': amount}
+    def createAddRequest(cls, command, userId, lineNum, amount):
+        return {
+            'function': cls.ADD,
+            'command': command,
+            'userId': userId,
+            'lineNum': lineNum,
+            'amount': amount
+        }
 
     @classmethod
     def createBuyRequest(cls, userId, amount, symbol):
@@ -329,8 +335,11 @@ def handleAdd(payload):
 
     user = databaseServer.addCash(userId, amount)
     if user:
-        return  create_response(200, user)
-    return create_response(500, "unknown error")
+        payload['reserve'] = user['reserve']
+    else:
+        payload['errorCode'] = 500
+        payload['errorString'] = "unknown error"
+    return payload
 
 def handleBuy(payload):
     symbol = payload["symbol"]
@@ -509,14 +518,14 @@ def on_request(ch, method, props, body):
         response = create_response(404, "function not found" + str(payload))
 
     response = json.dumps(response)
-
-    ch.basic_publish(
-        exchange='',
-        routing_key=props.reply_to,
-        properties=pika.BasicProperties(correlation_id=props.correlation_id),
-        body=response
-    )
-    ch.basic_ack(delivery_tag=method.delivery_tag)
+    transactionClient.send(response)
+    #ch.basic_publish(
+    #    exchange='',
+    #    routing_key=props.reply_to,
+    #   properties=pika.BasicProperties(correlation_id=props.correlation_id),
+    #    body=response
+    #)
+    #ch.basic_ack(delivery_tag=method.delivery_tag)
 
 
 if __name__ == '__main__':
@@ -540,13 +549,7 @@ if __name__ == '__main__':
         databaseFunctions.SELL_TRIGGER: handleTriggerSell,
     }
 
-    #connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
-    #channel = connection.channel()
-    #channel.queue_declare(queue=RabbitMQClient.DATABASE)
-    #channel.basic_qos(prefetch_count=1)
-    #channel.basic_consume(on_request, queue=RabbitMQClient.DATABASE)
-
     transactionClient = RabbitMQClient(RabbitMQClient.TRANSACTION)
+
     print("awaiting database requests")
     RabbitMQReceiver(on_request, RabbitMQReceiver.DATABASE)
-    #channel.start_consuming()

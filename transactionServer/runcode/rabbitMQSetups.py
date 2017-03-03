@@ -2,26 +2,6 @@ import json
 import pika
 
 
-testRequest = {
-    "transactionNum": 1,
-    "command": 1,
-    "userId": 1,
-    "stockSymbol": 's',
-    "quote": 200,
-    "cryptoKey": 'rgeg'
-}
-
-def getQuote(request):
-    if request.get('quote'):
-        return "something"
-    goToQuote()
-
-
-def goToQuote(request):
-    request['quote'] = 5
-    return request
-
-
 class RabbitMQBase:
     QUOTE = 'quoteIn'
     DATABASE = 'databaseIn'
