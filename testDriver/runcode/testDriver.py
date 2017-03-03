@@ -120,11 +120,11 @@ if __name__ == '__main__':
         #     splitLine = line.split(" ")
         #     lastLineNumber = splitLine[0].strip("[]")
 
-    base_url = sys.argv[1]
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(main())
-    loop.close()
-    # TODO: need to integrate this properly. currently its ignored. BUT its always last command, so just hard code it here
-    # send('DUMPLOG', ['./testLOG'], lastLineNumber)
-    print('completed')
+        base_url = sys.argv[1]
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(main())
+        loop.close()
+        # TODO: need to integrate this properly. currently its ignored. BUT its always last command, so just hard code it here
+        # send('DUMPLOG', ['./testLOG'], lastLineNumber)
+        print('completed')
 		
