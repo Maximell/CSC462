@@ -186,7 +186,7 @@ def delegate(ch , method, properties, body):
                 args.get("cash")
             )
             # Log User Command Call
-            audit_rpc.call(requestBody)
+            auditClient.send(requestBody)
 
         else:
             requestBody = auditFunctions.createUserCommand(
@@ -200,7 +200,7 @@ def delegate(ch , method, properties, body):
                 args.get("cash")
             )
             # Log User Command Call
-            audit_rpc.call(requestBody)
+            auditClient.send(requestBody)
 
         if args["command"] == "QUOTE":
             handleCommandQuote(args)
@@ -248,39 +248,22 @@ def delegate(ch , method, properties, body):
         else:
             print "couldn't figure out command..."
             print "command: ", args
-    except RuntimeError:
+
+    except (RuntimeError, TypeError, ArithmeticError, KeyError) as error:
+        print "-------ERROR-------"
+        print "args:", args
+        print "error:", error
+        print "-------------------"
         requestBody = auditFunctions.createErrorMessage(
             int(time.time() * 1000),
             "transactionServer",
             args["lineNum"],
             args["userId"],
             args["command"],
-            str(RuntimeError)
+            str(error)
         )
-        audit_rpc.call(requestBody)
-    except TypeError:
-        print args
-        # errror msg being sent to audit server
-        requestBody = auditFunctions.createErrorMessage(
-            int(time.time() * 1000),
-            "transactionServer",
-            args["lineNum"],
-            args["userId"],
-            args["command"],
-            str(TypeError)
-        )
-        audit_rpc.call(requestBody)
-    except ArithmeticError:
-        # errror msg being sent to audit server
-        requestBody = auditFunctions.createErrorMessage(
-            int(time.time() * 1000),
-            "transactionServer",
-            args["lineNum"],
-                args["userId"],
-            args["command"],
-            str(ArithmeticError)
-        )
-        audit_rpc.call(requestBody)
+        auditClient.send(requestBody)
+
 
 # From webServer: {"transactionNum": lineNum, "command": "QUOTE", "userId": userId, "stockSymbol": stockSymbol}
 # From quoteServer: + "quote:, "cryptoKey"
@@ -289,11 +272,13 @@ def handleCommandQuote(args):
     userId = args["userId"]
     lineNum = args["lineNum"]
 
-    print "***GOT A QUOTE REQUEST: ", args
+    print "Quote request:", args
 
     if args.get("quote") and args.get("cryptoKey"):
-        pass #TODO: Add return to webServer
+        print "have quote, return to webserver"
+        pass # TODO: Add return to webServer
     else:
+        print "no quote, call quote server"
         quoteClient.send(
             createQuoteRequest(userId, symbol, lineNum)
         )
@@ -443,29 +428,28 @@ def handleCommandCancelSetSell(args):
             releasePortfolioResponse = db_rpc.call(releasePortfolioRequest)
 
 def handleCommandDumplog(args):
-    requestBody = auditFunctions.createWriteLogs(int(time.time() * 1000), "transactionServer", args["lineNum"],
-                                                 args["userId"], args["command"])
-    audit_rpc.call(requestBody)
+    requestBody = auditFunctions.createWriteLogs(
+        int(time.time() * 1000),
+        "transactionServer",
+        args["lineNum"],
+        args["userId"],
+        args["command"]
+    )
+    auditClient.send(requestBody)
 
 
-def listenToRabbitQ():
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
-    channel = connection.channel()
-    channel.queue_declare(queue=RabbitMQClient.WEBSERVER)
-    channel.basic_consume(delegate,queue="webserverIn", no_ack=True)
-    print "Waiting for requests from queue."
-    channel.start_consuming()
-    pass
-
-
-def main():
-    listenToRabbitQ()
-
-
-def incrementSocketNum(socketNum):
-    # This is used to increment the socket incase ours is being used
-    socketNum += 1
-    return socketNum
+# def listenToRabbitQ():
+#     connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+#     channel = connection.channel()
+#     channel.queue_declare(queue=RabbitMQClient.WEBSERVER)
+#     channel.basic_consume(delegate, queue="webserverIn", no_ack=True)
+#     print "Waiting for requests from queue."
+#     channel.start_consuming()
+#     pass
+#
+#
+# def main():
+#     listenToRabbitQ()
 
 
 if __name__ == '__main__':
@@ -478,12 +462,14 @@ if __name__ == '__main__':
     trigger_rpc = TriggerRpcClient()
 
     quoteClient = RabbitMQClient(RabbitMQClient.QUOTE)
-    # RabbitMQReceiver(delegate, RabbitMQReceiver.TRANSACTION)
+    auditClient = RabbitMQClient(RabbitMQClient.AUDIT)
 
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
-    channel = connection.channel()
-    args = {'x-max-priority': 2}
-    channel.queue_declare(queue=RabbitMQReceiver.TRANSACTION, arguments=args)
-    channel.basic_consume(delegate, queue=RabbitMQReceiver.TRANSACTION)
-    channel.start_consuming()
+    RabbitMQReceiver(delegate, RabbitMQReceiver.TRANSACTION)
+
+    # connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+    # channel = connection.channel()
+    # args = {'x-max-priority': 2}
+    # channel.queue_declare(queue=RabbitMQReceiver.TRANSACTION, arguments=args)
+    # channel.basic_consume(delegate, queue=RabbitMQReceiver.TRANSACTION)
+    # channel.start_consuming()
     # main()

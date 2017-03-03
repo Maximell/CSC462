@@ -43,6 +43,7 @@ class RabbitMQClient(RabbitMQBase):
 
     # webserver should be using priority=1 when sending
     def send(self, requestBody, priority=2):
+        print "sending", requestBody, "to", self.queueName, "with priority", priority
         properties = pika.BasicProperties(
             priority=priority
         )

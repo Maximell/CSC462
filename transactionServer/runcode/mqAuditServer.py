@@ -1,10 +1,6 @@
 #!/usr/bin/env python
-import pika
-import time
 import json
-import math
-import ast
-from rabbitMQSetups import RabbitMQClient
+from rabbitMQSetups import RabbitMQReceiver
 
 class auditFunctions:
     USER_COMMAND = 1
@@ -392,27 +388,15 @@ def handleWriteLogs(payload):
 
 
 def on_request(ch, method, props, body):
-    print body
     payload = json.loads(body)
-    print payload
+    print "received payload", payload
+
     function = payload["function"]
     try:
-        response = handleFunctionSwitch[function](payload)
-    except KeyError:
-        response = create_response(404, "function not found")
+        handleFunctionSwitch[function](payload)
+    except KeyError as error:
+        print "keyError (possible function not found):", str(error)
 
-    response = json.dumps(response)
-
-    ch.basic_publish(
-        exchange='',
-        routing_key=props.reply_to,
-        properties=pika.BasicProperties(correlation_id=props.correlation_id),
-        body=response
-    )
-    ch.basic_ack(delivery_tag=method.delivery_tag)
-
-def create_response(status, response):
-    return {'status': status, 'body': response}
 
 if __name__ == '__main__':
     auditServer = AuditServer()
@@ -427,11 +411,4 @@ if __name__ == '__main__':
         auditFunctions.WRITE_LOGS: handleWriteLogs
     }
 
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
-    channel = connection.channel()
-    channel.queue_declare(queue=RabbitMQClient.AUDIT)
-    channel.basic_qos(prefetch_count=1)
-    channel.basic_consume(on_request, queue=RabbitMQClient.AUDIT)
-
-    print("awaiting audit requests")
-    channel.start_consuming()
+    RabbitMQReceiver(on_request, RabbitMQReceiver.AUDIT)
