@@ -7,8 +7,8 @@ from rabbitMQSetups import RabbitMQClient, RabbitMQReceiver
 from mqAuditServer import auditFunctions
 
 
-def createQuoteRequest(userId, symbol, transactionNum, command):
-    return {"userId": userId, "stockSymbol": symbol, "lineNum": transactionNum, "command": command}
+def createQuoteRequest(userId, stockSymbol, lineNum, args):
+    return args.update({"userId": userId, "stockSymbol": stockSymbol, "lineNum": lineNum})
 
 # quote shape: symbol: {value: string, retrieved: epoch time, user: string, cryptoKey: string}
 class Quotes():

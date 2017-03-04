@@ -96,7 +96,6 @@ def handleCommandQuote(args):
     symbol = args["stockSymbol"]
     userId = args["userId"]
     lineNum = args["lineNum"]
-    command = args["command"]
 
     quote = args.get("quote")
     cryptoKey = args.get("cryptoKey")
@@ -106,7 +105,7 @@ def handleCommandQuote(args):
         return args
     else:
         quoteClient.send(
-            createQuoteRequest(userId, symbol, lineNum, command)
+            createQuoteRequest(userId, symbol, lineNum, args)
         )
         return None
 
@@ -151,14 +150,20 @@ def handleCommandCommitBuy(args):
     userId = args["userId"]
     transactionNum = args["lineNum"]
 
-    popRequest = databaseFunctions.createPopBuyRequest(userId)
-    popResponse = db_rpc.call(popRequest)
-    if popResponse["status"] == 200:
-        buy = popResponse["body"]
-        quote = createQuoteRequest(userId, buy["symbol"], transactionNum)
-        quote = quote_rpc.call(quote)
-        commitRequest = databaseFunctions.createCommitBuyRequest(userId, buy, quote["value"])
-        commitResponse = db_rpc.call(commitRequest)
+    buy = args.get("buy")
+    quote = args.get("quote")
+
+    if buy and quote:
+        return args
+    elif buy:
+        quoteClient.send(
+            createQuoteRequest(userId, buy["symbol"], transactionNum, args)
+        )
+    else:
+        databaseClient.send(
+            databaseFunctions.createPopBuyRequest(userId, transactionNum)
+        )
+    return None
 
 
 def handleCommandCancelBuy(args):
@@ -302,8 +307,8 @@ def delegate(ch , method, properties, body):
     print "incoming args: ", args
 
     # error checking from other components
-    if args.get("errorCode") and args.get("errorString"):
-        error = str(args.get("errorCode")) + ": " + str(args.get("errorString"))
+    if args.get("response") >= 400:
+        error = str(args.get("response")) + ": " + str(args.get("errorString"))
 
         errorPrint(args, error)
         requestBody = auditFunctions.createErrorMessage(
@@ -316,7 +321,7 @@ def delegate(ch , method, properties, body):
         )
         auditClient.send(requestBody)
 
-        create_response(args.get("errorCode"), str(args.get("errorString")))
+        create_response(args.get("response"), str(args.get("errorString")))
         # TODO: return this ^ to the webserver (through a rabbitClient)
     else:
         try:

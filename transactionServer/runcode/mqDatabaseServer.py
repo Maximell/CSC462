@@ -26,13 +26,13 @@ class databaseFunctions:
     # @classmethod makes it so you dont have to instantiate the class. just call databaseFunctions.createAddRequest()
 
     @classmethod
-    def createAddRequest(cls, command, userId, lineNum, amount):
+    def createAddRequest(cls, command, userId, lineNum, cash):
         return {
             'function': cls.ADD,
             'command': command,
             'userId': userId,
             'lineNum': lineNum,
-            'amount': amount
+            'cash': cash
         }
 
     @classmethod
@@ -47,8 +47,12 @@ class databaseFunctions:
         }
 
     @classmethod
-    def createPopBuyRequest(cls, userId):
-        return {'function': cls.POP_BUY, 'userId': userId}
+    def createPopBuyRequest(cls, userId, lineNum):
+        return {
+            'function': cls.POP_BUY,
+            'userId': userId,
+            'lineNum': lineNum,
+        }
 
     # must be proceeded by popBuyRequest, to obtain the buy - cuz you need to pop -> get quote -> commit
     @classmethod
@@ -337,15 +341,16 @@ def create_response(status, response):
     return {'status': status, 'body': response}
 
 def handleAdd(payload):
-    amount = payload["amount"]
+    amount = payload["cash"]
     userId = payload["userId"]
 
     user = databaseServer.addCash(userId, amount)
     if user:
+        payload['response'] = 200
         payload['cash'] = user['cash']
         payload['reserve'] = user['reserve']
     else:
-        payload['errorCode'] = 500
+        payload['response'] = 500
         payload['errorString'] = "unknown error"
     return payload
 
@@ -353,7 +358,6 @@ def handleBuy(payload):
     symbol = payload["stockSymbol"]
     amount = payload["cash"]
     userId = payload["userId"]
-    print databaseServer.getUser(userId)
 
     user = databaseServer.getUser(userId)
 
@@ -363,20 +367,22 @@ def handleBuy(payload):
         payload['response'] = 200
         payload['amount'] = user['cash']
         payload['reserve'] = user['reserve']
-        return payload
     else:
         payload['response'] = 400
-        payload['amount'] = user['cash']
-        payload['reserve'] = user['reserve']
-        return payload
+        payload['errorString'] = "not enough money"
+    return payload
 
 def handlePopBuy(payload):
     userId = payload["userId"]
 
     buy = databaseServer.popBuy(userId)
     if buy:
-        return create_response(200, buy)
-    return create_response(400, "no buys available")
+        payload['response'] = 200
+        payload['buy'] = buy
+    else:
+        payload['response'] = 400
+        payload['errorString'] = "no buys available"
+    return payload
 
 def handleCommitBuy(payload):
     userId = payload["userId"]
