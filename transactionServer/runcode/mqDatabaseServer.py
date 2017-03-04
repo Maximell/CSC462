@@ -335,6 +335,7 @@ def handleAdd(payload):
 
     user = databaseServer.addCash(userId, amount)
     if user:
+        payload['cash'] = user['cash']
         payload['reserve'] = user['reserve']
     else:
         payload['errorCode'] = 500

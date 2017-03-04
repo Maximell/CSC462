@@ -11,46 +11,6 @@ from mqTriggers import TriggerFunctions
 from mqAuditServer import auditFunctions
 
 
-# new RPC client client using rabbitMQ
-class QuoteRpcClient(object):
-    def __init__(self):
-        self.response = None
-        self.corr_id = None
-
-        self.connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
-
-        self.channel = self.connection.channel()
-
-        result = self.channel.queue_declare(exclusive=True)
-        self.callback_queue = result.method.queue
-
-        self.channel.basic_consume(self.on_response, no_ack=True, queue=self.callback_queue)
-
-    def on_response(self, ch, method, props, body):
-        # make sure its the right package
-        if self.corr_id == props.correlation_id:
-            # self.response is essential the return of this function, because call() waits on it to be not None
-            self.response = json.loads(body)
-
-    def call(self, requestBody):
-        self.response = None
-        self.corr_id = str(uuid.uuid4())
-        print "sending quote request Id:", self.corr_id
-        self.channel.basic_publish(
-            exchange='',
-            routing_key=RabbitMQClient.QUOTE,
-            properties=pika.BasicProperties(
-                reply_to=self.callback_queue,
-                correlation_id=self.corr_id
-            ),
-            body=json.dumps(requestBody)
-        )
-        while self.response is None:
-            self.connection.process_data_events()
-        print "From Quote server: ",  self.response
-        return self.response
-
-
 # new RPC Database client using rabbitMQ
 class DatabaseRpcClient(object):
     def __init__(self):
@@ -233,7 +193,7 @@ def handleCommandQuote(args):
 
     if quote and cryptoKey:
         print "Quote return: ", args
-        return {"quote": quote}
+        return args
     else:
         quoteClient.send(
             createQuoteRequest(userId, symbol, lineNum, command)
@@ -251,7 +211,7 @@ def handleCommandAdd(args):
     # if the command has 'reserve' associated with it, then it is being returned from the db
     if reserve:
         print "Add return: ", args
-        return {"reserve": reserve}
+        return args
     else:
         databaseClient.send(
             databaseFunctions.createAddRequest(command, userId, lineNum, cash)
@@ -407,43 +367,30 @@ def handleCommandDumplog(args):
     auditClient.send(requestBody)
 
 
-# def listenToRabbitQ():
-#     connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
-#     channel = connection.channel()
-#     channel.queue_declare(queue=RabbitMQClient.WEBSERVER)
-#     channel.basic_consume(delegate, queue="webserverIn", no_ack=True)
-#     print "Waiting for requests from queue."
-#     channel.start_consuming()
-#     pass
-#
-#
-# def main():
-#     listenToRabbitQ()
-
-
 if __name__ == '__main__':
     print "starting TransactionServer"
 
     functionSwitch = {
-        "QUOTE""ADD": handleCommandQuote,
-        "BUY": handleCommandAdd,
-        "COMMIT_BUY": handleCommandBuy,
-        "CANCEL_BUY": handleCommandCommitBuy,
-        "SELL": handleCommandCancelBuy,
-        "COMMIT_SELL": handleCommandSell,
-        "CANCEL_SELL": handleCommandCommitSell,
-        # "SET_BUY_AMOUNT": handleCommandCancelSell,
-        # "CANCEL_BUY_AMOUNT": handleCommandSetBuyAmount,
-        # "SET_BUY_TRIGGER": handleCommandCancelSetBuy,
-        # "SET_SELL_AMOUNT": handleCommandSetBuyTrigger,
-        # "CANCEL_SELL_AMOUNT": handleCommandSetSellAmount,
-        # "SET_SELL_TRIGGER": handleCommandCancelSetSell,
-        "DUMPLOG": handleCommandSetSellTrigger,
+        "QUOTE": handleCommandQuote,
+        "ADD": handleCommandAdd,
+        "BUY": handleCommandBuy,
+        "COMMIT_BUY": handleCommandCommitBuy,
+        "CANCEL_BUY": handleCommandCancelBuy,
+        "SELL": handleCommandSell,
+        "COMMIT_SELL": handleCommandCommitSell,
+        # "CANCEL_SELL": handleCommandCancelSell,
+        # "SET_BUY_AMOUNT": handleCommandSetBuyAmount,
+        # "CANCEL_BUY_AMOUNT": handleCommandCancelSetBuy,
+        # "SET_BUY_TRIGGER": handleCommandSetBuyTrigger,
+        # "SET_SELL_AMOUNT": handleCommandSetSellAmount,
+        # "CANCEL_SELL_AMOUNT": handleCommandCancelSetSell,
+        "SET_SELL_TRIGGER": handleCommandSetSellTrigger,
+        "DUMPLOG": handleCommandDumplog
     }
 
     # rpc classes
     #quote_rpc = QuoteRpcClient()
-    db_rpc = DatabaseRpcClient()
+    #db_rpc = DatabaseRpcClient()
     trigger_rpc = TriggerRpcClient()
 
     quoteClient = RabbitMQClient(RabbitMQClient.QUOTE)
