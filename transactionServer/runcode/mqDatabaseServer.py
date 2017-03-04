@@ -533,7 +533,6 @@ def on_request(ch, method, props, body):
     except KeyError:
         response = create_response(404, "function not found" + str(payload))
 
-    response = json.dumps(response)
     transactionClient.send(response)
     #ch.basic_publish(
     #    exchange='',
