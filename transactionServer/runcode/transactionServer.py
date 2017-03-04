@@ -153,9 +153,14 @@ def handleCommandCommitBuy(args):
 
     buy = args.get("buy")
     quote = args.get("quote")
+    updatedUser = args.get("updatedUser")
 
-    if buy and quote:
+    if updatedUser:
         return args
+    elif buy and quote:
+        databaseClient.send(
+            databaseFunctions.createCommitBuyRequest(command, userId, buy, quote, transactionNum)
+        )
     elif buy:
         quoteClient.send(
             createQuoteRequest(userId, buy["symbol"], transactionNum, args)
@@ -168,10 +173,19 @@ def handleCommandCommitBuy(args):
 
 
 def handleCommandCancelBuy(args):
+    command = args['command']
     userId = args["userId"]
+    transactionNum = args["lineNum"]
 
-    request = databaseFunctions.createCancelBuyRequest(userId)
-    response = db_rpc.call(request)
+    buy = args.get("buy")
+
+    if buy:
+        return args
+    else:
+        databaseClient.send(
+            databaseFunctions.createCancelBuyRequest(command, userId, transactionNum)
+        )
+    return None
 
 
 def handleCommandSell(args):

@@ -57,12 +57,24 @@ class databaseFunctions:
 
     # must be proceeded by popBuyRequest, to obtain the buy - cuz you need to pop -> get quote -> commit
     @classmethod
-    def createCommitBuyRequest(cls, userId, buy, costPer):
-        return {'function': cls.COMMIT_BUY, 'userId': userId, 'buy': buy, 'costPer': costPer}
+    def createCommitBuyRequest(cls, command, userId, buy, costPer, lineNum):
+        return {
+            'function': cls.COMMIT_BUY,
+            'command': command,
+            'userId': userId,
+            'buy': buy,
+            'costPer': costPer,
+            'lineNum': lineNum,
+        }
 
     @classmethod
-    def createCancelBuyRequest(cls, userId):
-        return {'function': cls.CANCEL_BUY, 'userId': userId}
+    def createCancelBuyRequest(cls, command, userId, lineNum):
+        return {
+            'function': cls.CANCEL_BUY,
+            'command': command,
+            'userId': userId,
+            'lineNum': lineNum,
+        }
 
     @classmethod
     def createSellRequest(cls, userId, amount, symbol):
@@ -402,19 +414,26 @@ def handleCommitBuy(payload):
 
         databaseServer.commitReserveCash(userId, numberOfStocks * costPer)
         user = databaseServer.releaseCash(userId, unspentCash)
-        return create_response(200, user)
+        payload['response'] = 200
+        payload['updatedUser'] = user
     else:
         databaseServer.releaseCash(userId, moneyReserved)
-        return create_response(400, "buy no longer active")
+        payload['response'] = 400
+        payload['errorString'] = "buy no longer active"
+    return payload
+
 
 def handleCancelBuy(payload):
     userId = payload["userId"]
     buy = databaseServer.popBuy(userId)
     if buy:
-        user = databaseServer.releaseCash(userId, buy["amount"])
-        return create_response(200, user)
+        payload['response'] = 200
+        payload['buy'] = buy
+    else:
+        payload['response'] = 400
+        payload['errorString'] = "no buys available"
+    return payload
 
-    return create_response(400, "no buys available")
 
 def handleSell(payload):
     symbol = payload["symbol"]
