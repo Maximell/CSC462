@@ -36,8 +36,15 @@ class databaseFunctions:
         }
 
     @classmethod
-    def createBuyRequest(cls, userId, amount, symbol):
-        return {'function': cls.BUY, 'userId': userId, 'amount': amount, 'symbol': symbol}
+    def createBuyRequest(cls, command, userId, lineNum, amount, symbol):
+        return {
+            'function': cls.BUY,
+            'command': command,
+            'userId': userId,
+            'lineNum': lineNum,
+            'amount': amount,
+            'symbol': symbol
+        }
 
     @classmethod
     def createPopBuyRequest(cls, userId):
@@ -348,12 +355,20 @@ def handleBuy(payload):
     userId = payload["userId"]
     print databaseServer.getUser(userId)
 
-    if databaseServer.getUser(userId)["cash"] >= amount:
+    user = databaseServer.getUser(userId)
+
+    if user["cash"] >= amount:
         databaseServer.pushBuy(userId, symbol, amount)
         user = databaseServer.reserveCash(userId, amount)
-        return create_response(200, user)
+        payload['response'] = 200
+        payload['amount'] = user['cash']
+        payload['reserve'] = user['reserve']
+        return payload
     else:
-        return create_response(400, "not enough money available")
+        payload['response'] = 400
+        payload['amount'] = user['cash']
+        payload['reserve'] = user['reserve']
+        return payload
 
 def handlePopBuy(payload):
     userId = payload["userId"]

@@ -108,6 +108,7 @@ def handleCommandQuote(args):
         quoteClient.send(
             createQuoteRequest(userId, symbol, lineNum, command)
         )
+        return None
 
 
 def handleCommandAdd(args):
@@ -120,22 +121,30 @@ def handleCommandAdd(args):
 
     # if the command has 'reserve' associated with it, then it is being returned from the db
     if reserve:
-        print "Add return: ", args
         return args
     else:
         databaseClient.send(
             databaseFunctions.createAddRequest(command, userId, lineNum, cash)
         )
+        return None
 
 
 def handleCommandBuy(args):
-    symbol = args["stockSymbol"]
-    cash = args["cash"]
-    userId = args["userId"]
+    command = args['command']
+    lineNum = args['lineNum']
+    symbol = args['stockSymbol']
+    cash = args['cash']
+    userId = args['userId']
 
-    request = databaseFunctions.createBuyRequest(userId, cash, symbol)
-    response = db_rpc.call(request)
-    # response['status'] == 400 means they dont have enough money
+    # if response, this means it has already been to the DB
+    # a response of 200 means success, 400 means not enough cash for buy
+    if args.get('response'):
+        return args
+    else:
+        databaseClient.send(
+            databaseFunctions.createBuyRequest(command, userId, lineNum, cash, symbol)
+        )
+        return None
 
 
 def handleCommandCommitBuy(args):
