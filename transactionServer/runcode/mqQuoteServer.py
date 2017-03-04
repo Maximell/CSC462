@@ -8,6 +8,9 @@ from mqAuditServer import auditFunctions
 
 
 def createQuoteRequest(userId, stockSymbol, lineNum, args):
+    print "args: ", args
+    print "add in: ", {"userId": userId, "stockSymbol": stockSymbol, "lineNum": lineNum}
+    print "creating request:", args.update({"userId": userId, "stockSymbol": stockSymbol, "lineNum": lineNum})
     return args.update({"userId": userId, "stockSymbol": stockSymbol, "lineNum": lineNum})
 
 # quote shape: symbol: {value: string, retrieved: epoch time, user: string, cryptoKey: string}
