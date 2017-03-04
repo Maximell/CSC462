@@ -1,3 +1,1 @@
-[1] QUOTE,asdfjasld,TYG
-[2] ADD,asdkjfhaj,3245
-[3] BUY,asdkjfhaj,TYG,325
+[1] BUY,asdkjfhaj,TYG,325
