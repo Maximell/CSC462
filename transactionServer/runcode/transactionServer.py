@@ -147,6 +147,7 @@ def handleCommandBuy(args):
 
 
 def handleCommandCommitBuy(args):
+    command = args['command']
     userId = args["userId"]
     transactionNum = args["lineNum"]
 
@@ -161,7 +162,7 @@ def handleCommandCommitBuy(args):
         )
     else:
         databaseClient.send(
-            databaseFunctions.createPopBuyRequest(userId, transactionNum)
+            databaseFunctions.createPopBuyRequest(command, userId, transactionNum)
         )
     return None
 

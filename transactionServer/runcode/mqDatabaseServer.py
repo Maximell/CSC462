@@ -47,9 +47,10 @@ class databaseFunctions:
         }
 
     @classmethod
-    def createPopBuyRequest(cls, userId, lineNum):
+    def createPopBuyRequest(cls, command, userId, lineNum):
         return {
             'function': cls.POP_BUY,
+            'command': command,
             'userId': userId,
             'lineNum': lineNum,
         }
