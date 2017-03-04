@@ -9,19 +9,14 @@ app = Flask(__name__)
 # args now has keys: userId , sym , lineNum , command , cash
 
 def sendtoQueue(data):
-    # connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
-    # channel = connection.channel()
-    # channel.queue_declare(queue=RabbitMQClient.TRANSACTION)
-    # channel.basic_publish(exchange='', routing_key=RabbitMQClient.TRANSACTION, body=data)
-    # connection.close
-    transactionClient.send(json.loads(data), priority=1)
+    transactionClient.send(data, priority=1)
 
 
 @app.route('/add/<string:userId>/', methods=['POST'])
 def add(userId):
     lineNum = int(request.form['lineNum'].decode('utf-8'))
     cash = float(request.form['cash'].decode('utf-8'))
-    data = json.dumps({"command": "ADD", "userId": userId, "cash": cash, "lineNum": lineNum})
+    data = {"command": "ADD", "userId": userId, "cash": cash, "lineNum": lineNum}
     sendtoQueue(data)
     return 'Trying to add %f cash to user %s.' % (cash, userId)
 
@@ -30,7 +25,7 @@ def add(userId):
 def quote(userId, stockSymbol):
     lineNum = int(request.form['lineNum'].decode('utf-8'))
     data = {"lineNum": lineNum, "command": "QUOTE", "userId": userId, "stockSymbol": stockSymbol}
-    transactionClient.send(data, priority=1)
+    sendtoQueue(data)
     return 'Getting a quote for user %s on stock %s.' % (userId, stockSymbol)
 
 
@@ -38,8 +33,7 @@ def quote(userId, stockSymbol):
 def buy(userId, stockSymbol):
     lineNum = int(request.form['lineNum'].decode('utf-8'))
     cash = float(request.form['cash'].decode('utf-8'))
-    data = json.dumps(
-        {"command": "BUY", "userId": userId, "stockSymbol": stockSymbol, "cash": cash, "lineNum": lineNum})
+    data = {"command": "BUY", "userId": userId, "stockSymbol": stockSymbol, "cash": cash, "lineNum": lineNum}
     sendtoQueue(data)
     return 'Buying stock %s for user %s for cash %f' % (stockSymbol, userId, cash)
 

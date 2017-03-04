@@ -43,7 +43,7 @@ class databaseFunctions:
             'userId': userId,
             'lineNum': lineNum,
             'amount': amount,
-            'symbol': symbol
+            'stockSymbol': symbol
         }
 
     @classmethod
@@ -350,7 +350,7 @@ def handleAdd(payload):
     return payload
 
 def handleBuy(payload):
-    symbol = payload["symbol"]
+    symbol = payload["stockSymbol"]
     amount = payload["amount"]
     userId = payload["userId"]
     print databaseServer.getUser(userId)
