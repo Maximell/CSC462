@@ -124,6 +124,7 @@ if __name__ == '__main__':
         loop = asyncio.get_event_loop()
         loop.run_until_complete(main())
         loop.close()
-        send('DUMPLOG', ['./testLOG'], lastLineNumber)
+        print "last line number was calculated to be: ", lastLineNumber
+        #send('DUMPLOG', ['./testLOG'], lastLineNumber)
         print('completed')
 		
