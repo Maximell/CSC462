@@ -11,45 +11,6 @@ from mqTriggers import TriggerFunctions
 from mqAuditServer import auditFunctions
 
 
-# new RPC audit client using rabbitMQ
-class AuditRpcClient(object):
-    def __init__(self):
-        self.response = None
-        self.corr_id = None
-
-        self.connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
-
-        self.channel = self.connection.channel()
-
-        result = self.channel.queue_declare(exclusive=True)
-        self.callback_queue = result.method.queue
-
-        self.channel.basic_consume(self.on_response, no_ack=True, queue=self.callback_queue)
-    def on_response(self, ch, method, props, body):
-        # make sure its the right package
-        if self.corr_id == props.correlation_id:
-            # self.response is essential the return of this function, because call() waits on it to be not None
-            self.response = json.loads(body)
-
-    def call(self, requestBody):
-        self.response = None
-        self.corr_id = str(uuid.uuid4())
-        print "sending Audit request Id:", self.corr_id
-        self.channel.basic_publish(
-            exchange='',
-            routing_key=RabbitMQClient.AUDIT,
-            properties=pika.BasicProperties(
-                reply_to=self.callback_queue,
-                correlation_id=self.corr_id
-            ),
-            body=json.dumps(requestBody)
-        )
-        while self.response is None:
-            self.connection.process_data_events()
-        print "From Audit server: ", self.response
-        return self.response
-
-
 # new RPC client client using rabbitMQ
 class QuoteRpcClient(object):
     def __init__(self):
@@ -169,100 +130,94 @@ class TriggerRpcClient(object):
         return self.response
 
 
+def errorPrint(args, error):
+    print "-------ERROR-------"
+    print "args:", args
+    print "error:", error
+    print "-------------------"
+
+
+def create_response(status, response):
+    return {'status': status, 'body': response}
+
+
 def delegate(ch , method, properties, body):
     args = ast.literal_eval(body)
-    print args
-    try:
-        if "./testLOG" != args["userId"]:
+    print "incoming args: ", args
 
-            requestBody = auditFunctions.createUserCommand(
-                int(time.time() * 1000),
-                "transactionServer",
-                args["lineNum"],
-                args["userId"],
-                args["command"],
-                args.get("stockSymbol"),
-                None,
-                args.get("cash")
-            )
-            # Log User Command Call
-            auditClient.send(requestBody)
+    # error checking from other components
+    if args.get("errorCode") and args.get("errorString"):
+        error = str(args.get("errorCode")) + ": " + str(args.get("errorString"))
 
-        else:
-            requestBody = auditFunctions.createUserCommand(
-                int(time.time() * 1000),
-                "transactionServer",
-                args["lineNum"],
-                args["userId"],
-                args["command"],
-                args.get("stockSymbol"),
-                args["userId"],
-                args.get("cash")
-            )
-            # Log User Command Call
-            auditClient.send(requestBody)
-
-        if args["command"] == "QUOTE":
-            handleCommandQuote(args)
-
-        elif args["command"] == "ADD":
-            handleCommandAdd(args)
-
-        elif args["command"] == "BUY":
-            handleCommandBuy(args)
-
-        elif args["command"] == "COMMIT_BUY":
-            handleCommandCommitBuy(args)
-
-        elif args["command"] == "CANCEL_BUY":
-            handleCommandCancelBuy(args)
-
-        elif args["command"] == "SELL":
-            handleCommandSell(args)
-
-        elif args["command"] == "COMMIT_SELL":
-            handleCommandCommitSell(args)
-
-        elif args["command"] == "CANCEL_SELL":
-            handleCommandCancelSell(args)
-
-        # elif args["command"] == "SET_BUY_AMOUNT":
-        #     handleCommandSetBuyAmount(args)
-        #
-        # elif args["command"] == "CANCEL_BUY_AMOUNT":
-        #     handleCommandCancelSetBuy(args)
-        #
-        # elif args["command"] == "SET_BUY_TRIGGER":
-        #     handleCommandSetBuyTrigger(args)
-        #
-        # elif args["command"] == "SET_SELL_AMOUNT":
-        #     handleCommandSetSellAmount(args)
-        #
-        # elif args["command"] == "CANCEL_SELL_AMOUNT":
-        #     handleCommandCancelSetSell(args)
-        #
-        # elif args["command"] == "SET_SELL_TRIGGER":
-        #     handleCommandSetSellTrigger(args)
-        elif args["command"] == "DUMPLOG":
-            handleCommandDumplog(args)
-        else:
-            print "couldn't figure out command..."
-            print "command: ", args
-
-    except (RuntimeError, TypeError, ArithmeticError, KeyError) as error:
-        print "-------ERROR-------"
-        print "args:", args
-        print "error:", error
-        print "-------------------"
+        errorPrint(args, error)
         requestBody = auditFunctions.createErrorMessage(
             int(time.time() * 1000),
             "transactionServer",
             args["lineNum"],
             args["userId"],
             args["command"],
-            str(error)
+            error
         )
         auditClient.send(requestBody)
+
+        create_response(args.get("errorCode"), str(args.get("errorString")))
+        # TODO: return this ^ to the webserver (through a rabbitClient)
+    else:
+        try:
+            # send command to audit
+            if args["userId"] != "./testLOG":
+                requestBody = auditFunctions.createUserCommand(
+                    int(time.time() * 1000),
+                    "transactionServer",
+                    args["lineNum"],
+                    args["userId"],
+                    args["command"],
+                    args.get("stockSymbol"),
+                    None,
+                    args.get("cash")
+                )
+                auditClient.send(requestBody)
+
+            else:
+                requestBody = auditFunctions.createUserCommand(
+                    int(time.time() * 1000),
+                    "transactionServer",
+                    args["lineNum"],
+                    args["userId"],
+                    args["command"],
+                    args.get("stockSymbol"),
+                    args["userId"],
+                    args.get("cash")
+                )
+                # Log User Command Call
+                auditClient.send(requestBody)
+
+            function = functionSwitch.get(args["command"])
+            if function:
+                # if a function is complete, it should return a response to send back to web server
+                # if it is not complete (needs to go to another service) it should return None
+                response = function(args)
+                if response is not None:
+                    create_response(200, response)
+                    # TODO: return this ^ to the webserver (through a rabbitClient)
+            else:
+                print "couldn't figure out command...", args
+                create_response(404, "function not found" + str(args))
+                # TODO: return this ^ to the webserver (through a rabbitClient)
+
+        except (RuntimeError, TypeError, ArithmeticError, KeyError) as error:
+            errorPrint(args, error)
+            requestBody = auditFunctions.createErrorMessage(
+                int(time.time() * 1000),
+                "transactionServer",
+                args["lineNum"],
+                args["userId"],
+                args["command"],
+                str(error)
+            )
+            auditClient.send(requestBody)
+            create_response(500, str(error))
+            # TODO: return this ^ to the webserver (through a rabbitClient)
 
 
 # From webServer: {"transactionNum": lineNum, "command": "QUOTE", "userId": userId, "stockSymbol": stockSymbol}
@@ -273,8 +228,12 @@ def handleCommandQuote(args):
     lineNum = args["lineNum"]
     command = args["command"]
 
-    if args.get("quote") and args.get("cryptoKey"):
-        print "Quote return: ", args # TODO: Add return to webServer
+    quote = args.get("quote")
+    cryptoKey = args.get("cryptoKey")
+
+    if quote and cryptoKey:
+        print "Quote return: ", args
+        return {"quote": quote}
     else:
         quoteClient.send(
             createQuoteRequest(userId, symbol, lineNum, command)
@@ -291,7 +250,8 @@ def handleCommandAdd(args):
 
     # if the command has 'reserve' associated with it, then it is being returned from the db
     if reserve:
-        print "Add return: ", args #TODO: return to webserver
+        print "Add return: ", args
+        return {"reserve": reserve}
     else:
         databaseClient.send(
             databaseFunctions.createAddRequest(command, userId, lineNum, cash)
@@ -463,6 +423,23 @@ def handleCommandDumplog(args):
 
 if __name__ == '__main__':
     print "starting TransactionServer"
+
+    functionSwitch = {
+        "QUOTE""ADD": handleCommandQuote,
+        "BUY": handleCommandAdd,
+        "COMMIT_BUY": handleCommandBuy,
+        "CANCEL_BUY": handleCommandCommitBuy,
+        "SELL": handleCommandCancelBuy,
+        "COMMIT_SELL": handleCommandSell,
+        "CANCEL_SELL": handleCommandCommitSell,
+        # "SET_BUY_AMOUNT": handleCommandCancelSell,
+        # "CANCEL_BUY_AMOUNT": handleCommandSetBuyAmount,
+        # "SET_BUY_TRIGGER": handleCommandCancelSetBuy,
+        # "SET_SELL_AMOUNT": handleCommandSetBuyTrigger,
+        # "CANCEL_SELL_AMOUNT": handleCommandSetSellAmount,
+        # "SET_SELL_TRIGGER": handleCommandCancelSetSell,
+        "DUMPLOG": handleCommandSetSellTrigger,
+    }
 
     # rpc classes
     #quote_rpc = QuoteRpcClient()
