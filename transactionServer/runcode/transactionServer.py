@@ -90,96 +90,6 @@ class TriggerRpcClient(object):
         return self.response
 
 
-def errorPrint(args, error):
-    print "-------ERROR-------"
-    print "args:", args
-    print "error:", error
-    print "-------------------"
-
-
-def create_response(status, response):
-    return {'status': status, 'body': response}
-
-
-def delegate(ch , method, properties, body):
-    args = ast.literal_eval(body)
-    print "incoming args: ", args
-
-    # error checking from other components
-    if args.get("errorCode") and args.get("errorString"):
-        error = str(args.get("errorCode")) + ": " + str(args.get("errorString"))
-
-        errorPrint(args, error)
-        requestBody = auditFunctions.createErrorMessage(
-            int(time.time() * 1000),
-            "transactionServer",
-            args["lineNum"],
-            args["userId"],
-            args["command"],
-            error
-        )
-        auditClient.send(requestBody)
-
-        create_response(args.get("errorCode"), str(args.get("errorString")))
-        # TODO: return this ^ to the webserver (through a rabbitClient)
-    else:
-        try:
-            # send command to audit
-            if args["userId"] != "./testLOG":
-                requestBody = auditFunctions.createUserCommand(
-                    int(time.time() * 1000),
-                    "transactionServer",
-                    args["lineNum"],
-                    args["userId"],
-                    args["command"],
-                    args.get("stockSymbol"),
-                    None,
-                    args.get("cash")
-                )
-                auditClient.send(requestBody)
-
-            else:
-                requestBody = auditFunctions.createUserCommand(
-                    int(time.time() * 1000),
-                    "transactionServer",
-                    args["lineNum"],
-                    args["userId"],
-                    args["command"],
-                    args.get("stockSymbol"),
-                    args["userId"],
-                    args.get("cash")
-                )
-                # Log User Command Call
-                auditClient.send(requestBody)
-
-            function = functionSwitch.get(args["command"])
-            if function:
-                # if a function is complete, it should return a response to send back to web server
-                # if it is not complete (needs to go to another service) it should return None
-                response = function(args)
-                if response is not None:
-                    create_response(200, response)
-                    # TODO: return this ^ to the webserver (through a rabbitClient)
-            else:
-                print "couldn't figure out command...", args
-                create_response(404, "function not found" + str(args))
-                # TODO: return this ^ to the webserver (through a rabbitClient)
-
-        except (RuntimeError, TypeError, ArithmeticError, KeyError) as error:
-            errorPrint(args, error)
-            requestBody = auditFunctions.createErrorMessage(
-                int(time.time() * 1000),
-                "transactionServer",
-                args["lineNum"],
-                args["userId"],
-                args["command"],
-                str(error)
-            )
-            auditClient.send(requestBody)
-            create_response(500, str(error))
-            # TODO: return this ^ to the webserver (through a rabbitClient)
-
-
 # From webServer: {"transactionNum": lineNum, "command": "QUOTE", "userId": userId, "stockSymbol": stockSymbol}
 # From quoteServer: + "quote:, "cryptoKey"
 def handleCommandQuote(args):
@@ -365,6 +275,96 @@ def handleCommandDumplog(args):
         args["command"]
     )
     auditClient.send(requestBody)
+
+
+def errorPrint(args, error):
+    print "-------ERROR-------"
+    print "args:", args
+    print "error:", error
+    print "-------------------"
+
+
+def create_response(status, response):
+    return {'status': status, 'body': response}
+
+
+def delegate(ch , method, properties, body):
+    args = ast.literal_eval(body)
+    print "incoming args: ", args
+
+    # error checking from other components
+    if args.get("errorCode") and args.get("errorString"):
+        error = str(args.get("errorCode")) + ": " + str(args.get("errorString"))
+
+        errorPrint(args, error)
+        requestBody = auditFunctions.createErrorMessage(
+            int(time.time() * 1000),
+            "transactionServer",
+            args["lineNum"],
+            args["userId"],
+            args["command"],
+            error
+        )
+        auditClient.send(requestBody)
+
+        create_response(args.get("errorCode"), str(args.get("errorString")))
+        # TODO: return this ^ to the webserver (through a rabbitClient)
+    else:
+        try:
+            # send command to audit
+            if args["userId"] != "./testLOG":
+                requestBody = auditFunctions.createUserCommand(
+                    int(time.time() * 1000),
+                    "transactionServer",
+                    args["lineNum"],
+                    args["userId"],
+                    args["command"],
+                    args.get("stockSymbol"),
+                    None,
+                    args.get("cash")
+                )
+                auditClient.send(requestBody)
+
+            else:
+                requestBody = auditFunctions.createUserCommand(
+                    int(time.time() * 1000),
+                    "transactionServer",
+                    args["lineNum"],
+                    args["userId"],
+                    args["command"],
+                    args.get("stockSymbol"),
+                    args["userId"],
+                    args.get("cash")
+                )
+                # Log User Command Call
+                auditClient.send(requestBody)
+
+            function = functionSwitch.get(args["command"])
+            if function:
+                # if a function is complete, it should return a response to send back to web server
+                # if it is not complete (needs to go to another service) it should return None
+                response = function(args)
+                if response is not None:
+                    create_response(200, response)
+                    # TODO: return this ^ to the webserver (through a rabbitClient)
+            else:
+                print "couldn't figure out command...", args
+                create_response(404, "function not found" + str(args))
+                # TODO: return this ^ to the webserver (through a rabbitClient)
+
+        except (RuntimeError, TypeError, ArithmeticError, KeyError) as error:
+            errorPrint(args, error)
+            requestBody = auditFunctions.createErrorMessage(
+                int(time.time() * 1000),
+                "transactionServer",
+                args["lineNum"],
+                args["userId"],
+                args["command"],
+                str(error)
+            )
+            auditClient.send(requestBody)
+            create_response(500, str(error))
+            # TODO: return this ^ to the webserver (through a rabbitClient)
 
 
 if __name__ == '__main__':
