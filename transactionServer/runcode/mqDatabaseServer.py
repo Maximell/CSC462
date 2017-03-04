@@ -36,14 +36,14 @@ class databaseFunctions:
         }
 
     @classmethod
-    def createBuyRequest(cls, command, userId, lineNum, amount, symbol):
+    def createBuyRequest(cls, command, userId, lineNum, cash, stockSymbol):
         return {
             'function': cls.BUY,
             'command': command,
             'userId': userId,
             'lineNum': lineNum,
-            'amount': amount,
-            'stockSymbol': symbol
+            'cash': cash,
+            'stockSymbol': stockSymbol
         }
 
     @classmethod
@@ -351,7 +351,7 @@ def handleAdd(payload):
 
 def handleBuy(payload):
     symbol = payload["stockSymbol"]
-    amount = payload["amount"]
+    amount = payload["cash"]
     userId = payload["userId"]
     print databaseServer.getUser(userId)
 
