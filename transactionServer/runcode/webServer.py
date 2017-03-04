@@ -41,7 +41,7 @@ def buy(userId, stockSymbol):
 @app.route('/commit-buy/<string:userId>/', methods=['POST'])
 def commitBuy(userId):
     lineNum = int(request.form['lineNum'].decode('utf-8'))
-    data = json.dumps({"command": "COMMIT_BUY", "userId": userId, "lineNum": lineNum})
+    data = {"command": "COMMIT_BUY", "userId": userId, "lineNum": lineNum}
     sendtoQueue(data)
     return 'Committing buy for user %s.' % (userId)
 
@@ -49,7 +49,7 @@ def commitBuy(userId):
 @app.route('/cancel-buy/<string:userId>/', methods=['POST'])
 def cancelBuy(userId):
     lineNum = int(request.form['lineNum'].decode('utf-8'))
-    data = json.dumps({"command": "CANCEL_BUY", "userId": userId, "lineNum": lineNum})
+    data = {"command": "CANCEL_BUY", "userId": userId, "lineNum": lineNum}
     sendtoQueue(data)
     return 'Cancelling buy for user %s.' % (userId)
 
