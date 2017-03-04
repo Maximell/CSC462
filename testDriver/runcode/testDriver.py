@@ -116,7 +116,7 @@ if __name__ == '__main__':
         print(sys.argv)
     else:
         # get last line number. if file cant fit in memory, this will break. how large a file can fit in memory?
-        lastLine = reversed(open(sys.argv[2]).readlines())[0]
+        lastLine = reversed(open(sys.argv[2]).readlines()).next()
         lastLineNumber = lastLine.split(" ")[0].strip("[]")
 
         base_url = sys.argv[1]
