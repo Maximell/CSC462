@@ -115,10 +115,9 @@ if __name__ == '__main__':
         print('example: python3 testDriver.py http://localhost:8000 2userWorkLoad.txt')
         print(sys.argv)
     else:
-        #get last line number. if file cant fit in memory, this will break. how large a file can fit in memory?
-        for line in reversed(open(sys.argv[2]).readlines()):
-             splitLine = line.split(" ")
-             lastLineNumber = splitLine[0].strip("[]")
+        # get last line number. if file cant fit in memory, this will break. how large a file can fit in memory?
+        lastLine = reversed(open(sys.argv[2]).readlines())[0]
+        lastLineNumber = lastLine.split(" ")[0].strip("[]")
 
         base_url = sys.argv[1]
         loop = asyncio.get_event_loop()
