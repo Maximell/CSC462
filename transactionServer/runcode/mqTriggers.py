@@ -6,7 +6,7 @@ import json
 import uuid
 import math
 from threading import Thread
-from rabbitMQSetups import RabbitMQClient
+from rabbitMQSetups import RabbitMQClient, RabbitMQReceiver
 from mqDatabaseServer import databaseFunctions
 from mqQuoteServer import createQuoteRequest
 
@@ -96,32 +96,79 @@ class TriggerFunctions:
     GET_SELL = 7
 
     @classmethod
-    def createAddBuyRequest(cls, userId, symbol, amount, transactionNum):
-        return {'function': cls.BUY, 'userId': userId, 'symbol': symbol, 'amount': amount, 'transactionNum': transactionNum}
+    def createAddBuyRequest(cls, command, userId, stockSymbol, amount, lineNum):
+        return {
+            'function': cls.BUY,
+            'command': command,
+            'userId': userId,
+            'stockSymbol': stockSymbol,
+            'amount': amount,
+            'lineNum': lineNum,
+        }
 
     @classmethod
-    def createSetBuyActiveRequest(cls, userId, symbol, buyAt):
-        return {'function': cls.ACTIVATE_BUY, 'userId': userId, 'symbol': symbol, 'buyAt': buyAt}
+    def createSetBuyActiveRequest(cls, command, userId, symbol, buyAt, lineNum):
+        return {
+            'function': cls.ACTIVATE_BUY,
+            'command': command,
+            'userId': userId,
+            'symbol': symbol,
+            'buyAt': buyAt,
+            'lineNum': lineNum,
+        }
 
     @classmethod
-    def createCancelBuyRequest(cls, userId, symbol):
-        return {'function': cls.CANCEL_BUY, 'userId': userId, 'symbol': symbol}
+    def createCancelBuyRequest(cls, command, userId, symbol, lineNum):
+        return {
+            'function': cls.CANCEL_BUY,
+            'command': command,
+            'userId': userId,
+            'symbol': symbol,
+            'lineNum': lineNum,
+        }
 
     @classmethod
-    def createAddSellRequest(cls, userId, symbol, amount, transactionNum):
-        return {'function': cls.SELL, 'userId': userId, 'symbol': symbol, 'amount': amount, 'transactionNum': transactionNum}
+    def createAddSellRequest(cls, command, userId, symbol, amount, transactionNum, lineNum):
+        return {
+            'function': cls.SELL,
+            'command': command,
+            'userId': userId,
+            'symbol': symbol,
+            'amount': amount,
+            'transactionNum': transactionNum,
+            'lineNum': lineNum,
+        }
 
     @classmethod
-    def createSetSellActiveRequest(cls, userId, symbol, sellAt):
-        return {'function': cls.ACTIVATE_SELL, 'userId': userId, 'symbol': symbol, 'sellAt': sellAt}
+    def createSetSellActiveRequest(cls, command, userId, symbol, sellAt, lineNum):
+        return {
+            'function': cls.ACTIVATE_SELL,
+            'command': command,
+            'userId': userId,
+            'symbol': symbol,
+            'sellAt': sellAt,
+            'lineNum': lineNum,
+        }
 
     @classmethod
-    def createCancelSellRequest(cls, userId, symbol):
-        return {'function': cls.CANCEL_SELL, 'userId': userId, 'symbol': symbol}
+    def createCancelSellRequest(cls, command, userId, symbol, lineNum):
+        return {
+            'function': cls.CANCEL_SELL,
+            'command': command,
+            'userId': userId,
+            'symbol': symbol,
+            'lineNum': lineNum,
+        }
 
     @classmethod
-    def createGetSellRequest(cls, userId, symbol):
-        return {'function': cls.GET_SELL, 'userId': userId, 'symbol': symbol}
+    def createGetSellRequest(cls, command, userId, symbol, lineNum):
+        return {
+            'function': cls.GET_SELL,
+            'command': command,
+            'userId': userId,
+            'symbol': symbol,
+            'lineNum': lineNum,
+        }
 
     @classmethod
     def listOptions(cls):
@@ -174,12 +221,16 @@ class Triggers:
     def setSellActive(self, userId, symbol, sellAt):
         if self._triggerExists(userId, symbol, self.sellTriggers):
             trigger = self.sellTriggers.get(symbol).get(userId)
-            if sellAt >= trigger['maxSellAmount']:
+            # TODO: take deeper look at this logic, it might be backwards?
+            # sell 500 worth of X, sellAt 300 each. should be good
+            # sell 500 worth of X, sell at 600 each. not good?
+            # just switched it, until march 5th, it was sellAt >= trigger['maxSellAmount']
+            if sellAt <= trigger['maxSellAmount']:
                 trigger["active"] = True
                 trigger["sellAt"] = sellAt
                 return trigger
             else:
-                print "sellat less than maxSellAmount"
+                print "sellAt greater than maxSellAmount"
 
     def cancelBuyTrigger(self, userId, symbol):
         # danger here'
@@ -282,100 +333,151 @@ class SellTriggerThread(Thread):
             time.sleep(15)
 
 
-def handleAddBuy(userId, symbol, amount, transactionNum):
-     trigger = triggers.addBuyTrigger(userId, symbol, amount, transactionNum)
-     if trigger:
-         return create_response(200, trigger)
-     return create_response(400, "bad request")
+def handleAddBuy(payload):
+    userId = payload["userId"]
+    symbol = payload["stockSymbol"]
+    amount = payload["amount"]
+    transactionNum = payload["lineNum"]
 
-def handleSetBuyActive(userId, symbol, buyAt):
+    trigger = triggers.addBuyTrigger(userId, symbol, amount, transactionNum)
+    if trigger:
+        payload['response'] = 200
+        payload['trigger'] = trigger
+    else:
+        payload['response'] = 500
+        payload['errorString'] = "unknown error"
+    return payload
+
+
+def handleSetBuyActive(payload):
+    userId = payload["userId"]
+    symbol = payload["stockSymbol"]
+    buyAt = payload["buyAt"]
+
     trigger = triggers.setBuyActive(userId, symbol, buyAt)
     if trigger:
-        return create_response(200, trigger)
-    return create_response(400, "trigger doesnt exist")
+        payload['response'] = 200
+        payload['trigger'] = trigger
+    else:
+        payload['response'] = 400
+        payload['errorString'] = "trigger doesnt exist or buyAt is higher then cash amount reserved"
+    return payload
 
-def handleCancelBuy(userId, symbol):
+
+def handleCancelBuy(payload):
+    userId = payload["userId"]
+    symbol = payload["stockSymbol"]
+
     trigger = triggers.cancelBuyTrigger(userId, symbol)
     if trigger:
-        return create_response(200, trigger)
-    return create_response(400, "trigger doesnt exist")
+        payload['response'] = 200
+        payload['trigger'] = trigger
+    else:
+        payload['response'] = 400
+        payload['errorString'] = "trigger doesnt exist"
+    return payload
 
-def handleAddSell(userId, symbol, amount, transactionNum):
+
+def handleAddSell(payload):
+    userId = payload["userId"]
+    symbol = payload["stockSymbol"]
+    amount = payload["amount"]
+    transactionNum = payload["lineNum"]
+
     trigger = triggers.addSellTrigger(userId, symbol, amount, transactionNum)
     if trigger:
-        return create_response(200, trigger)
-    return create_response(400, "bad request")
+        payload['response'] = 200
+        payload['trigger'] = trigger
+    else:
+        payload['response'] = 500
+        payload['errorString'] = "unknown error"
+    return payload
 
-def handleSetSellActive(userId, symbol, sellAt):
+
+def handleSetSellActive(payload):
+    userId = payload["userId"]
+    symbol = payload["stockSymbol"]
+    sellAt = payload["sellAt"]
+
     trigger = triggers.setSellActive(userId, symbol, sellAt)
     if trigger:
-        return create_response(200, trigger)
-    return create_response(400, "trigger doesnt exist or is at a higher value than amount reserved for it")
+        payload['response'] = 200
+        payload['trigger'] = trigger
+    else:
+        payload['response'] = 400
+        payload['errorString'] = "trigger doesnt exist or sellAt is greater then max"
+    return payload
 
-def handleCancelSell(userId, symbol):
+
+def handleCancelSell(payload):
+    userId = payload["userId"]
+    symbol = payload["stockSymbol"]
+
     trigger = triggers.cancelSellTrigger(userId, symbol)
     if trigger:
-        return create_response(200, trigger)
-    return create_response(400, "trigger doesnt exist")
+        payload['response'] = 200
+        payload['trigger'] = trigger
+    else:
+        payload['response'] = 400
+        payload['errorString'] = "trigger doesnt exist"
+    return payload
 
-def handleGetSell(userId, symbol):
+
+def handleGetSell(payload):
+    userId = payload["userId"]
+    symbol = payload["stockSymbol"]
+
     trigger = triggers.getSellTrigger(userId, symbol)
     if trigger:
-        return create_response(200, trigger)
-    return create_response(400, "trigger doesnt exist")
+        payload['response'] = 200
+        payload['trigger'] = trigger
+    else:
+        payload['response'] = 400
+        payload['errorString'] = "trigger doesnt exist"
+    return payload
+
 
 def on_request(ch, method, props, body):
     payload = json.loads(body)
-    function = payload["function"]
-    del payload["function"]
+    print "payload: ", payload
 
-    try:
-        response = handleFunctionSwitch[function](**payload)
-    except KeyError:
-        print "404 error at:", function, payload
-        response = create_response(404, "function not found")
+    function = handleFunctionSwitch.get(payload["function"])
+    if function:
+        response = function(payload)
+    else:
+        payload['response'] = 404
+        payload['errorString'] = "function not found"
+        response = payload
 
-    response = json.dumps(response)
-
-    ch.basic_publish(
-        exchange='',
-        routing_key=props.reply_to,
-        properties=pika.BasicProperties(correlation_id=props.correlation_id),
-        body=response
-    )
-    ch.basic_ack(delivery_tag=method.delivery_tag)
+    transactionClient.send(response)
 
 
-def create_response(status, response):
-    return {'status': status, 'body': response}
+def create_error_response(status, response):
+    return {'response': status, 'errorString': response}
 
 
-# if __name__ == '__main__':
-#     triggers = Triggers()
-#
-#     handleFunctionSwitch = {
-#         TriggerFunctions.BUY: handleAddBuy,
-#         TriggerFunctions.ACTIVATE_BUY: handleSetBuyActive,
-#         TriggerFunctions.CANCEL_BUY: handleCancelBuy,
-#         TriggerFunctions.SELL: handleAddSell,
-#         TriggerFunctions.ACTIVATE_SELL: handleSetSellActive,
-#         TriggerFunctions.CANCEL_SELL: handleCancelSell,
-#         TriggerFunctions.GET_SELL: handleGetSell
-#     }
-#
-#     quote_rpc = QuoteRpcClient()
-#     db_rpc = DatabaseRpcClient()
-#
-#     BuyTriggerThread()
-#     SellTriggerThread()
-#
-#     connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
-#     channel = connection.channel()
-#     channel.queue_declare(queue=queueNames.TRIGGERS)
-#     channel.basic_qos(prefetch_count=1)
-#     channel.basic_consume(on_request, queue=queueNames.TRIGGERS)
-#
-#     print("awaiting trigger requests")
-#     channel.start_consuming()
+if __name__ == '__main__':
+    triggers = Triggers()
+
+    handleFunctionSwitch = {
+        TriggerFunctions.BUY: handleAddBuy,
+        TriggerFunctions.ACTIVATE_BUY: handleSetBuyActive,
+        TriggerFunctions.CANCEL_BUY: handleCancelBuy,
+        TriggerFunctions.SELL: handleAddSell,
+        TriggerFunctions.ACTIVATE_SELL: handleSetSellActive,
+        TriggerFunctions.CANCEL_SELL: handleCancelSell,
+        TriggerFunctions.GET_SELL: handleGetSell
+    }
+
+    quote_rpc = QuoteRpcClient()
+    db_rpc = DatabaseRpcClient()
+
+    # BuyTriggerThread()
+    # SellTriggerThread()
+
+    transactionClient = RabbitMQClient(RabbitMQClient.TRANSACTION)
+
+    print("awaiting trigger requests")
+    RabbitMQReceiver(on_request, RabbitMQReceiver.TRIGGERS)
 
 
