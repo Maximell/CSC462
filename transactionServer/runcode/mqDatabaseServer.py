@@ -93,20 +93,47 @@ class databaseFunctions:
         return {'function': cls.CANCEL_SELL, 'userId': userId}
 
     @classmethod
-    def createReserveCashRequest(cls, userId, amount):
-        return {'function': cls.RESERVE_CASH, 'userId': userId, 'amount': amount}
+    def createReserveCashRequest(cls, command, userId, amount, stockSymbol, lineNum):
+        return {
+            'function': cls.RESERVE_CASH,
+            'command': command,
+            'userId': userId,
+            'amount': amount,
+            'stockSymbol': stockSymbol,
+            'lineNum': lineNum,
+        }
 
     @classmethod
-    def createReleaseCashRequest(cls, userId, amount):
-        return {'function': cls.RELEASE_CASH, 'userId': userId, 'amount': amount}
+    def createReleaseCashRequest(cls, command, userId, amount, lineNum):
+        return {
+            'function': cls.RELEASE_CASH,
+            'command': command,
+            'userId': userId,
+            'amount': amount,
+            'lineNum': lineNum,
+        }
 
     @classmethod
-    def createReservePortfolioRequest(cls, userId, amount, symbol):
-        return {'function': cls.RESERVE_PORTFOLIO, 'userId': userId, 'amount': amount, 'symbol': symbol}
+    def createReservePortfolioRequest(cls, command, userId, amount, symbol, lineNum):
+        return {
+            'function': cls.RESERVE_PORTFOLIO,
+            'command': command,
+            'userId': userId,
+            'amount': amount,
+            'symbol': symbol,
+            'lineNum': lineNum,
+        }
 
     @classmethod
-    def createReleasePortfolioRequest(cls, userId, amount, symbol):
-        return {'function': cls.RELEASE_PORTFOLIO, 'userId': userId, 'amount': amount, 'symbol': symbol}
+    def createReleasePortfolioRequest(cls, command, userId, amount, symbol, lineNum):
+        return {
+            'function': cls.RELEASE_PORTFOLIO,
+            'command': command,
+            'userId': userId,
+            'amount': amount,
+            'symbol': symbol,
+            'lineNum': lineNum,
+        }
 
     @classmethod
     def createBuyTriggerRequest(cls, userId, cashCommitAmount, cashReleaseAmount, portfolioAmount, symbol):
@@ -481,8 +508,13 @@ def handleReserveCash(payload):
 
     user = databaseServer.reserveCash(userId, amount)
     if user:
-        return create_response(200, user)
-    return create_response(400, "not enough money")
+        payload['response'] = 200
+        payload['reserve'] = user['reserve']
+    else:
+        payload['response'] = 400
+        payload['errorString'] = "not enough money"
+
+    return payload
 
 def handleReleaseCash(payload):
     amount = payload["amount"]
@@ -490,8 +522,14 @@ def handleReleaseCash(payload):
 
     user = databaseServer.releaseCash(userId, amount)
     if user:
-        return create_response(200, user)
-    return create_response(400, "not enough reserved")
+        payload['response'] = 200
+        payload['cash'] = user['cash']
+    else:
+        payload['response'] = 400
+        payload['errorString'] = "not enough money reserved"
+
+    return payload
+
 
 def handleReservePortfolio(payload):
     symbol = payload["symbol"]
@@ -500,8 +538,14 @@ def handleReservePortfolio(payload):
 
     user = databaseServer.reserveFromPortfolio(userId, symbol, amount)
     if user:
-        return create_response(200, user)
-    return create_response(400, "not enough portfolio")
+        payload['response'] = 200
+        payload['reservedPortfolio'] = user['portfolio'][symbol]['reserved']
+    else:
+        payload['response'] = 400
+        payload['errorString'] = "not enough portfolio"
+
+    return payload
+
 
 def handleReleasePortfolio(payload):
     symbol = payload["symbol"]
@@ -510,8 +554,14 @@ def handleReleasePortfolio(payload):
 
     user = databaseServer.releasePortfolioReserves(userId, symbol, amount)
     if user:
-        return create_response(200, user)
-    return create_response(400, "not enough reserved")
+        payload['response'] = 200
+        payload['portfolioAmount'] = user['portfolio'][symbol]['amount']
+    else:
+        payload['response'] = 400
+        payload['errorString'] = "not enough reserved portfolio"
+
+    return payload
+
 
 def handleTriggerBuy(payload):
     symbol = payload["symbol"]
@@ -547,26 +597,20 @@ def handleTriggerSell(payload):
 def on_request(ch, method, props, body):
     payload = json.loads(body)
     print "payload: ", payload
-    function = payload["function"]
-    args = ast.literal_eval(body)
-    print "args: ", args
-    userId = args['userId']
-    if databaseServer.getUser(userId) == None:
+
+    userId = payload['userId']
+    if databaseServer.getUser(userId) is None:
         databaseServer.addUser(userId)
 
-    try:
-        response = handleFunctionSwitch[function](payload)
-    except KeyError:
-        response = create_response(404, "function not found" + str(payload))
+    function = handleFunctionSwitch.get(payload["function"])
+    if function:
+        response = function(payload)
+    else:
+        payload['response'] = 404
+        payload['errorString'] = "function not found"
+        response = payload
 
     transactionClient.send(response)
-    #ch.basic_publish(
-    #    exchange='',
-    #    routing_key=props.reply_to,
-    #   properties=pika.BasicProperties(correlation_id=props.correlation_id),
-    #    body=response
-    #)
-    #ch.basic_ack(delivery_tag=method.delivery_tag)
 
 
 if __name__ == '__main__':

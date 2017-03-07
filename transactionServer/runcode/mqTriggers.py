@@ -430,7 +430,7 @@ def handleGetSell(payload):
     trigger = triggers.getSellTrigger(userId, symbol)
     if trigger:
         payload['response'] = 200
-        payload['trigger'] = trigger
+        payload['sellTrigger'] = trigger
     else:
         payload['response'] = 400
         payload['errorString'] = "trigger doesnt exist"
