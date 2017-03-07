@@ -271,7 +271,6 @@ def handleCommandSetBuyAmount(args):
         databaseClient.send(
             databaseFunctions.createReserveCashRequest(command, userId, amount, symbol, transactionNum)
         )
-
     return None
 
 
