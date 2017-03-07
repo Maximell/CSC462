@@ -108,8 +108,13 @@ class databaseFunctions:
         }
 
     @classmethod
-    def createCancelSellRequest(cls, userId):
-        return {'function': cls.CANCEL_SELL, 'userId': userId}
+    def createCancelSellRequest(cls, command, userId, lineNum):
+        return {
+            'function': cls.CANCEL_SELL,
+            'command': command
+            'userId': userId,
+            'lineNum': lineNum
+        }
 
     @classmethod
     def createReserveCashRequest(cls, userId, amount):
@@ -472,7 +477,9 @@ def handleSell(payload):
 
 
 def handlePopSell(payload):
+    command = payload["command"]
     userId = payload["userId"]
+    lineNum = payload["lineNum"]
 
     sell = databaseServer.popSell(userId)
     if sell:
@@ -504,7 +511,9 @@ def handleCommitSell(payload):
     return payload
 
 def handleCancelSell(payload):
+    command = payload["command"]
     userId = payload["userId"]
+    lineNum = payload["lineNum"]
 
     sell = databaseServer.popSell(userId)
     if sell:
