@@ -550,7 +550,7 @@ def handleCancelSell(payload):
         payload["sell"] = sell
     else:
         payload["response"] = 400
-        payload["errorMessage"] = "no sells available"
+        payload["errorString"] = "no sells available"
     return payload
 
 def handleReserveCash(payload):
