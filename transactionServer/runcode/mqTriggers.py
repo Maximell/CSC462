@@ -112,7 +112,7 @@ class TriggerFunctions:
             'function': cls.ACTIVATE_BUY,
             'command': command,
             'userId': userId,
-            'symbol': symbol,
+            'stockSymbol': symbol,
             'buyAt': buyAt,
             'lineNum': lineNum,
         }
@@ -123,7 +123,7 @@ class TriggerFunctions:
             'function': cls.CANCEL_BUY,
             'command': command,
             'userId': userId,
-            'symbol': symbol,
+            'stockSymbol': symbol,
             'lineNum': lineNum,
         }
 
@@ -133,7 +133,7 @@ class TriggerFunctions:
             'function': cls.SELL,
             'command': command,
             'userId': userId,
-            'symbol': symbol,
+            'stockSymbol': symbol,
             'amount': amount,
             'transactionNum': transactionNum,
             'lineNum': lineNum,
@@ -145,7 +145,7 @@ class TriggerFunctions:
             'function': cls.ACTIVATE_SELL,
             'command': command,
             'userId': userId,
-            'symbol': symbol,
+            'stockSymbol': symbol,
             'sellAt': sellAt,
             'lineNum': lineNum,
         }
@@ -156,7 +156,7 @@ class TriggerFunctions:
             'function': cls.CANCEL_SELL,
             'command': command,
             'userId': userId,
-            'symbol': symbol,
+            'stockSymbol': symbol,
             'lineNum': lineNum,
         }
 
@@ -166,7 +166,7 @@ class TriggerFunctions:
             'function': cls.GET_SELL,
             'command': command,
             'userId': userId,
-            'symbol': symbol,
+            'stockSymbol': symbol,
             'lineNum': lineNum,
         }
 
