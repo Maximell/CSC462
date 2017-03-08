@@ -454,8 +454,13 @@ def handleCommitBuy(payload):
     userId = payload["userId"]
     buy = payload["buy"]
     costPer = payload["costPer"]
-    symbol = buy["symbol"]
-    moneyReserved = buy["amount"]
+
+    try:
+        symbol = buy["symbol"]
+        moneyReserved = buy["amount"]
+    except KeyError as e:
+        print "erroring buy:", buy
+        raise e
 
     if databaseServer.isBuySellActive(buy):
         numberOfStocks = math.floor(moneyReserved / costPer)
