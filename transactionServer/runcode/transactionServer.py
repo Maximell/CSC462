@@ -197,17 +197,13 @@ def handleCommandSell(args):
 
     # if response, has already been to DB
     # response of 200 means success, 400 means not enough of that stock
-    if args.get("response"):
+    if args.get("response") is not None:
         return args
     else:
         databaseClient.send(
             databaseFunctions.createSellRequest(command, userId, lineNum, cash, stockSymbol)
         )
-
-
-    request = databaseFunctions.createSellRequest(command, userId, lineNum, cash, stockSymbol)
-    response = db_rpc.call(request)
-    # response['status'] == 400 means they dont have that
+    return None
 
 
 def handleCommandCommitSell(args):
@@ -219,17 +215,20 @@ def handleCommandCommitSell(args):
     updatedUser = args.get("updatedUser")
     quote = args.get("quote")
 
-    if updatedUser:
+    if updatedUser is not None:
         return args
-    elif sell and quote: # this is where we commit the sell
+    elif (sell is not None) and (quote is not None):
+        # this is where we commit the sell
         databaseClient.send(
-            databaseFunctions.createCommitSellRequest(command, userId, lineNum, sell, )
+            databaseFunctions.createCommitSellRequest(command, userId, lineNum, sell, quote)
         )
-    elif sell: # have the sell, need to get a quote
+    elif sell is not None:
+        # have the sell, need to get a quote
         quoteClient.send(
             createQuoteRequest(userId, sell["symbol"], lineNum, args)
         )
-    else: #this is where we need to go to the pop endpoint
+    else:
+        # this is where we need to go to the pop endpoint
         databaseClient.send(
             databaseFunctions.createPopSellRequest(command, userId, lineNum)
         )
@@ -243,7 +242,7 @@ def handleCommandCancelSell(args):
 
     sell = args.get("sell")
 
-    if sell:
+    if sell is not None:
         return args
     else:
         databaseClient.send(
