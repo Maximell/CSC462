@@ -383,10 +383,8 @@ def create_response(status, response):
 
 def delegate(ch , method, properties, body):
     print "---mq features---"
-    print properties
-    print method
-    print ch
-    print "---mq features---"
+    print properties, properties.priority
+    print "-----------------"
     args = json.loads(body)
     print "incoming args: ", args
 
