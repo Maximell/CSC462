@@ -383,7 +383,7 @@ def create_response(status, response):
 
 def delegate(ch , method, properties, body):
     print "---mq features---"
-    print properties, properties.priority
+    print properties, properties.priority, type(properties.priority)
     print "-----------------"
     args = json.loads(body)
     print "incoming args: ", args
@@ -407,33 +407,34 @@ def delegate(ch , method, properties, body):
         # TODO: return this ^ to the webserver (through a rabbitClient)
     else:
         try:
-            # send command to audit
-            if args["userId"] != "./testLOG":
-                requestBody = auditFunctions.createUserCommand(
-                    int(time.time() * 1000),
-                    "transactionServer",
-                    args["lineNum"],
-                    args["userId"],
-                    args["command"],
-                    args.get("stockSymbol"),
-                    None,
-                    args.get("cash")
-                )
-                auditClient.send(requestBody)
+            # send command to audit, if it is from web server
+            if properties.priority == 1:
+                if args["userId"] != "./testLOG":
+                    requestBody = auditFunctions.createUserCommand(
+                        int(time.time() * 1000),
+                        "transactionServer",
+                        args["lineNum"],
+                        args["userId"],
+                        args["command"],
+                        args.get("stockSymbol"),
+                        None,
+                        args.get("cash")
+                    )
+                    auditClient.send(requestBody)
 
-            else:
-                requestBody = auditFunctions.createUserCommand(
-                    int(time.time() * 1000),
-                    "transactionServer",
-                    args["lineNum"],
-                    args["userId"],
-                    args["command"],
-                    args.get("stockSymbol"),
-                    args["userId"],
-                    args.get("cash")
-                )
-                # Log User Command Call
-                auditClient.send(requestBody)
+                else:
+                    requestBody = auditFunctions.createUserCommand(
+                        int(time.time() * 1000),
+                        "transactionServer",
+                        args["lineNum"],
+                        args["userId"],
+                        args["command"],
+                        args.get("stockSymbol"),
+                        args["userId"],
+                        args.get("cash")
+                    )
+                    # Log User Command Call
+                    auditClient.send(requestBody)
 
             function = functionSwitch.get(args["command"])
             if function:
