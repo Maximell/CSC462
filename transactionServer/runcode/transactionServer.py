@@ -320,11 +320,11 @@ def handleCommandSetSellTrigger(args):
     elif sellTrigger is not None:
         reserve = math.floor(sellTrigger["maxSellAmount"] / sellAt)
         databaseClient.send(
-            databaseFunctions.createReservePortfolioRequest(command, userId, reserve, symbol, transactionNum)
+            databaseFunctions.createReservePortfolioRequest(command, userId, reserve, symbol, sellAt, transactionNum)
         )
     else:
         triggerClient.send(
-            TriggerFunctions.createGetSellRequest(command, userId, symbol, transactionNum)
+            TriggerFunctions.createGetSellRequest(command, userId, symbol, sellAt, transactionNum)
         )
 
     return None

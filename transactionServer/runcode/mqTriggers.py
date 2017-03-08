@@ -160,12 +160,13 @@ class TriggerFunctions:
         }
 
     @classmethod
-    def createGetSellRequest(cls, command, userId, symbol, lineNum):
+    def createGetSellRequest(cls, command, userId, symbol, cash, lineNum):
         return {
             'function': cls.GET_SELL,
             'command': command,
             'userId': userId,
             'stockSymbol': symbol,
+            'cash': cash,
             'lineNum': lineNum,
         }
 

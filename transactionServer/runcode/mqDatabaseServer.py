@@ -115,13 +115,14 @@ class databaseFunctions:
         }
 
     @classmethod
-    def createReservePortfolioRequest(cls, command, userId, amount, symbol, lineNum):
+    def createReservePortfolioRequest(cls, command, userId, amount, symbol, cash, lineNum):
         return {
             'function': cls.RESERVE_PORTFOLIO,
             'command': command,
             'userId': userId,
             'amount': amount,
             'symbol': symbol,
+            'cash': cash,
             'lineNum': lineNum,
         }
 
