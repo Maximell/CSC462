@@ -235,19 +235,19 @@ class Triggers:
     def cancelBuyTrigger(self, userId, symbol):
         # danger here'
         if self._triggerExists(userId, symbol, self.buyTriggers):
-            BuyTriggerThread.buyLock.acquire()
+            buyThread.buyLock.acquire()
             removedTrigger = self.buyTriggers[symbol][userId]
             del self.buyTriggers[symbol][userId]
-            BuyTriggerThread.buyLock.realease()
+            buyThread.buyLock.realease()
             return removedTrigger
 
     def cancelSellTrigger(self, userId, symbol):
         # danger here
         if self._triggerExists(userId, symbol, self.sellTriggers):
-            SellTriggerThread.sellLock.acquire()
+            sellThread.sellLock.acquire()
             removedTrigger = self.sellTriggers[symbol][userId]
             del self.sellTriggers[symbol][userId]
-            SellTriggerThread.sellLock.realease()
+            sellThread.sellLock.realease()
             return removedTrigger
 
     def _triggerExists(self, userId, symbol, triggers):
@@ -473,8 +473,8 @@ if __name__ == '__main__':
     db_rpc = DatabaseRpcClient()
 
     # self.start() currently commented out in both threads
-    BuyTriggerThread()
-    SellTriggerThread()
+    buyThread = BuyTriggerThread()
+    sellThread = SellTriggerThread()
 
     transactionClient = RabbitMQClient(RabbitMQClient.TRANSACTION)
 
