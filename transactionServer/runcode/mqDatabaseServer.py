@@ -83,7 +83,7 @@ class databaseFunctions:
             'command': command,
             'userId': userId,
             'lineNum': lineNum,
-            'amount': amount,
+            'cash': amount,
             'stockSymbol': stockSymbol,
         }
 
