@@ -382,8 +382,11 @@ def create_response(status, response):
 
 
 def delegate(ch , method, properties, body):
-    print "--incomingBody--", type(body),body
-    args = ast.literal_eval(body)
+    # {"function": 1, "userId": "user", "cash": 658.38, "lineNum": 2,
+    #  "trigger": {"active": false, "buyAt": 0, "cashReserved": 658.38, "transId": 2}, "command": "SET_BUY_AMOUNT",
+    #  "stockSymbol": "S", "response": 200}
+    print "--incomingBody--", type(body), body
+    args = json.loads(body)
     print "incoming args: ", args
 
     # error checking from other components
