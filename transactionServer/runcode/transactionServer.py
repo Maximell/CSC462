@@ -100,7 +100,7 @@ def handleCommandQuote(args):
     quote = args.get("quote")
     cryptoKey = args.get("cryptoKey")
 
-    if quote and cryptoKey:
+    if (quote is not None) and cryptoKey:
         print "Quote return: ", args
         return args
     else:
@@ -119,7 +119,7 @@ def handleCommandAdd(args):
     reserve = args.get("reserve")
 
     # if the command has 'reserve' associated with it, then it is being returned from the db
-    if reserve:
+    if reserve is not None:
         return args
     else:
         databaseClient.send(
@@ -137,7 +137,7 @@ def handleCommandBuy(args):
 
     # if response, this means it has already been to the DB
     # a response of 200 means success, 400 means not enough cash for buy
-    if args.get('response'):
+    if args.get('response') is not None:
         return args
     else:
         databaseClient.send(
@@ -155,13 +155,13 @@ def handleCommandCommitBuy(args):
     quote = args.get("quote")
     updatedUser = args.get("updatedUser")
 
-    if updatedUser:
+    if updatedUser is not None:
         return args
-    elif buy and quote:
+    elif (buy is not None) and (quote is not None):
         databaseClient.send(
             databaseFunctions.createCommitBuyRequest(command, userId, buy, quote, transactionNum)
         )
-    elif buy:
+    elif buy is not None:
         quoteClient.send(
             createQuoteRequest(userId, buy["symbol"], transactionNum, args)
         )
@@ -179,7 +179,7 @@ def handleCommandCancelBuy(args):
 
     buy = args.get("buy")
 
-    if buy:
+    if buy is not None:
         return args
     else:
         databaseClient.send(
@@ -229,9 +229,9 @@ def handleCommandSetBuyAmount(args):
     reserved = args.get("reserve")
     trigger = args.get("trigger")
 
-    if trigger:
+    if trigger is not None:
         return args
-    elif reserved:
+    elif reserved is not None:
         triggerClient.send(
             TriggerFunctions.createAddBuyRequest(command, userId, symbol, amount, transactionNum)
         )
@@ -252,7 +252,7 @@ def handleCommandSetBuyTrigger(args):
 
     trigger = args.get("trigger")
 
-    if trigger:
+    if trigger is not None:
         return args
     else:
         triggerClient.send(
@@ -270,9 +270,9 @@ def handleCommandCancelSetBuy(args):
     trigger = args.get("trigger")
     cash = args.get("cash")
 
-    if cash:
+    if cash is not None:
         return args
-    elif trigger:
+    elif trigger is not None:
         databaseClient.send(
             databaseFunctions.createReleaseCashRequest(command, userId, trigger["cashReserved"], transactionNum)
         )
@@ -291,7 +291,7 @@ def handleCommandSetSellAmount(args):
     transactionNum = args["lineNum"]
 
     trigger = args.get("trigger")
-    if trigger:
+    if trigger is not None:
         return args
     else:
         triggerClient.send(
@@ -311,13 +311,13 @@ def handleCommandSetSellTrigger(args):
     reservedPortfolio = args.get("reservedPortfolio")
     trigger = args.get("trigger")
 
-    if trigger:
+    if trigger is not None:
         return args
     elif reservedPortfolio:
         triggerClient.send(
             TriggerFunctions.createSetSellActiveRequest(command, userId, symbol, sellAt, transactionNum)
         )
-    elif sellTrigger:
+    elif sellTrigger is not None:
         reserve = math.floor(sellTrigger["maxSellAmount"] / sellAt)
         databaseClient.send(
             databaseFunctions.createReservePortfolioRequest(command, userId, reserve, symbol, transactionNum)
@@ -339,9 +339,9 @@ def handleCommandCancelSetSell(args):
     trigger = args.get("trigger")
     portfolioAmount = args.get("portfolioAmount")
 
-    if portfolioAmount:
+    if portfolioAmount is not None:
         return args
-    elif trigger:
+    elif trigger is not None:
         # if the removed trigger was active, then we set aside portfolio for it
         if trigger["active"]:
             refund = math.floor(trigger["maxSellAmount"] / trigger["sellAt"])
