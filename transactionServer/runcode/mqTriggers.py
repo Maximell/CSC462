@@ -264,7 +264,7 @@ class BuyTriggerThread(Thread):
         self.buyLock = threading.Lock()
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.daemon = True
-        self.start()
+        # self.start()
 
     def run(self):
         while True:
@@ -298,7 +298,7 @@ class SellTriggerThread(Thread):
         self.sellLock = threading.Lock()
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.daemon = True
-        self.start()
+        # self.start()
 
     def run(self):
         # offset buy and sell triggers by 5 seconds
@@ -472,8 +472,9 @@ if __name__ == '__main__':
     quote_rpc = QuoteRpcClient()
     db_rpc = DatabaseRpcClient()
 
-    # BuyTriggerThread()
-    # SellTriggerThread()
+    # self.start() currently commented out in both threads
+    BuyTriggerThread()
+    SellTriggerThread()
 
     transactionClient = RabbitMQClient(RabbitMQClient.TRANSACTION)
 
