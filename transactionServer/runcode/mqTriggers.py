@@ -102,7 +102,7 @@ class TriggerFunctions:
             'command': command,
             'userId': userId,
             'stockSymbol': stockSymbol,
-            'amount': amount,
+            'cash': amount,
             'lineNum': lineNum,
         }
 
@@ -134,7 +134,7 @@ class TriggerFunctions:
             'command': command,
             'userId': userId,
             'stockSymbol': symbol,
-            'amount': amount,
+            'cash': amount,
             'transactionNum': transactionNum,
             'lineNum': lineNum,
         }
@@ -336,7 +336,7 @@ class SellTriggerThread(Thread):
 def handleAddBuy(payload):
     userId = payload["userId"]
     symbol = payload["stockSymbol"]
-    amount = payload["amount"]
+    amount = payload["cash"]
     transactionNum = payload["lineNum"]
 
     trigger = triggers.addBuyTrigger(userId, symbol, amount, transactionNum)
@@ -381,7 +381,7 @@ def handleCancelBuy(payload):
 def handleAddSell(payload):
     userId = payload["userId"]
     symbol = payload["stockSymbol"]
-    amount = payload["amount"]
+    amount = payload["cash"]
     transactionNum = payload["lineNum"]
 
     trigger = triggers.addSellTrigger(userId, symbol, amount, transactionNum)

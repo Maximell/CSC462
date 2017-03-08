@@ -98,7 +98,7 @@ class databaseFunctions:
             'function': cls.RESERVE_CASH,
             'command': command,
             'userId': userId,
-            'amount': amount,
+            'cash': amount,
             'stockSymbol': stockSymbol,
             'lineNum': lineNum,
         }
@@ -503,7 +503,7 @@ def handleCancelSell(payload):
     return create_response(400, "no sells available")
 
 def handleReserveCash(payload):
-    amount = payload["amount"]
+    amount = payload["cash"]
     userId = payload["userId"]
 
     user = databaseServer.reserveCash(userId, amount)
