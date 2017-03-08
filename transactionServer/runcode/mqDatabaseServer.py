@@ -104,12 +104,13 @@ class databaseFunctions:
         }
 
     @classmethod
-    def createReleaseCashRequest(cls, command, userId, amount, lineNum):
+    def createReleaseCashRequest(cls, command, userId, amount, symbol, lineNum):
         return {
             'function': cls.RELEASE_CASH,
             'command': command,
             'userId': userId,
             'amount': amount,
+            'stockSymbol': symbol,
             'lineNum': lineNum,
         }
 

@@ -113,7 +113,7 @@ class TriggerFunctions:
             'command': command,
             'userId': userId,
             'stockSymbol': symbol,
-            'buyAt': buyAt,
+            'cash': buyAt,
             'lineNum': lineNum,
         }
 
@@ -146,7 +146,7 @@ class TriggerFunctions:
             'command': command,
             'userId': userId,
             'stockSymbol': symbol,
-            'sellAt': sellAt,
+            'cash': sellAt,
             'lineNum': lineNum,
         }
 
@@ -352,7 +352,7 @@ def handleAddBuy(payload):
 def handleSetBuyActive(payload):
     userId = payload["userId"]
     symbol = payload["stockSymbol"]
-    buyAt = payload["buyAt"]
+    buyAt = payload["cash"]
 
     trigger = triggers.setBuyActive(userId, symbol, buyAt)
     if trigger:
@@ -397,7 +397,7 @@ def handleAddSell(payload):
 def handleSetSellActive(payload):
     userId = payload["userId"]
     symbol = payload["stockSymbol"]
-    sellAt = payload["sellAt"]
+    sellAt = payload["cash"]
 
     trigger = triggers.setSellActive(userId, symbol, sellAt)
     if trigger:

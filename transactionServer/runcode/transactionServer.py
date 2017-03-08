@@ -274,7 +274,7 @@ def handleCommandCancelSetBuy(args):
         return args
     elif trigger is not None:
         databaseClient.send(
-            databaseFunctions.createReleaseCashRequest(command, userId, trigger["cashReserved"], transactionNum)
+            databaseFunctions.createReleaseCashRequest(command, userId, trigger["cashReserved"], symbol, transactionNum)
         )
     else:
         triggerClient.send(
