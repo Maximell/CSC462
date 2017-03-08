@@ -238,7 +238,7 @@ class Triggers:
             buyThread.buyLock.acquire()
             removedTrigger = self.buyTriggers[symbol][userId]
             del self.buyTriggers[symbol][userId]
-            buyThread.buyLock.realease()
+            buyThread.buyLock.release()
             return removedTrigger
 
     def cancelSellTrigger(self, userId, symbol):
@@ -247,7 +247,7 @@ class Triggers:
             sellThread.sellLock.acquire()
             removedTrigger = self.sellTriggers[symbol][userId]
             del self.sellTriggers[symbol][userId]
-            sellThread.sellLock.realease()
+            sellThread.sellLock.release()
             return removedTrigger
 
     def _triggerExists(self, userId, symbol, triggers):
