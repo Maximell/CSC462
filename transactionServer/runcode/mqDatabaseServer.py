@@ -84,7 +84,7 @@ class databaseFunctions:
             'userId': userId,
             'lineNum': lineNum,
             'amount': amount,
-            'stockSymbol': stockSymbol
+            'stockSymbol': stockSymbol,
         }
 
     @classmethod
@@ -93,7 +93,7 @@ class databaseFunctions:
             'function': cls.POP_SELL,
             'command': command,
             'userId': userId,
-            'lineNum': lineNum
+            'lineNum': lineNum,
         }
 
     @classmethod
@@ -104,16 +104,16 @@ class databaseFunctions:
             'userId': userId,
             'lineNum': lineNum,
             'sell': sell,
-            'costPer': costPer
+            'costPer': costPer,
         }
 
     @classmethod
     def createCancelSellRequest(cls, command, userId, lineNum):
         return {
             'function': cls.CANCEL_SELL,
-            'command': command
+            'command': command,
             'userId': userId,
-            'lineNum': lineNum
+            'lineNum': lineNum,
         }
 
     @classmethod
