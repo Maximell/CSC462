@@ -474,10 +474,10 @@ if __name__ == '__main__':
         "COMMIT_SELL": handleCommandCommitSell,
         "CANCEL_SELL": handleCommandCancelSell,
         "SET_BUY_AMOUNT": handleCommandSetBuyAmount,
-        "CANCEL_BUY_AMOUNT": handleCommandCancelSetBuy,
+        "CANCEL_SET_BUY": handleCommandCancelSetBuy,
         "SET_BUY_TRIGGER": handleCommandSetBuyTrigger,
         "SET_SELL_AMOUNT": handleCommandSetSellAmount,
-        "CANCEL_SELL_AMOUNT": handleCommandCancelSetSell,
+        "CANCEL_SET_SELL": handleCommandCancelSetSell,
         "SET_SELL_TRIGGER": handleCommandSetSellTrigger,
         "DUMPLOG": handleCommandDumplog
     }
