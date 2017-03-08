@@ -128,14 +128,13 @@ class TriggerFunctions:
         }
 
     @classmethod
-    def createAddSellRequest(cls, command, userId, symbol, amount, transactionNum, lineNum):
+    def createAddSellRequest(cls, command, userId, symbol, amount, lineNum):
         return {
             'function': cls.SELL,
             'command': command,
             'userId': userId,
             'stockSymbol': symbol,
             'cash': amount,
-            'transactionNum': transactionNum,
             'lineNum': lineNum,
         }
 
