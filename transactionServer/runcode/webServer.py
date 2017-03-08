@@ -58,8 +58,7 @@ def cancelBuy(userId):
 def sell(userId, stockSymbol):
     lineNum = int(request.form['lineNum'].decode('utf-8'))
     cash = float(request.form['cash'].decode('utf-8'))
-    data = json.dumps(
-        {"command": "SELL", "userId": userId, "stockSymbol": stockSymbol, "cash": cash, "lineNum": lineNum})
+    data = {"command": "SELL", "userId": userId, "stockSymbol": stockSymbol, "cash": cash, "lineNum": lineNum}
     sendtoQueue(data)
     return 'Selling %f of stock %s for user %s' % (cash, stockSymbol, userId)
 
@@ -67,7 +66,7 @@ def sell(userId, stockSymbol):
 @app.route('/commit-sell/<string:userId>/', methods=['POST'])
 def commitSell(userId):
     lineNum = int(request.form['lineNum'].decode('utf-8'))
-    data = json.dumps({"command": "COMMIT_SELL", "userId": userId, "lineNum": lineNum})
+    data = {"command": "COMMIT_SELL", "userId": userId, "lineNum": lineNum}
     sendtoQueue(data)
     return 'Committing sell for user %s.' % (userId)
 
@@ -75,7 +74,7 @@ def commitSell(userId):
 @app.route('/cancel-sell/<string:userId>/', methods=['POST'])
 def cancelSell(userId):
     lineNum = int(request.form['lineNum'].decode('utf-8'))
-    data = json.dumps({"command": "CANCEL_SELL", "userId": userId, "lineNum": lineNum})
+    data = {"command": "CANCEL_SELL", "userId": userId, "lineNum": lineNum}
     sendtoQueue(data)
     return 'Cancelling sell for user %s.' % (userId)
 
@@ -84,8 +83,7 @@ def cancelSell(userId):
 def setBuyAmount(userId, stockSymbol):
     lineNum = int(request.form['lineNum'].decode('utf-8'))
     cash = float(request.form['cash'].decode('utf-8'))
-    data = json.dumps(
-        {"command": "SET_BUY_AMOUNT", "userId": userId, "stockSymbol": stockSymbol, "cash": cash, "lineNum": lineNum})
+    data = {"command": "SET_BUY_AMOUNT", "userId": userId, "stockSymbol": stockSymbol, "cash": cash, "lineNum": lineNum}
     sendtoQueue(data)
     return 'Setting buy of $%f on stock %s for user %s.' % (cash, stockSymbol, userId)
 
@@ -93,7 +91,7 @@ def setBuyAmount(userId, stockSymbol):
 @app.route('/cancel-set-buy/<string:userId>/<string:stockSymbol>/', methods=['POST'])
 def cancelSetBuy(userId, stockSymbol):
     lineNum = int(request.form['lineNum'].decode('utf-8'))
-    data = json.dumps({"command": "CANCEL_SET_BUY", "userId": userId, "stockSymbol": stockSymbol, "lineNum": lineNum})
+    data = {"command": "CANCEL_SET_BUY", "userId": userId, "stockSymbol": stockSymbol, "lineNum": lineNum}
     sendtoQueue(data)
     return 'Cancelling set buy for user %s on stock %s.' % (userId, stockSymbol)
 
@@ -102,8 +100,7 @@ def cancelSetBuy(userId, stockSymbol):
 def setBuyTrigger(userId, stockSymbol):
     lineNum = int(request.form['lineNum'].decode('utf-8'))
     cash = float(request.form['cash'].decode('utf-8'))
-    data = json.dumps(
-        {"command": "SET_BUY_TRIGGER", "userId": userId, "stockSymbol": stockSymbol, "cash": cash, "lineNum": lineNum})
+    data = {"command": "SET_BUY_TRIGGER", "userId": userId, "stockSymbol": stockSymbol, "cash": cash, "lineNum": lineNum}
     sendtoQueue(data)
     return 'Setting a buy trigger for user %s on stock %s for cash %f.' % (userId, stockSymbol, cash)
 
@@ -112,8 +109,7 @@ def setBuyTrigger(userId, stockSymbol):
 def setSellAmount(userId, stockSymbol):
     lineNum = int(request.form['lineNum'].decode('utf-8'))
     cash = float(request.form['cash'].decode('utf-8'))
-    data = json.dumps(
-        {"command": "SET_SELL_AMOUNT", "userId": userId, "stockSymbol": stockSymbol, "cash": cash, "lineNum": lineNum})
+    data = {"command": "SET_SELL_AMOUNT", "userId": userId, "stockSymbol": stockSymbol, "cash": cash, "lineNum": lineNum}
     sendtoQueue(data)
     return 'Setting a sell for user %s on stock %s for cash %f.' % (userId, stockSymbol, cash)
 
@@ -122,8 +118,7 @@ def setSellAmount(userId, stockSymbol):
 def setSellTrigger(userId, stockSymbol):
     lineNum = int(request.form['lineNum'].decode('utf-8'))
     cash = float(request.form['cash'].decode('utf-8'))
-    data = json.dumps(
-        {"command": "SET_SELL_TRIGGER", "userId": userId, "stockSymbol": stockSymbol, "cash": cash, "lineNum": lineNum})
+    data = {"command": "SET_SELL_TRIGGER", "userId": userId, "stockSymbol": stockSymbol, "cash": cash, "lineNum": lineNum}
     sendtoQueue(data)
     return 'Setting a sell trigger for user %s on stock %s for cash %f.' % (userId, stockSymbol, cash)
 
@@ -131,7 +126,7 @@ def setSellTrigger(userId, stockSymbol):
 @app.route('/cancel-set-sell/<string:userId>/<string:stockSymbol>/', methods=['POST'])
 def cancelSetSell(userId, stockSymbol):
     lineNum = int(request.form['lineNum'].decode('utf-8'))
-    data = json.dumps({"command": "CANCEL_SET_SELL", "userId": userId, "stockSymbol": stockSymbol, "lineNum": lineNum})
+    data = {"command": "CANCEL_SET_SELL", "userId": userId, "stockSymbol": stockSymbol, "lineNum": lineNum}
     sendtoQueue(data)
     return 'Cancelling set sell for user %s on stock %s.' % (userId, stockSymbol)
 
@@ -141,7 +136,7 @@ def dumpLog():
     lineNum = int(request.form['lineNum'].decode('utf-8'))
     fileName = request.form['fileName']
     # print "dumplog"
-    data = json.dumps({"command": "DUMPLOG", "lineNum": lineNum, "userId": fileName})
+    data = {"command": "DUMPLOG", "lineNum": lineNum, "userId": fileName}
     sendtoQueue(data)
     return 'Dumping log into file: %s.' % (fileName)
 
@@ -149,7 +144,7 @@ def dumpLog():
 @app.route('/display-summary/<string:userId>/', methods=['GET'])
 def displaySummary(userId):
     lineNum = int(request.form['lineNum'].decode('utf-8'))
-    data = json.dumps({"command": "DISPLAY_SUMMARY", "userId": userId, "lineNum": lineNum})
+    data = {"command": "DISPLAY_SUMMARY", "userId": userId, "lineNum": lineNum}
     sendtoQueue(data)
     return 'Displaying summary for user %s.' % (userId)
 

@@ -100,7 +100,7 @@ def handleCommandQuote(args):
     quote = args.get("quote")
     cryptoKey = args.get("cryptoKey")
 
-    if quote and cryptoKey:
+    if (quote is not None) and cryptoKey:
         print "Quote return: ", args
         return args
     else:
@@ -119,7 +119,7 @@ def handleCommandAdd(args):
     reserve = args.get("reserve")
 
     # if the command has 'reserve' associated with it, then it is being returned from the db
-    if reserve:
+    if reserve is not None:
         return args
     else:
         databaseClient.send(
@@ -137,7 +137,7 @@ def handleCommandBuy(args):
 
     # if response, this means it has already been to the DB
     # a response of 200 means success, 400 means not enough cash for buy
-    if args.get('response'):
+    if args.get('response') is not None:
         return args
     else:
         databaseClient.send(
@@ -155,13 +155,13 @@ def handleCommandCommitBuy(args):
     quote = args.get("quote")
     updatedUser = args.get("updatedUser")
 
-    if updatedUser:
+    if updatedUser is not None:
         return args
-    elif buy and quote:
+    elif (buy is not None) and (quote is not None):
         databaseClient.send(
             databaseFunctions.createCommitBuyRequest(command, userId, buy, quote, transactionNum)
         )
-    elif buy:
+    elif buy is not None:
         quoteClient.send(
             createQuoteRequest(userId, buy["symbol"], transactionNum, args)
         )
@@ -179,7 +179,7 @@ def handleCommandCancelBuy(args):
 
     buy = args.get("buy")
 
-    if buy:
+    if buy is not None:
         return args
     else:
         databaseClient.send(
@@ -253,80 +253,144 @@ def handleCommandCancelSell(args):
 
 
 def handleCommandSetBuyAmount(args):
-    symbol = args.get("stockSymbol")
-    amount = args.get("cash")
-    userId = args.get("userId")
-    transactionNum = args.get("lineNum")
+    command = args["command"]
+    symbol = args["stockSymbol"]
+    amount = args["cash"]
+    userId = args["userId"]
+    transactionNum = args["lineNum"]
 
-    reserveRequest = databaseFunctions.createReserveCashRequest(userId, amount)
-    reserveResponse = db_rpc.call(reserveRequest)
-    if reserveResponse["status"] == 200:
-        buyRequest = TriggerFunctions.createAddBuyRequest(userId, symbol, amount, transactionNum)
-        buyResponse = trigger_rpc.call(buyRequest)
+    reserved = args.get("reserve")
+    trigger = args.get("trigger")
+
+    if trigger is not None:
+        return args
+    elif reserved is not None:
+        triggerClient.send(
+            TriggerFunctions.createAddBuyRequest(command, userId, symbol, amount, transactionNum)
+        )
+    else:
+        databaseClient.send(
+            databaseFunctions.createReserveCashRequest(command, userId, amount, symbol, transactionNum)
+        )
+
+    return None
 
 
 def handleCommandSetBuyTrigger(args):
-    symbol = args.get("stockSymbol")
-    buyAt = args.get("cash")
-    userId = args.get("userId")
+    command = args["command"]
+    symbol = args["stockSymbol"]
+    buyAt = args["cash"]
+    userId = args["userId"]
+    transactionNum = args["lineNum"]
 
-    request = TriggerFunctions.createSetBuyActiveRequest(userId, symbol, buyAt)
-    response = trigger_rpc.call(request)
+    trigger = args.get("trigger")
+
+    if trigger is not None:
+        return args
+    else:
+        triggerClient.send(
+            TriggerFunctions.createSetBuyActiveRequest(command, userId, symbol, buyAt, transactionNum)
+        )
+    return None
 
 
 def handleCommandCancelSetBuy(args):
+    command = args["command"]
     symbol = args["stockSymbol"]
     userId = args["userId"]
+    transactionNum = args["lineNum"]
 
-    cancelRequest = TriggerFunctions.createCancelBuyRequest(userId, symbol)
-    cancelResponse = trigger_rpc.call(cancelRequest)
-    if cancelResponse["status"] == 200:
-        trigger = cancelResponse["body"]
-        releaseRequest = databaseFunctions.createReleaseCashRequest(userId, trigger["cashReserved"])
-        releaseResponse = db_rpc.call(releaseRequest)
+    trigger = args.get("trigger")
+    cash = args.get("cash")
+
+    if cash is not None:
+        return args
+    elif trigger is not None:
+        databaseClient.send(
+            databaseFunctions.createReleaseCashRequest(command, userId, trigger["cashReserved"], symbol, transactionNum)
+        )
+    else:
+        triggerClient.send(
+            TriggerFunctions.createCancelBuyRequest(command, userId, symbol, transactionNum)
+        )
+    return None
 
 
 def handleCommandSetSellAmount(args):
-    symbol = args.get("stockSymbol")
-    amount = args.get("cash")
-    userId = args.get("userId")
-    transactionNum = args.get("lineNum")
+    command = args["command"]
+    symbol = args["stockSymbol"]
+    amount = args["cash"]
+    userId = args["userId"]
+    transactionNum = args["lineNum"]
 
-    sellRequest = TriggerFunctions.createAddSellRequest(userId, symbol, amount, transactionNum)
-    sellResponse = trigger_rpc.call(sellRequest)
+    trigger = args.get("trigger")
+    if trigger is not None:
+        return args
+    else:
+        triggerClient.send(
+            TriggerFunctions.createAddSellRequest(command, userId, symbol, amount, transactionNum)
+        )
+    return None
 
 
 def handleCommandSetSellTrigger(args):
-    symbol = args.get("stockSymbol")
-    sellAt = args.get("cash")
-    userId = args.get("userId")
+    command = args["command"]
+    symbol = args["stockSymbol"]
+    sellAt = args["cash"]
+    userId = args["userId"]
+    transactionNum = args["lineNum"]
 
-    getTriggerRequest = TriggerFunctions.createGetSellRequest(userId, symbol)
-    getTriggerResponse = trigger_rpc.call(getTriggerRequest)
-    if getTriggerResponse["status"] == 200:
-        trigger = getTriggerResponse["body"]
-        reserve = math.floor(trigger["maxSellAmount"] / sellAt)
+    sellTrigger = args.get("sellTrigger")
+    reservedPortfolio = args.get("reservedPortfolio")
+    trigger = args.get("trigger")
 
-        reservePortfolioRequest = databaseFunctions.createReservePortfolioRequest(userId, reserve, symbol)
-        reservePortfolioResponse = db_rpc.call(reservePortfolioRequest)
+    if trigger is not None:
+        return args
+    elif reservedPortfolio:
+        triggerClient.send(
+            TriggerFunctions.createSetSellActiveRequest(command, userId, symbol, sellAt, transactionNum)
+        )
+    elif sellTrigger is not None:
+        reserve = math.floor(sellTrigger["maxSellAmount"] / sellAt)
+        databaseClient.send(
+            databaseFunctions.createReservePortfolioRequest(command, userId, reserve, symbol, sellAt, transactionNum)
+        )
+    else:
+        triggerClient.send(
+            TriggerFunctions.createGetSellRequest(command, userId, symbol, sellAt, transactionNum)
+        )
 
-        if reservePortfolioResponse["status"] == 200:
-            setActiveRequest = TriggerFunctions.createSetSellActiveRequest(userId, symbol, sellAt)
-            setActiveResponse = trigger_rpc.call(setActiveRequest)
+    return None
 
 
 def handleCommandCancelSetSell(args):
-    symbol = args.get("stockSymbol")
-    userId = args.get("userId")
+    command = args["command"]
+    symbol = args["stockSymbol"]
+    userId = args["userId"]
+    transactionNum = args["lineNum"]
 
-    cancelTriggerRequest = TriggerFunctions.createCancelSellRequest(userId, symbol)
-    cancelTriggerResponse = trigger_rpc.call(cancelTriggerRequest)
-    if cancelTriggerResponse["status"] == 200:
-        trigger = cancelTriggerResponse["body"]
+    trigger = args.get("trigger")
+    portfolioAmount = args.get("portfolioAmount")
+
+    if portfolioAmount is not None:
+        return args
+    elif trigger is not None:
+        # if the removed trigger was active, then we set aside portfolio for it
         if trigger["active"]:
             refund = math.floor(trigger["maxSellAmount"] / trigger["sellAt"])
-            releasePortfolioRequest = databaseFunctions.createReleasePortfolioRequest(userId, refund, symbol)
-            releasePortfolioResponse = db_rpc.call(releasePortfolioRequest)
+            databaseClient.send(
+                databaseFunctions.createReleasePortfolioRequest(command, userId, refund, symbol, transactionNum)
+            )
+        # if it wasnt active yet, nothing set aside, so we can just return
+        else:
+            return args
+    else:
+        triggerClient.send(
+            TriggerFunctions.createCancelSellRequest(command, userId, symbol, transactionNum)
+        )
+
+    return None
+
 
 def handleCommandDumplog(args):
     requestBody = auditFunctions.createWriteLogs(
@@ -351,7 +415,7 @@ def create_response(status, response):
 
 
 def delegate(ch , method, properties, body):
-    args = ast.literal_eval(body)
+    args = json.loads(body)
     print "incoming args: ", args
 
     # error checking from other components
@@ -373,33 +437,34 @@ def delegate(ch , method, properties, body):
         # TODO: return this ^ to the webserver (through a rabbitClient)
     else:
         try:
-            # send command to audit
-            if args["userId"] != "./testLOG":
-                requestBody = auditFunctions.createUserCommand(
-                    int(time.time() * 1000),
-                    "transactionServer",
-                    args["lineNum"],
-                    args["userId"],
-                    args["command"],
-                    args.get("stockSymbol"),
-                    None,
-                    args.get("cash")
-                )
-                auditClient.send(requestBody)
+            # send command to audit, if it is from web server
+            if properties.priority == 1:
+                if args["userId"] != "./testLOG":
+                    requestBody = auditFunctions.createUserCommand(
+                        int(time.time() * 1000),
+                        "transactionServer",
+                        args["lineNum"],
+                        args["userId"],
+                        args["command"],
+                        args.get("stockSymbol"),
+                        None,
+                        args.get("cash")
+                    )
+                    auditClient.send(requestBody)
 
-            else:
-                requestBody = auditFunctions.createUserCommand(
-                    int(time.time() * 1000),
-                    "transactionServer",
-                    args["lineNum"],
-                    args["userId"],
-                    args["command"],
-                    args.get("stockSymbol"),
-                    args["userId"],
-                    args.get("cash")
-                )
-                # Log User Command Call
-                auditClient.send(requestBody)
+                else:
+                    requestBody = auditFunctions.createUserCommand(
+                        int(time.time() * 1000),
+                        "transactionServer",
+                        args["lineNum"],
+                        args["userId"],
+                        args["command"],
+                        args.get("stockSymbol"),
+                        args["userId"],
+                        args.get("cash")
+                    )
+                    # Log User Command Call
+                    auditClient.send(requestBody)
 
             function = functionSwitch.get(args["command"])
             if function:
@@ -440,12 +505,12 @@ if __name__ == '__main__':
         "CANCEL_BUY": handleCommandCancelBuy,
         "SELL": handleCommandSell,
         "COMMIT_SELL": handleCommandCommitSell,
-        # "CANCEL_SELL": handleCommandCancelSell,
-        # "SET_BUY_AMOUNT": handleCommandSetBuyAmount,
-        # "CANCEL_BUY_AMOUNT": handleCommandCancelSetBuy,
-        # "SET_BUY_TRIGGER": handleCommandSetBuyTrigger,
-        # "SET_SELL_AMOUNT": handleCommandSetSellAmount,
-        # "CANCEL_SELL_AMOUNT": handleCommandCancelSetSell,
+        "CANCEL_SELL": handleCommandCancelSell,
+        "SET_BUY_AMOUNT": handleCommandSetBuyAmount,
+        "CANCEL_SET_BUY": handleCommandCancelSetBuy,
+        "SET_BUY_TRIGGER": handleCommandSetBuyTrigger,
+        "SET_SELL_AMOUNT": handleCommandSetSellAmount,
+        "CANCEL_SET_SELL": handleCommandCancelSetSell,
         "SET_SELL_TRIGGER": handleCommandSetSellTrigger,
         "DUMPLOG": handleCommandDumplog
     }
@@ -458,5 +523,6 @@ if __name__ == '__main__':
     quoteClient = RabbitMQClient(RabbitMQClient.QUOTE)
     auditClient = RabbitMQClient(RabbitMQClient.AUDIT)
     databaseClient = RabbitMQClient(RabbitMQClient.DATABASE)
+    triggerClient = RabbitMQClient(RabbitMQClient.TRIGGERS)
 
     RabbitMQReceiver(delegate, RabbitMQReceiver.TRANSACTION)

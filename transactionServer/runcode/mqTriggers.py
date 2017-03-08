@@ -102,7 +102,7 @@ class TriggerFunctions:
             'command': command,
             'userId': userId,
             'stockSymbol': stockSymbol,
-            'amount': amount,
+            'cash': amount,
             'lineNum': lineNum,
         }
 
@@ -112,8 +112,8 @@ class TriggerFunctions:
             'function': cls.ACTIVATE_BUY,
             'command': command,
             'userId': userId,
-            'symbol': symbol,
-            'buyAt': buyAt,
+            'stockSymbol': symbol,
+            'cash': buyAt,
             'lineNum': lineNum,
         }
 
@@ -123,19 +123,18 @@ class TriggerFunctions:
             'function': cls.CANCEL_BUY,
             'command': command,
             'userId': userId,
-            'symbol': symbol,
+            'stockSymbol': symbol,
             'lineNum': lineNum,
         }
 
     @classmethod
-    def createAddSellRequest(cls, command, userId, symbol, amount, transactionNum, lineNum):
+    def createAddSellRequest(cls, command, userId, symbol, amount, lineNum):
         return {
             'function': cls.SELL,
             'command': command,
             'userId': userId,
-            'symbol': symbol,
-            'amount': amount,
-            'transactionNum': transactionNum,
+            'stockSymbol': symbol,
+            'cash': amount,
             'lineNum': lineNum,
         }
 
@@ -145,8 +144,8 @@ class TriggerFunctions:
             'function': cls.ACTIVATE_SELL,
             'command': command,
             'userId': userId,
-            'symbol': symbol,
-            'sellAt': sellAt,
+            'stockSymbol': symbol,
+            'cash': sellAt,
             'lineNum': lineNum,
         }
 
@@ -156,17 +155,18 @@ class TriggerFunctions:
             'function': cls.CANCEL_SELL,
             'command': command,
             'userId': userId,
-            'symbol': symbol,
+            'stockSymbol': symbol,
             'lineNum': lineNum,
         }
 
     @classmethod
-    def createGetSellRequest(cls, command, userId, symbol, lineNum):
+    def createGetSellRequest(cls, command, userId, symbol, cash, lineNum):
         return {
             'function': cls.GET_SELL,
             'command': command,
             'userId': userId,
-            'symbol': symbol,
+            'stockSymbol': symbol,
+            'cash': cash,
             'lineNum': lineNum,
         }
 
@@ -235,19 +235,19 @@ class Triggers:
     def cancelBuyTrigger(self, userId, symbol):
         # danger here'
         if self._triggerExists(userId, symbol, self.buyTriggers):
-            BuyTriggerThread.buyLock.acquire()
+            buyThread.buyLock.acquire()
             removedTrigger = self.buyTriggers[symbol][userId]
             del self.buyTriggers[symbol][userId]
-            BuyTriggerThread.buyLock.realease()
+            buyThread.buyLock.release()
             return removedTrigger
 
     def cancelSellTrigger(self, userId, symbol):
         # danger here
         if self._triggerExists(userId, symbol, self.sellTriggers):
-            SellTriggerThread.sellLock.acquire()
+            sellThread.sellLock.acquire()
             removedTrigger = self.sellTriggers[symbol][userId]
             del self.sellTriggers[symbol][userId]
-            SellTriggerThread.sellLock.realease()
+            sellThread.sellLock.release()
             return removedTrigger
 
     def _triggerExists(self, userId, symbol, triggers):
@@ -264,7 +264,7 @@ class BuyTriggerThread(Thread):
         self.buyLock = threading.Lock()
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.daemon = True
-        self.start()
+        # self.start()
 
     def run(self):
         while True:
@@ -298,7 +298,7 @@ class SellTriggerThread(Thread):
         self.sellLock = threading.Lock()
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.daemon = True
-        self.start()
+        # self.start()
 
     def run(self):
         # offset buy and sell triggers by 5 seconds
@@ -336,7 +336,7 @@ class SellTriggerThread(Thread):
 def handleAddBuy(payload):
     userId = payload["userId"]
     symbol = payload["stockSymbol"]
-    amount = payload["amount"]
+    amount = payload["cash"]
     transactionNum = payload["lineNum"]
 
     trigger = triggers.addBuyTrigger(userId, symbol, amount, transactionNum)
@@ -352,7 +352,7 @@ def handleAddBuy(payload):
 def handleSetBuyActive(payload):
     userId = payload["userId"]
     symbol = payload["stockSymbol"]
-    buyAt = payload["buyAt"]
+    buyAt = payload["cash"]
 
     trigger = triggers.setBuyActive(userId, symbol, buyAt)
     if trigger:
@@ -381,7 +381,7 @@ def handleCancelBuy(payload):
 def handleAddSell(payload):
     userId = payload["userId"]
     symbol = payload["stockSymbol"]
-    amount = payload["amount"]
+    amount = payload["cash"]
     transactionNum = payload["lineNum"]
 
     trigger = triggers.addSellTrigger(userId, symbol, amount, transactionNum)
@@ -397,7 +397,7 @@ def handleAddSell(payload):
 def handleSetSellActive(payload):
     userId = payload["userId"]
     symbol = payload["stockSymbol"]
-    sellAt = payload["sellAt"]
+    sellAt = payload["cash"]
 
     trigger = triggers.setSellActive(userId, symbol, sellAt)
     if trigger:
@@ -430,7 +430,7 @@ def handleGetSell(payload):
     trigger = triggers.getSellTrigger(userId, symbol)
     if trigger:
         payload['response'] = 200
-        payload['trigger'] = trigger
+        payload['sellTrigger'] = trigger
     else:
         payload['response'] = 400
         payload['errorString'] = "trigger doesnt exist"
@@ -472,8 +472,9 @@ if __name__ == '__main__':
     quote_rpc = QuoteRpcClient()
     db_rpc = DatabaseRpcClient()
 
-    # BuyTriggerThread()
-    # SellTriggerThread()
+    # self.start() currently commented out in both threads
+    buyThread = BuyTriggerThread()
+    sellThread = SellTriggerThread()
 
     transactionClient = RabbitMQClient(RabbitMQClient.TRANSACTION)
 
