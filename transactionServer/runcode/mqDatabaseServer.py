@@ -525,8 +525,9 @@ def handleCommitSell(payload):
     userId = payload["userId"]
     sell = payload["sell"]
     costPer = payload["costPer"]
+
     symbol = sell["symbol"]
-    amount = sell["amount"]
+    amount = sell["number"]
 
     if databaseServer.isBuySellActive(sell):
         numberOfStocks = math.floor(amount / costPer)
