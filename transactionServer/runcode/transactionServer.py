@@ -471,12 +471,12 @@ if __name__ == '__main__':
         "CANCEL_BUY": handleCommandCancelBuy,
         "SELL": handleCommandSell,
         "COMMIT_SELL": handleCommandCommitSell,
-        # "CANCEL_SELL": handleCommandCancelSell,
-        # "SET_BUY_AMOUNT": handleCommandSetBuyAmount,
-        # "CANCEL_BUY_AMOUNT": handleCommandCancelSetBuy,
-        # "SET_BUY_TRIGGER": handleCommandSetBuyTrigger,
-        # "SET_SELL_AMOUNT": handleCommandSetSellAmount,
-        # "CANCEL_SELL_AMOUNT": handleCommandCancelSetSell,
+        "CANCEL_SELL": handleCommandCancelSell,
+        "SET_BUY_AMOUNT": handleCommandSetBuyAmount,
+        "CANCEL_BUY_AMOUNT": handleCommandCancelSetBuy,
+        "SET_BUY_TRIGGER": handleCommandSetBuyTrigger,
+        "SET_SELL_AMOUNT": handleCommandSetSellAmount,
+        "CANCEL_SELL_AMOUNT": handleCommandCancelSetSell,
         "SET_SELL_TRIGGER": handleCommandSetSellTrigger,
         "DUMPLOG": handleCommandDumplog
     }
