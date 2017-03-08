@@ -382,7 +382,7 @@ def create_response(status, response):
 
 
 def delegate(ch , method, properties, body):
-    print "--incomingBody--", body
+    print "--incomingBody--", type(body),body
     args = ast.literal_eval(body)
     print "incoming args: ", args
 
