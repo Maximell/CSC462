@@ -27,7 +27,7 @@ def add(userId):
     sendtoQueue(data)
     print("waiting for transaction return")
     result = (None, None, None)
-    while result is not (None, None, None):
+    while result is (None, None, None):
         time.sleep(0.1)
         result = channel.basic_get(queue=RabbitMQReceiver.WEB+str(lineNum))
         print "interm result was: ", result
