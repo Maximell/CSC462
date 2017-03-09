@@ -26,11 +26,12 @@ def add(userId):
     # send data to transactionServer
     sendtoQueue(data)
     print("waiting for transaction return")
-    result = (None, None, None)
-    while result == (None, None, None):
-        time.sleep(0.1)
-        result = channel.basic_get(queue=RabbitMQReceiver.WEB+str(lineNum))
+    result = None
+    while result is None:
+        time.sleep(0.01)
+        method, props, result = channel.basic_get(queue=RabbitMQReceiver.WEB+str(lineNum))
         print "interm result was: ", result
+    result = json.loads(result)
     print "from the trans server: ", result
     return result
     #return RabbitMQReceiver(None, RabbitMQReceiver.WEB + str(lineNum))
