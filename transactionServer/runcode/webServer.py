@@ -1,4 +1,4 @@
-import threading
+import time
 import json
 import pika
 from flask import Flask, request
@@ -28,7 +28,7 @@ def add(userId):
     print("waiting for transaction return")
     result = (None, None, None)
     while result is not (None, None, None):
-        threading.Event.wait(10)
+        time.sleep(1)
         result = channel.basic_get(queue=RabbitMQReceiver.WEB+str(lineNum))
         print "interm result was: ", result
     print "from the trans server: ", result
