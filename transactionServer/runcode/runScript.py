@@ -5,7 +5,11 @@ import sys
 
 if __name__ == '__main__':
     # start transaction server
-
+    # start Webserver
+    try:
+        os.system("python -u webServer.py > webserverOutput.txt &")
+    except:
+        print "quote server failed to start"
     try:
         os.system("python -u mqTriggers.py > triggerOutput.txt &")
     except:
@@ -19,13 +23,6 @@ if __name__ == '__main__':
         os.system("python -u mqDatabaseServer.py > databaseOutput.txt &")
     except:
         print "Database Server failed to start"
-    # start Webserver
-    try:
-        # os.system("gunicorn --workers 10 --bind 127.0.0.1:5000 wsgi > webserverOutput.txt &")
-        os.system("python -u webServer.py > webserverOutput.txt &")
-    except:
-        print "quote server failed to start"
-
     try:
         os.system("python3.5 ../../testDriver/runcode/testDriver.py http://127.0.0.1:5000 " + str(sys.argv[1]))
     except:
