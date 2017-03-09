@@ -4,14 +4,8 @@ import os
 import sys
 
 if __name__ == '__main__':
-    if len(sys.argv) != 2:
-        print('INCORRECT PARAMETERS FOR TESTDRIVER\n')
-        print('example: python3 testDriver.py http://localhost:8000 2userWorkLoad.txt')
     # start transaction server
-    try:
-        os.system("python -u mqAuditServer.py > auditOutput.txt &")
-    except:
-        print "Audit server failed to start"
+
     try:
         os.system("python -u mqTriggers.py > triggerOutput.txt &")
     except:
@@ -25,11 +19,7 @@ if __name__ == '__main__':
         os.system("python -u mqDatabaseServer.py > databaseOutput.txt &")
     except:
         print "Database Server failed to start"
-    # start Quote server
-    try:
-        os.system("python -u mqQuoteServer.py > quoteOutput.txt &")
-    except:
-        print "quote server failed to start"
+    # start Webserver
     try:
         os.system("python -u webServer.py > webserverOutput.txt &")
     except:

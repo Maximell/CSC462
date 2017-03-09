@@ -17,7 +17,7 @@ class DatabaseRpcClient(object):
         self.response = None
         self.corr_id = None
 
-        self.connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+        self.connection = pika.BlockingConnection(pika.ConnectionParameters('142.104.91.142',44429))
 
         self.channel = self.connection.channel()
 
@@ -56,7 +56,7 @@ class TriggerRpcClient(object):
         self.response = None
         self.corr_id = None
 
-        self.connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+        self.connection = pika.BlockingConnection(pika.ConnectionParameters('142.104.91.142',44429))
 
         self.channel = self.connection.channel()
 
@@ -467,18 +467,18 @@ if __name__ == '__main__':
     functionSwitch = {
         "QUOTE": handleCommandQuote,
         "ADD": handleCommandAdd,
-        "BUY": handleCommandBuy,
-        "COMMIT_BUY": handleCommandCommitBuy,
-        "CANCEL_BUY": handleCommandCancelBuy,
-        "SELL": handleCommandSell,
-        "COMMIT_SELL": handleCommandCommitSell,
-        "CANCEL_SELL": handleCommandCancelSell,
-        "SET_BUY_AMOUNT": handleCommandSetBuyAmount,
-        "CANCEL_SET_BUY": handleCommandCancelSetBuy,
-        "SET_BUY_TRIGGER": handleCommandSetBuyTrigger,
-        "SET_SELL_AMOUNT": handleCommandSetSellAmount,
-        "CANCEL_SET_SELL": handleCommandCancelSetSell,
-        "SET_SELL_TRIGGER": handleCommandSetSellTrigger,
+        # "BUY": handleCommandBuy,
+        # "COMMIT_BUY": handleCommandCommitBuy,
+        # "CANCEL_BUY": handleCommandCancelBuy,
+        # "SELL": handleCommandSell,
+        # "COMMIT_SELL": handleCommandCommitSell,
+        # "CANCEL_SELL": handleCommandCancelSell,
+        # "SET_BUY_AMOUNT": handleCommandSetBuyAmount,
+        # "CANCEL_SET_BUY": handleCommandCancelSetBuy,
+        # "SET_BUY_TRIGGER": handleCommandSetBuyTrigger,
+        # "SET_SELL_AMOUNT": handleCommandSetSellAmount,
+        # "CANCEL_SET_SELL": handleCommandCancelSetSell,
+        # "SET_SELL_TRIGGER": handleCommandSetSellTrigger,
         "DUMPLOG": handleCommandDumplog
     }
 
