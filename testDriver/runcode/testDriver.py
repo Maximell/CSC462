@@ -124,6 +124,6 @@ if __name__ == '__main__':
         loop.run_until_complete(main())
         loop.close()
         print("last line number was calculated to be: "+str(lastLineNumber))
-        send('DUMPLOG', ['./testLOG-test'], lastLineNumber)
+        send('DUMPLOG', ['./testLOG'], lastLineNumber)
         print('completed')
 		
