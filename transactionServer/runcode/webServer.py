@@ -31,7 +31,6 @@ def add(userId):
         time.sleep(0.01)
         method, props, result = channel.basic_get(queue=RabbitMQReceiver.WEB+str(lineNum))
         print "interm result was: ", result
-    result = json.loads(result)
     print "from the trans server: ", result
     return result
     #return RabbitMQReceiver(None, RabbitMQReceiver.WEB + str(lineNum))
