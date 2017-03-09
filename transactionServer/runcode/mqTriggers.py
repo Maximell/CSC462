@@ -15,7 +15,7 @@ class DatabaseRpcClient(object):
         self.response = None
         self.corr_id = None
 
-        self.connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+        self.connection = pika.BlockingConnection(pika.ConnectionParameters('142.104.91.142',44429))
 
         self.channel = self.connection.channel()
 
@@ -53,7 +53,7 @@ class QuoteRpcClient(object):
         self.response = None
         self.corr_id = None
 
-        self.connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+        self.connection = pika.BlockingConnection(pika.ConnectionParameters('142.104.91.142',44429))
 
         self.channel = self.connection.channel()
 

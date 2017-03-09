@@ -1,13 +1,17 @@
 import json
 import pika
 
-
+# Names for RabbitMQ queues
 class RabbitMQBase:
+    # Host Server group
     QUOTE = 'quoteIn'
-    DATABASE = 'databaseIn'
+    AUDIT = 'AuditIn'
+
+    #Worker group
+    DATABASE = 'database'
     TRANSACTION = 'transactionIn'
     TRIGGERS = 'triggersIn'
-    AUDIT = 'AuditIn'
+
 
 # this will replace having to write multiple clients
 # usage: quoteClient = RabbitMQClient(RabbitMQClient.QUOTE)
@@ -15,7 +19,7 @@ class RabbitMQBase:
 class RabbitMQClient(RabbitMQBase):
     def __init__(self, queueName):
         self.queueName = queueName
-        self.connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+        self.connection = pika.BlockingConnection(pika.ConnectionParameters('142.104.91.142',44429))
         self.channel = self.connection.channel()
 
         args = {'x-max-priority': 2}
@@ -38,7 +42,7 @@ class RabbitMQClient(RabbitMQBase):
 # usage: RabbitMQReceiver(on_request, RabbitMQClient.QUOTE)
 class RabbitMQReceiver(RabbitMQBase):
     def __init__(self, callback, queueName):
-        connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+        connection = pika.BlockingConnection(pika.ConnectionParameters('142.104.91.142',44429))
         channel = connection.channel()
 
         args = {'x-max-priority': 2}
