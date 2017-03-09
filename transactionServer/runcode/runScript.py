@@ -31,7 +31,8 @@ if __name__ == '__main__':
     except:
         print "quote server failed to start"
     try:
-        os.system("python -u webServer.py > webserverOutput.txt &")
+        os.system("gunicorn --workers 10 --bind 127.0.0.1:5000 wsgi > webserverOutput.txt &")
+        # os.system("python -u webServer.py > webserverOutput.txt &")
     except:
         print "quote server failed to start"
 
