@@ -1,3 +1,4 @@
+import threading
 import json
 import pika
 from flask import Flask, request
@@ -25,9 +26,13 @@ def add(userId):
     # send data to transactionServer
     sendtoQueue(data)
     print("waiting for transaction return")
-    basic_get = channel.basic_get(queue=RabbitMQReceiver.WEB+str(lineNum))
-    print "from the trans server: ", basic_get
-    return basic_get
+    result = (None, None, None)
+    while result is not (None, None, None):
+        threading.Event.wait(10)
+        result = channel.basic_get(queue=RabbitMQReceiver.WEB+str(lineNum))
+        print "interm result was: ", result
+    print "from the trans server: ", result
+    return result
     #return RabbitMQReceiver(None, RabbitMQReceiver.WEB + str(lineNum))
     #return 'Trying to add %f cash to user %s.' % (cash, userId)
 
