@@ -54,7 +54,17 @@ def add(userId):
         return "Can't convert Value to float" , request.form['cash'].decode('utf-8')
     data = {"command": "ADD", "userId": userId, "cash": cash, "lineNum": lineNum}
 
-    return sendAndReceive(data)
+    # initializing the stuff for the return
+    connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+    channel = connection.channel()
+    args = {'x-max-priority': 2}
+    channel.queue_declare(queue=RabbitMQReceiver.WEB+str(lineNum), arguments=args)
+    # send data to transactionServer
+    sendtoQueue(data)
+    print("waiting for transaction return")
+    return channel.basic_get(queue=RabbitMQReceiver.WEB+str(lineNum))
+    #return RabbitMQReceiver(None, RabbitMQReceiver.WEB + str(lineNum))
+    #return 'Trying to add %f cash to user %s.' % (cash, userId)
 
 
 @app.route('/quote/<string:userId>/<string:stockSymbol>/', methods=['GET'])
