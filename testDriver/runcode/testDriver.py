@@ -107,7 +107,9 @@ async def send(command, args, lineNum):
         r = requests.get( url, data=data , verify=False)
     else:
         r = requests.post( url, data=data , verify=False)
-    # print(r.status_code)
+    print(r.status_code)
+    print("repsonse:", r)
+
 
 async def sendRequests(userCommandList):
     for command in userCommandList:
