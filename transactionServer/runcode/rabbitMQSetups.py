@@ -8,6 +8,7 @@ class RabbitMQBase:
     TRANSACTION = 'transactionIn'
     TRIGGERS = 'triggersIn'
     AUDIT = 'AuditIn'
+    WEB = 'webIn'
 
 # this will replace having to write multiple clients
 # usage: quoteClient = RabbitMQClient(RabbitMQClient.QUOTE)

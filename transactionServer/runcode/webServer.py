@@ -17,8 +17,17 @@ def add(userId):
     lineNum = int(request.form['lineNum'].decode('utf-8'))
     cash = float(request.form['cash'].decode('utf-8'))
     data = {"command": "ADD", "userId": userId, "cash": cash, "lineNum": lineNum}
+    # initializing the stuff for the return
+    connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+    channel = connection.channel()
+    args = {'x-max-priority': 2}
+    channel.queue_declare(queue=RabbitMQReceiver.WEB+str(lineNum), arguments=args)
+    # send data to transactionServer
     sendtoQueue(data)
-    return 'Trying to add %f cash to user %s.' % (cash, userId)
+    print("waiting for transaction return")
+    return channel.basic_get(queue=RabbitMQReceiver.WEB+str(lineNum))
+    #return RabbitMQReceiver(None, RabbitMQReceiver.WEB + str(lineNum))
+    #return 'Trying to add %f cash to user %s.' % (cash, userId)
 
 
 @app.route('/quote/<string:userId>/<string:stockSymbol>/', methods=['GET'])
