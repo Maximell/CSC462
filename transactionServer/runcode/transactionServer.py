@@ -478,8 +478,10 @@ def delegate(ch , method, properties, body):
                     )
             else:
                 print "couldn't figure out command...", args
-                create_response(404, "function not found" + str(args))
-                # TODO: return this ^ to the webserver (through a rabbitClient)
+                returnClient = RabbitMQClient(queueName=RabbitMQClient.WEB+str(args['lineNum']))
+                returnClient.send(
+                    create_response(404, "function not found" + str(args))
+                )
 
         except (RuntimeError, TypeError, ArithmeticError, KeyError) as error:
             errorPrint(args, error)
@@ -492,8 +494,10 @@ def delegate(ch , method, properties, body):
                 str(error)
             )
             auditClient.send(requestBody)
-            create_response(500, str(error))
-            # TODO: return this ^ to the webserver (through a rabbitClient)
+            returnClient = RabbitMQClient(queueName=RabbitMQClient.WEB+str(args['lineNum']))
+            returnClient.send(
+                create_response(500, str(error))
+            )
 
 
 if __name__ == '__main__':
