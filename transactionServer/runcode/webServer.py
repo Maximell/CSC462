@@ -25,7 +25,9 @@ def add(userId):
     # send data to transactionServer
     sendtoQueue(data)
     print("waiting for transaction return")
-    return channel.basic_get(queue=RabbitMQReceiver.WEB+str(lineNum))
+    basic_get = channel.basic_get(queue=RabbitMQReceiver.WEB+str(lineNum))
+    print "from the trans server: ", basic_get
+    return basic_get
     #return RabbitMQReceiver(None, RabbitMQReceiver.WEB + str(lineNum))
     #return 'Trying to add %f cash to user %s.' % (cash, userId)
 
