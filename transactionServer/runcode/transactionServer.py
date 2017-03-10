@@ -413,6 +413,7 @@ def delegate(ch , method, properties, body):
                 returnClient.close()
 
         except (RuntimeError, TypeError, ArithmeticError, KeyError) as error:
+            print "before error print here"
             errorPrint(args, error)
             print "got an error, args: ", args
             requestBody = auditFunctions.createErrorMessage(
