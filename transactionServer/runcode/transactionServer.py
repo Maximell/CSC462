@@ -216,19 +216,23 @@ def handleCommandCommitSell(args):
     quote = args.get("quote")
 
     if updatedUser is not None:
+        print "returning args"
         return args
     elif (sell is not None) and (quote is not None):
         # this is where we commit the sell
+        print "committing the sell"
         databaseClient.send(
             databaseFunctions.createCommitSellRequest(command, userId, lineNum, sell, quote)
         )
     elif sell is not None:
         # have the sell, need to get a quote
+        print "have sell, need to get quote"
         quoteClient.send(
             createQuoteRequest(userId, sell["symbol"], lineNum, args)
         )
     else:
         # this is where we need to go to the pop endpoint
+        print "going to pop endpoint"
         databaseClient.send(
             databaseFunctions.createPopSellRequest(command, userId, lineNum)
         )
