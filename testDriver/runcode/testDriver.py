@@ -27,7 +27,7 @@ urls = {
 
 def send(command, args, lineNum):
     user = args[0]
-    if userMap[user] != None:
+    if user in userMap:
         base_url = userMap["userId"]
     else:
         min = workerMap[0][1]
