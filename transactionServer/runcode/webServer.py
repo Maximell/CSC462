@@ -36,8 +36,8 @@ def sendAndReceive(data, host='localhost', queueName=None):
         time.sleep(0.01)
         method, props, result = channel.basic_get(queue=queueName)
     print "from the trans server: ", result
-    # close the channel
-    channel.close()
+    # delete the queue
+    channel.queue_delete(queue=queueName)
     return result
 
 
