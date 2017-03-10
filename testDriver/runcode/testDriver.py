@@ -32,19 +32,23 @@ def send(command, args, lineNum):
         print("In dict already")
     else:
         min = workerMap[0][1]
+        index = 0
         for x in range(0 , len(workerMap)):
             currentWorker = workerMap[x]
             if currentWorker[1] <= min:
                 sendto = currentWorker
+                index = x
                 min = currentWorker[1]
         if sendto != None:
             print("adding User to map")
             userMap[user] = sendto[0]
             base_url = sendto[0]
+            workerMap[index][1] += 1
+
         else:
             print("problem with sending the workers")
 
-
+    print "\nworkerMap:", workerMap, "\n"
 
 
 
