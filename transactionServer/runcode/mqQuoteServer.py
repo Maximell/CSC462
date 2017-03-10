@@ -30,12 +30,13 @@ class Quotes():
         stocksLengthTwo = [''.join(i) for i in itertools.product(alphabet, repeat=2)]
         stocksLengthThree = [''.join(i) for i in itertools.product(alphabet, repeat=3)]
 
-        for stock in stocksLengthOne:
+        for stock in stocksLengthThree:
             self.stockList.append(stock)
         for stock in stocksLengthTwo:
             self.stockList.append(stock)
-        for stock in stocksLengthThree:
+        for stock in stocksLengthOne:
             self.stockList.append(stock)
+
 
     def getQuotes(self):
         startTime = time.time()
