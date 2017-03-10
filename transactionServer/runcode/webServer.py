@@ -58,9 +58,10 @@ def add(userId):
     connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
     channel = connection.channel()
     args = {'x-max-priority': 2}
-    channel.queue_declare(queue=RabbitMQReceiver.WEB+str(lineNum), arguments=args)
-    # send data to transactionServer
-    sendtoQueue(data)
+    channel.queue_declare(queue=queueName, arguments=args)
+    return channel
+
+def pollAndWaitForQueue(channel, queueName):
     print("waiting for transaction return")
     return channel.basic_get(queue=RabbitMQReceiver.WEB+str(lineNum))
     #return RabbitMQReceiver(None, RabbitMQReceiver.WEB + str(lineNum))
