@@ -101,7 +101,7 @@ def send(command, args, lineNum):
         r = requests.post( url, data=data , verify=False)
     print(r.status_code)
 
-def sendRequests(userCommandList):
+async def sendRequests(userCommandList):
     for command in userCommandList:
         send(command['command'], command['args'], command['lineNum'])
 
@@ -125,7 +125,7 @@ def splitUsersFromFile():
 
     return userActions
 
-def main():
+async def main():
     print('reading file...')
     userActions = splitUsersFromFile()
     print('sending requests...')
