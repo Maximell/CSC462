@@ -17,7 +17,11 @@ def sendtoQueue(data):
 @app.route('/add/<string:userId>/', methods=['POST'])
 def add(userId):
     lineNum = int(request.form['lineNum'].decode('utf-8'))
-    cash = float(request.form['cash'].decode('utf-8'))
+    try:
+        cash = float(request.form['cash'].decode('utf-8'))
+        assert cash > 0
+    except:
+        return "Can't convert Value to float" , request.form['cash'].decode('utf-8')
     data = {"command": "ADD", "userId": userId, "cash": cash, "lineNum": lineNum}
     sendtoQueue(data)
     return 'Trying to add %f cash to user %s.' % (cash, userId)
@@ -34,7 +38,11 @@ def quote(userId, stockSymbol):
 @app.route('/buy/<string:userId>/<string:stockSymbol>/', methods=['POST'])
 def buy(userId, stockSymbol):
     lineNum = int(request.form['lineNum'].decode('utf-8'))
-    cash = float(request.form['cash'].decode('utf-8'))
+    try:
+        cash = float(request.form['cash'].decode('utf-8'))
+        assert cash > 0
+    except:
+        return "Can't convert Value to float" , request.form['cash'].decode('utf-8')
     data = {"command": "BUY", "userId": userId, "stockSymbol": stockSymbol, "cash": cash, "lineNum": lineNum}
     sendtoQueue(data)
     return 'Buying stock %s for user %s for cash %f' % (stockSymbol, userId, cash)
@@ -59,7 +67,11 @@ def cancelBuy(userId):
 @app.route('/sell/<string:userId>/<string:stockSymbol>/', methods=['POST'])
 def sell(userId, stockSymbol):
     lineNum = int(request.form['lineNum'].decode('utf-8'))
-    cash = float(request.form['cash'].decode('utf-8'))
+    try:
+        cash = float(request.form['cash'].decode('utf-8'))
+        assert cash > 0
+    except:
+        return "Can't convert Value to float" , request.form['cash'].decode('utf-8')
     data = {"command": "SELL", "userId": userId, "stockSymbol": stockSymbol, "cash": cash, "lineNum": lineNum}
     sendtoQueue(data)
     return 'Selling %f of stock %s for user %s' % (cash, stockSymbol, userId)
@@ -84,7 +96,11 @@ def cancelSell(userId):
 @app.route('/set-buy-amount/<string:userId>/<string:stockSymbol>/', methods=['POST'])
 def setBuyAmount(userId, stockSymbol):
     lineNum = int(request.form['lineNum'].decode('utf-8'))
-    cash = float(request.form['cash'].decode('utf-8'))
+    try:
+        cash = float(request.form['cash'].decode('utf-8'))
+        assert cash > 0
+    except:
+        return "Can't convert Value to float" , request.form['cash'].decode('utf-8')
     data = {"command": "SET_BUY_AMOUNT", "userId": userId, "stockSymbol": stockSymbol, "cash": cash, "lineNum": lineNum}
     sendtoQueue(data)
     return 'Setting buy of $%f on stock %s for user %s.' % (cash, stockSymbol, userId)
@@ -101,7 +117,11 @@ def cancelSetBuy(userId, stockSymbol):
 @app.route('/set-buy-trigger/<string:userId>/<string:stockSymbol>/', methods=['POST'])
 def setBuyTrigger(userId, stockSymbol):
     lineNum = int(request.form['lineNum'].decode('utf-8'))
-    cash = float(request.form['cash'].decode('utf-8'))
+    try:
+        cash = float(request.form['cash'].decode('utf-8'))
+        assert cash > 0
+    except:
+        return "Can't convert Value to float" , request.form['cash'].decode('utf-8')
     data = {"command": "SET_BUY_TRIGGER", "userId": userId, "stockSymbol": stockSymbol, "cash": cash, "lineNum": lineNum}
     sendtoQueue(data)
     return 'Setting a buy trigger for user %s on stock %s for cash %f.' % (userId, stockSymbol, cash)
@@ -110,7 +130,11 @@ def setBuyTrigger(userId, stockSymbol):
 @app.route('/set-sell-amount/<string:userId>/<string:stockSymbol>/', methods=['POST'])
 def setSellAmount(userId, stockSymbol):
     lineNum = int(request.form['lineNum'].decode('utf-8'))
-    cash = float(request.form['cash'].decode('utf-8'))
+    try:
+        cash = float(request.form['cash'].decode('utf-8'))
+        assert cash > 0
+    except:
+        return "Can't convert Value to float" , request.form['cash'].decode('utf-8')
     data = {"command": "SET_SELL_AMOUNT", "userId": userId, "stockSymbol": stockSymbol, "cash": cash, "lineNum": lineNum}
     sendtoQueue(data)
     return 'Setting a sell for user %s on stock %s for cash %f.' % (userId, stockSymbol, cash)
@@ -119,7 +143,11 @@ def setSellAmount(userId, stockSymbol):
 @app.route('/set-sell-trigger/<string:userId>/<string:stockSymbol>/', methods=['POST'])
 def setSellTrigger(userId, stockSymbol):
     lineNum = int(request.form['lineNum'].decode('utf-8'))
-    cash = float(request.form['cash'].decode('utf-8'))
+    try:
+        cash = float(request.form['cash'].decode('utf-8'))
+        assert cash > 0
+    except:
+        return "Can't convert Value to float" , request.form['cash'].decode('utf-8')
     data = {"command": "SET_SELL_TRIGGER", "userId": userId, "stockSymbol": stockSymbol, "cash": cash, "lineNum": lineNum}
     sendtoQueue(data)
     return 'Setting a sell trigger for user %s on stock %s for cash %f.' % (userId, stockSymbol, cash)
