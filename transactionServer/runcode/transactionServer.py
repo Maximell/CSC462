@@ -464,6 +464,8 @@ def delegate(ch , method, properties, body):
                     )
                     # Log User Command Call
                     auditClient.send(requestBody)
+            if args.get("cash") != None and args.get("cash") > 0:
+                create_response(501, "function not found" + str(args))
 
             function = functionSwitch.get(args["command"])
             if function:
