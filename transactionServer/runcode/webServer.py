@@ -21,6 +21,8 @@ def add(userId):
         cash = float(request.form['cash'].decode('utf-8'))
         assert cash > 0
     except:
+        data = {"command": "ADD", "userId": None, "cash": None, "lineNum": None}
+        sendtoQueue(data)
         return "Can't convert Value to float" , request.form['cash'].decode('utf-8')
     data = {"command": "ADD", "userId": userId, "cash": cash, "lineNum": lineNum}
     sendtoQueue(data)
