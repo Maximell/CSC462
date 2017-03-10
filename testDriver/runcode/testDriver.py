@@ -26,7 +26,7 @@ urls = {
 }
 
 def send(command, args, lineNum):
-    user = args["userId"]
+    user = args[0]
     if userMap[user] != None:
         base_url = userMap["userId"]
     else:
@@ -37,7 +37,7 @@ def send(command, args, lineNum):
                 sendto = currentWorker
                 min = currentWorker[1]
         if sendto != None:
-            userMap[args["userId"]] = sendto[0]
+            userMap[user] = sendto[0]
             base_url = sendto[0]
         else:
             print("problem with sending the workers")
