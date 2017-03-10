@@ -38,7 +38,7 @@ if __name__ == '__main__':
     except:
         print "quote server failed to start"
     print "waiting before running the test driver"
-    sleep(5);
+    time.sleep(5);
     print "starting the test driver"
     # start the testDriver
     try:
