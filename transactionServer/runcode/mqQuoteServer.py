@@ -2,8 +2,9 @@
 import socket
 import time
 import json
+import itertools
 from random import randint
-from rabbitMQSetups import RabbitMQClient, RabbitMQReceiver
+from rabbitMQSetups import RabbitMQClient, RabbitMQReceiver, RabbitMQPeriodicReceiver
 from mqAuditServer import auditFunctions
 
 
@@ -17,6 +18,45 @@ class Quotes():
         self.cacheExpire = cacheExpire
         self.quoteCache = {}
         self.testing = testing
+
+        self.stockList = []
+        self._constructStockList()
+        print "length of stock list: ", len(self.stockList)
+
+    def _constructStockList(self):
+        alphabet = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
+        self.stockList.append([''.join(i) for i in itertools.product(alphabet, repeat=1)])
+        self.stockList.append([''.join(i) for i in itertools.product(alphabet, repeat=2)])
+        self.stockList.append([''.join(i) for i in itertools.product(alphabet, repeat=3)])
+
+    def getQuotes(self):
+        startTime = time.time()
+        print "getting all quotes time start: ", startTime
+        for stockSymbol in self.stockList:
+            request = stockSymbol + ',' + "quoteServerUser\n"
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.connect(('quoteserve.seng.uvic.ca', 4445))
+            s.send(request)
+            data = s.recv(1024)
+            s.close()
+            newQuote = self._quoteStringToDictionary(data)
+            #requestBody = auditFunctions.createQuoteServer(
+            #    int(time.time() * 1000),
+            #    "quoteServer",
+            #    transactionNum,
+            #    user,
+            #    newQuote['serverTime'],
+            #    symbol,
+            #    newQuote['value'],
+            #    newQuote['cryptoKey']
+            #)
+            #auditClient.send(requestBody)
+            self.quoteCache[stockSymbol] = newQuote
+
+        endTime = time.time()
+        print "getting all quotes time end: ", endTime
+        timeDiff = endTime - startTime
+        print "getting all quotes time: ", timeDiff
 
     def getQuote(self, symbol, user, transactionNum):
         self._testPrint(True, "current cache state: ", self.quoteCache)
@@ -113,5 +153,6 @@ if __name__ == '__main__':
     auditClient = RabbitMQClient(RabbitMQClient.AUDIT)
     transactionClient = RabbitMQClient(RabbitMQClient.TRANSACTION)
     print "Awaiting quote requests"
-    RabbitMQReceiver(on_request, RabbitMQReceiver.QUOTE)
+    RabbitMQPeriodicReceiver(on_request, quoteServer.getQuotes, 45, RabbitMQPeriodicReceiver.QUOTE)
+    #RabbitMQReceiver(on_request, RabbitMQReceiver.QUOTE)
 

@@ -1,5 +1,6 @@
 import json
 import pika
+import time
 
 
 class RabbitMQBase:
@@ -50,3 +51,20 @@ class RabbitMQReceiver(RabbitMQBase):
         channel.basic_consume(callback, queue=queueName)
 
         channel.start_consuming()
+
+class RabbitMQPeriodicReceiver(RabbitMQBase):
+    def __init__(self, callback, periodicCallback, periodicInterval, queueName):
+        connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+        channel = connection.channel()
+
+        args = {'x-max-priority': 2}
+        channel.queue_declare(queue=queueName, arguments=args)
+
+        channel.basic_consume(callback, queue=queueName)
+
+        while True:
+            periodicCallback() # do the periodic task
+            timeout = time.time() + periodicInterval # in seconds from now
+            while time.time() < timeout:
+                method, properties, body = channel.basic_get(queue=queueName)
+                callback(body)
