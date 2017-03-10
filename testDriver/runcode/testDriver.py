@@ -3,6 +3,9 @@ import requests
 import asyncio
 import sys
 
+workerMap = [["142.104.91.142:44424" , 0] ,["142.104.91.144:44424",0]]
+userMap = {}
+
 urls = {
     'ADD': '/add/%s/',
     'BUY': '/buy/%s/%s/',
@@ -23,6 +26,26 @@ urls = {
 }
 
 def send(command, args, lineNum):
+
+    if args["userId"] in userMap:
+        base_url = userMap["userId"]
+    else:
+        min = workerMap[0][1]
+        for x in range(0 , len(workerMap)):
+            currentWorker = workerMap[x]
+            if currentWorker[1] <= min:
+                sendto = currentWorker
+                min = currentWorker[1]
+        if sendto != None:
+            userMap[args["userId"]] = sendto[0]
+            base_url = sendto[0]
+        else:
+            print "problem with sending the workers"
+
+
+
+
+
 
     url = base_url
     data = {'lineNum': lineNum}
@@ -109,7 +132,7 @@ async def main():
 
 
 if __name__ == '__main__':
-    if len(sys.argv) < 3:
+    if len(sys.argv) < 2:
         print('INCORRECT PARAMETERS\n')
         print('python3 testDriver.py <url> <file>')
         print('example: python3 testDriver.py http://localhost:8000 2userWorkLoad.txt')
@@ -119,7 +142,8 @@ if __name__ == '__main__':
         lastLine = next(reversed(open(sys.argv[2]).readlines()))
         lastLineNumber = lastLine.split(" ")[0].strip("[]")
 
-        base_url = sys.argv[1]
+        # base_url = sys.argv[1]
+        base_url = None
         loop = asyncio.get_event_loop()
         loop.run_until_complete(main())
         loop.close()

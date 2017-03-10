@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import json
 from rabbitMQSetups import RabbitMQReceiver
+import socket
 
 class auditFunctions:
     USER_COMMAND = 1
@@ -401,7 +402,9 @@ def on_request(ch, method, props, body):
 
 if __name__ == '__main__':
     print "starting AuditServer"
-    auditServer = AuditServer()
+
+    auditServer = AuditServer(port=44424)
+
 
     handleFunctionSwitch = {
         auditFunctions.USER_COMMAND: handleUserCommand,
