@@ -1,5 +1,6 @@
 import json
 import pika
+import random
 
 # Names for RabbitMQ queues
 class RabbitMQBase:
@@ -7,10 +8,11 @@ class RabbitMQBase:
     QUOTE = 'quoteIn'
     AUDIT = 'AuditIn'
 
+    rand = str(random.random())
     #Worker group
-    DATABASE = 'database'
-    TRANSACTION = 'transactionIn'
-    TRIGGERS = 'triggersIn'
+    DATABASE = 'database' + rand
+    TRANSACTION = 'transactionIn' + rand
+    TRIGGERS = 'triggersIn' + rand
 
 
 # this will replace having to write multiple clients
