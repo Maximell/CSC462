@@ -358,7 +358,13 @@ def delegate(ch , method, properties, body):
         )
         auditClient.send(requestBody)
 
-        create_response(args.get("response"), str(args.get("errorString")))
+        returnClient = RabbitMQClient(queueName=RabbitMQClient.WEB + str(args['lineNum']))
+        print "sending error back to webserver on queue: ", RabbitMQClient.WEB + str(args['lineNum'])
+        returnClient.send(
+            create_response(args.get("response"), args)
+        )
+        print "error sent to webserver"
+        returnClient.close()
         # TODO: return this ^ to the webserver (through a rabbitClient)
     else:
         try:
@@ -413,9 +419,7 @@ def delegate(ch , method, properties, body):
                 returnClient.close()
 
         except (RuntimeError, TypeError, ArithmeticError, KeyError) as error:
-            print "before error print here"
             errorPrint(args, error)
-            print "got an error, args: ", args
             requestBody = auditFunctions.createErrorMessage(
                 int(time.time() * 1000),
                 "transactionServer",
@@ -426,11 +430,9 @@ def delegate(ch , method, properties, body):
             )
             auditClient.send(requestBody)
             returnClient = RabbitMQClient(queueName=RabbitMQClient.WEB+str(args['lineNum']))
-            print "sending error back to webserver on queue: ", RabbitMQClient.WEB+str(args['lineNum'])
             returnClient.send(
                 create_response(500, args)
             )
-            print "error sent to webserver"
             returnClient.close()
 
 
