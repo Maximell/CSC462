@@ -105,7 +105,7 @@ async def sendRequests(userCommandList):
 
 def splitUsersFromFile():
     userActions = {}
-    with open(sys.argv[2]) as f:
+    with open(sys.argv[1]) as f:
         for line in f:
             splitLine = line.split(" ")
             lineNumber = splitLine[0].strip("[]")
@@ -139,7 +139,7 @@ if __name__ == '__main__':
         print(sys.argv)
     else:
         # get last line number. if file cant fit in memory, this will break. how large a file can fit in memory?
-        lastLine = next(reversed(open(sys.argv[2]).readlines()))
+        lastLine = next(reversed(open(sys.argv[1]).readlines()))
         lastLineNumber = lastLine.split(" ")[0].strip("[]")
 
         # base_url = sys.argv[1]
