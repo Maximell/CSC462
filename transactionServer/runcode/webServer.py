@@ -12,19 +12,14 @@ app = Flask(__name__)
 def sendtoQueue(data):
     transactionClient.send(data, priority=1)
 
-
-@app.route('/add/<string:userId>/', methods=['POST'])
-def add(userId):
-    lineNum = int(request.form['lineNum'].decode('utf-8'))
-    cash = float(request.form['cash'].decode('utf-8'))
-    data = {"command": "ADD", "userId": userId, "cash": cash, "lineNum": lineNum}
-    # initializing the stuff for the return
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+def initializeReturnQueue(host, queueName):
+    connection = pika.BlockingConnection(pika.ConnectionParameters(host=host'localhost'))
     channel = connection.channel()
     args = {'x-max-priority': 2}
-    channel.queue_declare(queue=RabbitMQReceiver.WEB+str(lineNum), arguments=args)
-    # send data to transactionServer
-    sendtoQueue(data)
+    channel.queue_declare(queue=queueName, arguments=args)
+    return channel
+
+def pollAndWaitForQueue(channel, queueName):
     print("waiting for transaction return")
     result = None
     while result is None:
@@ -32,7 +27,24 @@ def add(userId):
         method, props, result = channel.basic_get(queue=RabbitMQReceiver.WEB+str(lineNum))
         print "interm result was: ", result
     print "from the trans server: ", result
+    channel.close()
     return result
+
+
+@app.route('/add/<string:userId>/', methods=['POST'])
+def add(userId):
+    lineNum = int(request.form['lineNum'].decode('utf-8'))
+    cash = float(request.form['cash'].decode('utf-8'))
+    data = {"command": "ADD", "userId": userId, "cash": cash, "lineNum": lineNum}
+
+    host = 'localhost'
+    queueName = RabbitMQReceiver.WEB + str(lineNum)
+    channel = initializeReturnQueue(host, queueName)
+
+    sendtoQueue(data) # send data to transactionServer
+
+    return pollAndWaitForQueue(channel, queueName)
+
     #return RabbitMQReceiver(None, RabbitMQReceiver.WEB + str(lineNum))
     #return 'Trying to add %f cash to user %s.' % (cash, userId)
 
