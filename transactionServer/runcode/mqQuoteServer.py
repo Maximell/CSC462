@@ -48,6 +48,7 @@ class Quotes():
             data = s.recv(1024)
             s.close()
             newQuote = self._quoteStringToDictionary(data)
+            print newQuote
             #requestBody = auditFunctions.createQuoteServer(
             #    int(time.time() * 1000),
             #    "quoteServer",
