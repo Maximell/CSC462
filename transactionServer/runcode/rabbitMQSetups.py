@@ -2,13 +2,14 @@ import json
 import pika
 import random
 
+
+rand = str(random.random())
 # Names for RabbitMQ queues
 class RabbitMQBase:
     # Host Server group
     QUOTE = 'quoteIn'
     AUDIT = 'AuditIn'
 
-    rand = str(random.random())
     #Worker group
     DATABASE = 'database' + rand
     TRANSACTION = 'transactionIn' + rand
