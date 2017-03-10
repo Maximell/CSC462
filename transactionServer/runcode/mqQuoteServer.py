@@ -24,12 +24,15 @@ class Quotes():
         cache = self.quoteCache.get(symbol)
         if cache:
             if self._cacheIsActive(cache):
+                print "---QUOTE FROM CACHE---"
                 self._testPrint(False, "from cache")
                 return cache
+            print "---CACHE EXPIRED---"
             self._testPrint(False, "expired cache")
         return self._hitQuoteServerAndCache(symbol, user, transactionNum)
 
     def _hitQuoteServerAndCache(self, symbol, user, transactionNum):
+        print "---NOT FROM CACHE---"
         self._testPrint(False, "not from cache")
         request = symbol + "," + user + "\n"
 
