@@ -9,7 +9,7 @@ class RabbitMQBase:
     QUOTE = 'quoteIn'
     AUDIT = 'AuditIn'
 
-    mac = get_mac()
+    mac = str(get_mac())
     #Worker group
     DATABASE = 'database' + mac
     TRANSACTION = 'transactionIn' + mac
