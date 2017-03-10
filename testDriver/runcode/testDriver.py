@@ -51,7 +51,7 @@ def send(command, args, lineNum):
         else:
             print("problem with sending the workers")
 
-    print "\nworkerMap:", workerMap, "\n"
+    print("\nworkerMap:", workerMap, "\n")
 
 
 
