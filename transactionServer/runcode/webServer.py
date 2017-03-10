@@ -15,7 +15,12 @@ def sendToQueue(data):
 
 def sendAndReceive(data, host='localhost', queueName=None):
     # if the queueName is None, set it to a default
-    queueName = RabbitMQReceiver.WEB + str(data["lineNum"])
+
+    if queueName is None:
+        try:
+            queueName = RabbitMQReceiver.WEB + str(data["lineNum"])
+        except KeyError as error:
+            print error
     # send a request to the transactionServer
     sendToQueue(data)
     # open a connection to rabbitMq

@@ -28,12 +28,14 @@ class RabbitMQClient(RabbitMQBase):
         properties = pika.BasicProperties(
             priority=priority
         )
+        print "here"
         self.channel.basic_publish(
             exchange='',
             routing_key=self.queueName,
             properties=properties,
             body=json.dumps(requestBody)
         )
+        print "now here"
 
     def close(self):
         self.channel.close()

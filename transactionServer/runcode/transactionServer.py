@@ -11,85 +11,6 @@ from mqTriggers import TriggerFunctions
 from mqAuditServer import auditFunctions
 
 
-# new RPC Database client using rabbitMQ
-class DatabaseRpcClient(object):
-    def __init__(self):
-        self.response = None
-        self.corr_id = None
-
-        self.connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
-
-        self.channel = self.connection.channel()
-
-        result = self.channel.queue_declare(exclusive=True)
-        self.callback_queue = result.method.queue
-
-        self.channel.basic_consume(self.on_response, no_ack=True, queue=self.callback_queue)
-
-    def on_response(self, ch, method, props, body):
-        # make sure its the right package
-        if self.corr_id == props.correlation_id:
-            # self.response is essential the return of this function, because call() waits on it to be not None
-            self.response = json.loads(body)
-
-    def call(self, requestBody):
-        self.response = None
-        self.corr_id = str(uuid.uuid4())
-        print "sending Database request Id:", self.corr_id
-        self.channel.basic_publish(
-            exchange='',
-            routing_key=RabbitMQClient.DATABASE,
-            properties=pika.BasicProperties(
-                reply_to=self.callback_queue,
-                correlation_id=self.corr_id
-            ),
-            body=json.dumps(requestBody)
-        )
-        while self.response is None:
-            self.connection.process_data_events()
-        print "From Database server: ",  self.response
-        return self.response
-
-
-class TriggerRpcClient(object):
-    def __init__(self):
-        self.response = None
-        self.corr_id = None
-
-        self.connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
-
-        self.channel = self.connection.channel()
-
-        result = self.channel.queue_declare(exclusive=True)
-        self.callback_queue = result.method.queue
-
-        self.channel.basic_consume(self.on_response, no_ack=True, queue=self.callback_queue)
-
-    def on_response(self, ch, method, props, body):
-        # make sure its the right package
-        if self.corr_id == props.correlation_id:
-            # self.response is essential the return of this function, because call() waits on it to be not None
-            self.response = json.loads(body)
-
-    def call(self, requestBody):
-        self.response = None
-        self.corr_id = str(uuid.uuid4())
-        print "sending Trigger request Id:", self.corr_id , requestBody
-        self.channel.basic_publish(
-            exchange='',
-            routing_key=RabbitMQClient.TRIGGERS,
-            properties=pika.BasicProperties(
-                reply_to=self.callback_queue,
-                correlation_id=self.corr_id
-            ),
-            body=json.dumps(requestBody)
-        )
-        while self.response is None:
-            self.connection.process_data_events()
-        print "From Trigger server: ",  self.response
-        return self.response
-
-
 # From webServer: {"transactionNum": lineNum, "command": "QUOTE", "userId": userId, "stockSymbol": stockSymbol}
 # From quoteServer: + "quote:, "cryptoKey"
 def handleCommandQuote(args):
@@ -532,11 +453,6 @@ if __name__ == '__main__':
         "SET_SELL_TRIGGER": handleCommandSetSellTrigger,
         "DUMPLOG": handleCommandDumplog
     }
-
-    # rpc classes
-    #quote_rpc = QuoteRpcClient()
-    #db_rpc = DatabaseRpcClient()
-    trigger_rpc = TriggerRpcClient()
 
     quoteClient = RabbitMQClient(RabbitMQClient.QUOTE)
     auditClient = RabbitMQClient(RabbitMQClient.AUDIT)
