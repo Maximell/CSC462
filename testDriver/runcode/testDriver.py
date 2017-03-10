@@ -3,7 +3,7 @@ import requests
 import asyncio
 import sys
 
-workerMap = [["142.104.91.142:44424" , 0] ,["142.104.91.144:44424",0]]
+workerMap = [["http://142.104.91.142:44424" , 0] ,["http://142.104.91.144:44424",0]]
 userMap = {}
 
 urls = {
