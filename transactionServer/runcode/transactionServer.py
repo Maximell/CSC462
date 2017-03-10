@@ -430,7 +430,7 @@ def delegate(ch , method, properties, body):
             args["command"],
             error
         )
-        auditClient.send(requestBody)
+        # auditClient.send(requestBody)
 
         create_response(args.get("response"), str(args.get("errorString")))
         # TODO: return this ^ to the webserver (through a rabbitClient)
@@ -488,8 +488,8 @@ def delegate(ch , method, properties, body):
                 args["command"],
                 str(error)
             )
-            auditClient.send(requestBody)
-            create_response(500, str(error))
+            # auditClient.send(requestBody)
+            # create_response(500, str(error))
             # TODO: return this ^ to the webserver (through a rabbitClient)
 
 
