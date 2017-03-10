@@ -23,6 +23,7 @@ if __name__ == '__main__':
         os.system("python -u mqDatabaseServer.py > databaseOutput.txt &")
     except:
         print "Database Server failed to start"
+
     try:
         os.system("python3.5 ../../testDriver/runcode/testDriver.py http://127.0.0.1:5000 " + str(sys.argv[1]))
     except:
