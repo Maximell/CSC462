@@ -164,6 +164,6 @@ if __name__ == '__main__':
     auditClient = RabbitMQClient(RabbitMQClient.AUDIT)
     transactionClient = RabbitMQClient(RabbitMQClient.TRANSACTION)
     print "Awaiting quote requests"
-    RabbitMQPeriodicReceiver(on_request, quoteServer.getQuotes, 45, RabbitMQPeriodicReceiver.QUOTE)
-    #RabbitMQReceiver(on_request, RabbitMQReceiver.QUOTE)
+    #RabbitMQPeriodicReceiver(on_request, quoteServer.getQuotes, 45, RabbitMQPeriodicReceiver.QUOTE)
+    RabbitMQReceiver(on_request, RabbitMQReceiver.QUOTE)
 
