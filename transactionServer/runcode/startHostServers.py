@@ -14,7 +14,7 @@ if __name__ == '__main__':
     except:
         print "quote server failed to start"
     try:
-        os.system("python3.5 ../../testDriver/runcode/testDriver.py " + str(sys.argv[1]))
+        os.system("python3.5 ../../testDriver/runcode/testDriver.py c" + str(sys.argv[1]))
     except:
         print "test driver failed to start"
 
