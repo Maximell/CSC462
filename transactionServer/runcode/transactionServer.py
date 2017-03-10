@@ -215,7 +215,9 @@ def handleCommandCommitSell(args):
     updatedUser = args.get("updatedUser")
     quote = args.get("quote")
 
-    if updatedUser is not None:
+    errorString = args.get("errorString")
+
+    if updatedUser is not None or errorString:
         print "returning args"
         return args
     elif (sell is not None) and (quote is not None):
