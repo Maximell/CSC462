@@ -68,6 +68,6 @@ class RabbitMQPeriodicReceiver(RabbitMQBase):
             print "done the periodic callback"
             timeout = time.time() + periodicInterval # in seconds from now
             while time.time() < timeout:
-                method, properties, body = channel.basic_get(queue=queueName)
-                callback(body)
+                result = channel.basic_get(queue=queueName)
+                callback(result)
             print "out of the time loop"
