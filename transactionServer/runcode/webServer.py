@@ -19,7 +19,6 @@ def add(userId):
     lineNum = int(request.form['lineNum'].decode('utf-8'))
     try:
         cash = float(request.form['cash'].decode('utf-8'))
-        assert cash > 0
     except:
         data = {"command": "ADD", "userId": userId, "cash": request.form['cash'].decode('utf-8'), "lineNum": None}
         sendtoQueue(data)
@@ -42,7 +41,6 @@ def buy(userId, stockSymbol):
     lineNum = int(request.form['lineNum'].decode('utf-8'))
     try:
         cash = float(request.form['cash'].decode('utf-8'))
-        assert cash > 0
     except:
         data = {"command": "ADD", "userId": userId, "cash": request.form['cash'].decode('utf-8'), "lineNum": None}
         sendtoQueue(data)
@@ -73,7 +71,6 @@ def sell(userId, stockSymbol):
     lineNum = int(request.form['lineNum'].decode('utf-8'))
     try:
         cash = float(request.form['cash'].decode('utf-8'))
-        assert cash > 0
     except:
         data = {"command": "ADD", "userId": userId, "cash": request.form['cash'].decode('utf-8'), "lineNum": None}
         sendtoQueue(data)
@@ -104,7 +101,6 @@ def setBuyAmount(userId, stockSymbol):
     lineNum = int(request.form['lineNum'].decode('utf-8'))
     try:
         cash = float(request.form['cash'].decode('utf-8'))
-        assert cash > 0
     except:
         data = {"command": "ADD", "userId": userId, "cash": request.form['cash'].decode('utf-8'), "lineNum": None}
         sendtoQueue(data)
@@ -127,7 +123,6 @@ def setBuyTrigger(userId, stockSymbol):
     lineNum = int(request.form['lineNum'].decode('utf-8'))
     try:
         cash = float(request.form['cash'].decode('utf-8'))
-        assert cash > 0
     except:
         data = {"command": "ADD", "userId": userId, "cash": request.form['cash'].decode('utf-8'), "lineNum": None}
         sendtoQueue(data)
@@ -142,7 +137,6 @@ def setSellAmount(userId, stockSymbol):
     lineNum = int(request.form['lineNum'].decode('utf-8'))
     try:
         cash = float(request.form['cash'].decode('utf-8'))
-        assert cash > 0
     except:
         data = {"command": "ADD", "userId": userId, "cash": request.form['cash'].decode('utf-8'), "lineNum": None}
         sendtoQueue(data)
@@ -157,7 +151,6 @@ def setSellTrigger(userId, stockSymbol):
     lineNum = int(request.form['lineNum'].decode('utf-8'))
     try:
         cash = float(request.form['cash'].decode('utf-8'))
-        assert cash > 0
     except:
         data = {"command": "ADD", "userId": userId, "cash": request.form['cash'].decode('utf-8'), "lineNum": None}
         sendtoQueue(data)

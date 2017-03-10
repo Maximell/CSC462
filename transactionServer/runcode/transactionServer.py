@@ -464,8 +464,10 @@ def delegate(ch , method, properties, body):
                     )
                     # Log User Command Call
                     auditClient.send(requestBody)
+
+            # Sanitizing for Negative values of cash
             if args.get("cash") != None and args.get("cash") > 0:
-                create_response(501, "function not found" + str(args))
+                create_response(501, "function not allowed" + str(args))
 
             function = functionSwitch.get(args["command"])
             if function:
