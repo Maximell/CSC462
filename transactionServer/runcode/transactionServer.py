@@ -500,6 +500,7 @@ def delegate(ch , method, prop, args):
             #     returnClient.close()
 
         except (RuntimeError, TypeError, ArithmeticError, KeyError) as error:
+            print "before error print here"
             errorPrint(args, error)
             requestBody = auditFunctions.createErrorMessage(
                 int(time.time() * 1000),
