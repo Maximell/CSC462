@@ -117,14 +117,14 @@ if __name__ == '__main__':
         print(sys.argv)
     else:
         # get last line number. if file cant fit in memory, this will break. how large a file can fit in memory?
-        #lastLine = next(reversed(open(sys.argv[2]).readlines()))
-        #lastLineNumber = lastLine.split(" ")[0].strip("[]")
+        lastLine = next(reversed(open(sys.argv[2]).readlines()))
+        lastLineNumber = lastLine.split(" ")[0].strip("[]")
 
         base_url = sys.argv[1]
         loop = asyncio.get_event_loop()
         loop.run_until_complete(main())
         loop.close()
-        #print("last line number was calculated to be: "+str(lastLineNumber))
-        #send('DUMPLOG', ['./testLOG-test'], lastLineNumber)
+        print("last line number was calculated to be: "+str(lastLineNumber))
+        send('DUMPLOG', ['./testLOG-test'], lastLineNumber)
         print('completed')
 		
