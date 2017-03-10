@@ -3,7 +3,7 @@ import requests
 import asyncio
 import sys
 
-workerMap = [["http://142.104.91.142:44424" , 0] ,["http://142.104.91.144:44424",0]]
+workerMap = [["http://142.104.91.145:44424" , 0] ,["http://142.104.91.144:44424",0]]
 userMap = {}
 
 urls = {
@@ -28,7 +28,7 @@ urls = {
 def send(command, args, lineNum):
     user = args[0]
     if user in userMap:
-        base_url = userMap["userId"]
+        base_url = userMap[user]
     else:
         min = workerMap[0][1]
         for x in range(0 , len(workerMap)):
