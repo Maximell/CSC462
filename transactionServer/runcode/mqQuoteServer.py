@@ -41,6 +41,7 @@ class Quotes():
         startTime = time.time()
         print "getting all quotes time start: ", startTime
         for stockSymbol in self.stockList:
+            print "getting quote: ", stockSymbol
             request = stockSymbol + ',' + "quoteServerUser\n"
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             s.connect(('quoteserve.seng.uvic.ca', 4445))
