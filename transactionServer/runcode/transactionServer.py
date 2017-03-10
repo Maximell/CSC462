@@ -61,7 +61,6 @@ class Quotes():
     def _cacheIsActive(self, quote):
         return (int(quote.get('retrieved', 0)) + self.cacheExpire) > int(time.time())
 
-
 # From webServer: {"transactionNum": lineNum, "command": "QUOTE", "userId": userId, "stockSymbol": stockSymbol}
 # From quoteServer: + "quote:, "cryptoKey"
 def handleCommandQuote(args):
@@ -541,8 +540,6 @@ if __name__ == '__main__':
         "SET_SELL_TRIGGER": handleCommandSetSellTrigger,
         "DUMPLOG": handleCommandDumplog
     }
-
-
 
     quoteClient = RabbitMQClient(RabbitMQClient.QUOTE)
     auditClient = RabbitMQClient(RabbitMQClient.AUDIT)
