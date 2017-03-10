@@ -1,19 +1,19 @@
 import json
 import pika
-import random
+from uuid import getnode as get_mac
 
 
-rand = str(random.random())
 # Names for RabbitMQ queues
 class RabbitMQBase:
     # Host Server group
     QUOTE = 'quoteIn'
     AUDIT = 'AuditIn'
 
+    mac = get_mac()
     #Worker group
-    DATABASE = 'database' + rand
-    TRANSACTION = 'transactionIn' + rand
-    TRIGGERS = 'triggersIn' + rand
+    DATABASE = 'database' + mac
+    TRANSACTION = 'transactionIn' + mac
+    TRIGGERS = 'triggersIn' + mac
 
 
 # this will replace having to write multiple clients
