@@ -25,9 +25,17 @@ class Quotes():
 
     def _constructStockList(self):
         alphabet = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
-        self.stockList.append([''.join(i) for i in itertools.product(alphabet, repeat=1)])
-        self.stockList.append([''.join(i) for i in itertools.product(alphabet, repeat=2)])
-        self.stockList.append([''.join(i) for i in itertools.product(alphabet, repeat=3)])
+
+        stocksLengthOne = [''.join(i) for i in itertools.product(alphabet, repeat=1)]
+        stocksLengthTwo = [''.join(i) for i in itertools.product(alphabet, repeat=2)]
+        stocksLengthThree = [''.join(i) for i in itertools.product(alphabet, repeat=3)]
+
+        for stock in stocksLengthOne:
+            self.stockList.append(stock)
+        for stock in stocksLengthTwo:
+            self.stockList.append(stock)
+        for stock in stocksLengthThree:
+            self.stockList.append(stock)
 
     def getQuotes(self):
         startTime = time.time()
