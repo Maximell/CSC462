@@ -30,16 +30,19 @@ class RabbitMQClient(RabbitMQBase):
 
     # webserver should be using priority=1 when sending
     def send(self, requestBody, priority=2):
-        print "sending", requestBody, "to", self.queueName, "with priority", priority
-        properties = pika.BasicProperties(
-            priority=priority
-        )
-        self.channel.basic_publish(
-            exchange='',
-            routing_key=self.queueName,
-            properties=properties,
-            body=json.dumps(requestBody)
-        )
+        try:
+            print "sending", requestBody, "to", self.queueName, "with priority", priority
+            properties = pika.BasicProperties(
+                priority=priority
+            )
+            self.channel.basic_publish(
+                exchange='',
+                routing_key=self.queueName,
+                properties=properties,
+                body=json.dumps(requestBody)
+            )
+        except:
+            print requestBody
 
 
 # usage: RabbitMQReceiver(on_request, RabbitMQClient.QUOTE)
