@@ -43,14 +43,14 @@ class Quotes():
         print "getting all quotes time start: ", startTime
         for stockSymbol in self.stockList:
             print "getting quote: ", stockSymbol
-            request = stockSymbol + ',' + "quoteServerUser\n"
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.connect(('quoteserve.seng.uvic.ca', 4445))
-            s.send(request)
-            data = s.recv(1024)
-            s.close()
-            newQuote = self._quoteStringToDictionary(data)
-            print newQuote
+            #request = stockSymbol + ',' + "quoteServerUser\n"
+            #s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            #s.connect(('quoteserve.seng.uvic.ca', 4445))
+            #s.send(request)
+            #data = s.recv(1024)
+            #s.close()
+            #newQuote = self._quoteStringToDictionary(data)
+            #print newQuote
             #requestBody = auditFunctions.createQuoteServer(
             #    int(time.time() * 1000),
             #    "quoteServer",
@@ -62,7 +62,7 @@ class Quotes():
             #    newQuote['cryptoKey']
             #)
             #auditClient.send(requestBody)
-            self.quoteCache[stockSymbol] = newQuote
+            #self.quoteCache[stockSymbol] = newQuote
 
         endTime = time.time()
         print "getting all quotes time end: ", endTime
