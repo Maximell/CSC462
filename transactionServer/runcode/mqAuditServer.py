@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 import json
 from rabbitMQSetups import RabbitMQReceiver
-import socket
 
 class auditFunctions:
     USER_COMMAND = 1

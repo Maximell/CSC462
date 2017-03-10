@@ -2,6 +2,8 @@ import json
 import pika
 from flask import Flask, request
 from rabbitMQSetups import RabbitMQClient, RabbitMQReceiver
+import socket
+
 
 app = Flask(__name__)
 
