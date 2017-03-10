@@ -31,6 +31,13 @@ if __name__ == '__main__':
         os.system("python -u mqDatabaseServer.py > databaseOutput.txt &")
     except:
         print "Database Server failed to start"
+    # start Quote server
+    try:
+        os.system("python -u mqQuoteServer.py > quoteOutput.txt &")
+    except:
+        print "quote server failed to start"
+    print "waiting before running the test driver"
+    time.sleep(5);
     print "starting the test driver"
     # start the testDriver
     try:
