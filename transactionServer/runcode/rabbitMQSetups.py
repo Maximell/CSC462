@@ -35,6 +35,8 @@ class RabbitMQClient(RabbitMQBase):
             body=json.dumps(requestBody)
         )
 
+    def close(self):
+        self.channel.close()
 
 # usage: RabbitMQReceiver(on_request, RabbitMQClient.QUOTE)
 class RabbitMQReceiver(RabbitMQBase):
