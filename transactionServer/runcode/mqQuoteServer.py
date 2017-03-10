@@ -126,27 +126,44 @@ class Quotes():
         # print "current cache = ",self.quoteCache
         if cache:
             if self._cacheIsActive(cache):
-                # print "cache value is active"
+                print "---QUOTE FROM CACHE---"
+                self._testPrint(False, "from cache")
                 return cache
-        self.hitQuoteServerAndCache(symbol, user, transactionNum)
-        return
+            print "---CACHE EXPIRED---"
+            self._testPrint(False, "expired cache")
+        return self._hitQuoteServerAndCache(symbol, user, transactionNum)
 
-    def hitQuoteServerAndCache(self, symbol, user, transactionNum):
-        # run new quote thread
+    def _hitQuoteServerAndCache(self, symbol, user, transactionNum):
+        print "---NOT FROM CACHE---"
+        self._testPrint(False, "not from cache")
+        request = symbol + "," + user + "\n"
 
-        if symbol in self.inflight:
-            return
-        while(quoteServer.maxthread <= quoteServer.threadCount):
-            pass
-        getQuoteThread(symbol , user , transactionNum)
-        print "making new thread"
-        quoteServer.threadCount += 1
-        print "current thread count = ",quoteServer.threadCount
-        self.inflight.append(symbol)
+        if self.testing:
+            data = self._mockQuoteServer(request)
+            newQuote = self._quoteStringToDictionary(data)
+        else:
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.connect(('quoteserve.seng.uvic.ca', 4445))
+            s.send(request)
+            data = s.recv(1024)
+            s.close()
+            newQuote = self._quoteStringToDictionary(data)
+            requestBody = auditFunctions.createQuoteServer(
+                int(time.time() * 1000),
+                "quoteServer",
+                transactionNum,
+                user,
+                newQuote['serverTime'],
+                symbol,
+                newQuote['value'],
+                newQuote['cryptoKey']
+            )
+            auditClient.send(requestBody)
 
+        self.quoteCache[symbol] = newQuote
+        return newQuote
 
-
-    def quoteStringToDictionary(self, quoteString):
+    def _quoteStringToDictionary(self, quoteString):
         # "quote, sym, userId, timeStamp, cryptokey\n"
         split = quoteString.split(",")
         return {'value': float(split[0]), 'retrieved': int(split[3])/1000, 'serverTime': split[3], 'cryptoKey': split[4].strip("\n")}
