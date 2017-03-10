@@ -29,6 +29,7 @@ def send(command, args, lineNum):
     user = args[0]
     if user in userMap:
         base_url = userMap[user]
+        print("In dict already")
     else:
         min = workerMap[0][1]
         for x in range(0 , len(workerMap)):
@@ -37,6 +38,7 @@ def send(command, args, lineNum):
                 sendto = currentWorker
                 min = currentWorker[1]
         if sendto != None:
+            print("adding User to map")
             userMap[user] = sendto[0]
             base_url = sendto[0]
         else:
@@ -99,7 +101,7 @@ def send(command, args, lineNum):
         r = requests.post( url, data=data , verify=False)
     print(r.status_code)
 
-async def sendRequests(userCommandList):
+def sendRequests(userCommandList):
     for command in userCommandList:
         send(command['command'], command['args'], command['lineNum'])
 
@@ -123,7 +125,7 @@ def splitUsersFromFile():
 
     return userActions
 
-async def main():
+def main():
     print('reading file...')
     userActions = splitUsersFromFile()
     print('sending requests...')
