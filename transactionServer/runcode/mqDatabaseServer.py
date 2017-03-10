@@ -77,20 +77,44 @@ class databaseFunctions:
         }
 
     @classmethod
-    def createSellRequest(cls, userId, amount, symbol):
-        return {'function': cls.SELL, 'userId': userId, 'amount': amount, 'symbol': symbol}
+    def createSellRequest(cls, command, userId, lineNum, amount, stockSymbol):
+        return {
+            'function': cls.SELL,
+            'command': command,
+            'userId': userId,
+            'lineNum': lineNum,
+            'cash': amount,
+            'stockSymbol': stockSymbol,
+        }
 
     @classmethod
-    def createPopSellRequest(cls, userId):
-        return {'function': cls.POP_SELL, 'userId': userId}
+    def createPopSellRequest(cls, command, userId, lineNum):
+        return {
+            'function': cls.POP_SELL,
+            'command': command,
+            'userId': userId,
+            'lineNum': lineNum,
+        }
 
     @classmethod
-    def createCommitSellRequest(cls, userId, sell, costPer):
-        return {'function': cls.COMMIT_SELL, 'userId': userId, 'sell': sell, 'costPer': costPer}
+    def createCommitSellRequest(cls, command, userId, lineNum, sell, costPer):
+        return {
+            'function': cls.COMMIT_SELL,
+            'command': command,
+            'userId': userId,
+            'lineNum': lineNum,
+            'sell': sell,
+            'costPer': costPer,
+        }
 
     @classmethod
-    def createCancelSellRequest(cls, userId):
-        return {'function': cls.CANCEL_SELL, 'userId': userId}
+    def createCancelSellRequest(cls, command, userId, lineNum):
+        return {
+            'function': cls.CANCEL_SELL,
+            'command': command,
+            'userId': userId,
+            'lineNum': lineNum,
+        }
 
     @classmethod
     def createReserveCashRequest(cls, command, userId, amount, stockSymbol, lineNum):
@@ -430,8 +454,9 @@ def handleCommitBuy(payload):
     userId = payload["userId"]
     buy = payload["buy"]
     costPer = payload["costPer"]
+
     symbol = buy["symbol"]
-    moneyReserved = buy["amount"]
+    moneyReserved = buy["number"]
 
     if databaseServer.isBuySellActive(buy):
         numberOfStocks = math.floor(moneyReserved / costPer)
@@ -448,7 +473,7 @@ def handleCommitBuy(payload):
     else:
         databaseServer.releaseCash(userId, moneyReserved)
         payload['response'] = 400
-        payload['errorString'] = "buy no longer active"
+        payload['errorString'] = "no active buy"
     return payload
 
 
@@ -465,44 +490,70 @@ def handleCancelBuy(payload):
 
 
 def handleSell(payload):
-    symbol = payload["symbol"]
-    amount = payload["amount"]
+    symbol = payload["stockSymbol"]
+    amount = payload["cash"]
     userId = payload["userId"]
 
-    if databaseServer.pushSell(userId, symbol, amount):
-        return create_response(200, databaseServer.getUser(userId))
-    return create_response(400, "dont own any of those stock")
+    newSell = databaseServer.pushSell(userId, symbol, amount)
+
+    if newSell:
+        payload["response"] = 200
+        payload["number"] = newSell["number"]
+        payload["timeStamp"] = newSell["timestamp"]
+    else:
+        payload["response"] = 400
+        payload["errorString"] = "Don't own enough of that stock"
+    return payload
+
 
 def handlePopSell(payload):
+    command = payload["command"]
     userId = payload["userId"]
+    lineNum = payload["lineNum"]
 
     sell = databaseServer.popSell(userId)
     if sell:
-        return create_response(200, sell)
-    return create_response(400, "no sells available")
+        payload["response"] = 200
+        payload["sell"] = sell
+    else:
+        payload["response"] = 400
+        payload["errorString"] = "no sells available"
+    return payload
+
 
 def handleCommitSell(payload):
     userId = payload["userId"]
     sell = payload["sell"]
     costPer = payload["costPer"]
+
     symbol = sell["symbol"]
-    amount = sell["amount"]
+    amount = sell["number"]
 
     if databaseServer.isBuySellActive(sell):
         numberOfStocks = math.floor(amount / costPer)
 
         databaseServer.removeFromPortfolio(userId, symbol, numberOfStocks)
         user = databaseServer.addCash(userId, numberOfStocks * costPer)
-        return create_response(200, user)
-    return create_response(400, "sell no longer active")
+        payload["response"] = 200
+        payload["updatedUser"] = user
+    else:
+        payload["response"] = 400
+        payload["errorString"] = "no active sell"
+    return payload
 
 def handleCancelSell(payload):
+    command = payload["command"]
     userId = payload["userId"]
+    lineNum = payload["lineNum"]
 
     sell = databaseServer.popSell(userId)
     if sell:
-        return create_response(200, databaseServer.getUser(userId))
-    return create_response(400, "no sells available")
+        payload["response"] = 200
+        payload["sell"] = sell
+    else:
+        payload["response"] = 400
+        payload["errorString"] = "no sells available"
+    return payload
 
 def handleReserveCash(payload):
     amount = payload["cash"]

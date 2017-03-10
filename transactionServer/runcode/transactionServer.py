@@ -189,34 +189,66 @@ def handleCommandCancelBuy(args):
 
 
 def handleCommandSell(args):
-    symbol = args["stockSymbol"]
-    cash = args["cash"]
+    command = args["command"]
     userId = args["userId"]
+    lineNum = args["lineNum"]
+    stockSymbol = args["stockSymbol"]
+    cash = args["cash"]
 
-    request = databaseFunctions.createSellRequest(userId, cash, symbol)
-    response = db_rpc.call(request)
-    # response['status'] == 400 means they dont have that
+    # if response, has already been to DB
+    # response of 200 means success, 400 means not enough of that stock
+    if args.get("response") is not None:
+        return args
+    else:
+        databaseClient.send(
+            databaseFunctions.createSellRequest(command, userId, lineNum, cash, stockSymbol)
+        )
+    return None
 
 
 def handleCommandCommitSell(args):
+    command = args["command"]
     userId = args["userId"]
-    transactionNum = args["lineNum"]
+    lineNum = args["lineNum"]
 
-    popRequest = databaseFunctions.createPopSellRequest(userId)
-    popResponse = db_rpc.call(popRequest)
-    if popResponse["status"] == 200:
-        sell = popResponse["body"]
-        quote = createQuoteRequest(userId, sell["symbol"], transactionNum)
-        quote = quote_rpc.call(quote)
-        commitRequest = databaseFunctions.createCommitSellRequest(userId, sell, quote["value"])
-        commitResponse = db_rpc.call(commitRequest)
+    sell = args.get("sell")
+    updatedUser = args.get("updatedUser")
+    quote = args.get("quote")
+
+    if updatedUser is not None:
+        return args
+    elif (sell is not None) and (quote is not None):
+        # this is where we commit the sell
+        databaseClient.send(
+            databaseFunctions.createCommitSellRequest(command, userId, lineNum, sell, quote)
+        )
+    elif sell is not None:
+        # have the sell, need to get a quote
+        quoteClient.send(
+            createQuoteRequest(userId, sell["symbol"], lineNum, args)
+        )
+    else:
+        # this is where we need to go to the pop endpoint
+        databaseClient.send(
+            databaseFunctions.createPopSellRequest(command, userId, lineNum)
+        )
+    return None
 
 
 def handleCommandCancelSell(args):
-    userId = args.get("userId")
+    command = args["command"]
+    userId = args["userId"]
+    lineNum = args["lineNum"]
 
-    request = databaseFunctions.createCancelSellRequest(userId)
-    response = db_rpc.call(request)
+    sell = args.get("sell")
+
+    if sell is not None:
+        return args
+    else:
+        databaseClient.send(
+            databaseFunctions.createCancelSellRequest(command, userId, lineNum)
+        )
+    return None
 
 
 def handleCommandSetBuyAmount(args):
