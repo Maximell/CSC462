@@ -24,7 +24,7 @@ def sendAndReceive(data, host='localhost', queueName=None):
     # declare a queue
     args = {'x-max-priority': 2}
     channel.queue_declare(queue=queueName, arguments=args)
-    print("waiting for transaction return")
+    print("waiting for transaction return on queue: ", queueName)
     # wait for a response from the transactionServer in that queue
     result = None
     while result is None:

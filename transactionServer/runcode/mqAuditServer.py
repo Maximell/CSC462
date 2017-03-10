@@ -67,7 +67,12 @@ class auditFunctions:
     def createErrorMessage(cls, timeStamp, server, transactionNum, userId, commandName, errorMessage):
         return {
             'function': cls.ERROR_MESSAGE,
-            'todo': "still needs to be done"
+            'timeStamp': timeStamp,
+            'server': server,
+            'transactionNum': transactionNum,
+            'userId': userId,
+            'commandName': commandName,
+            'errorMessage': errorMessage
         }
 
     @classmethod

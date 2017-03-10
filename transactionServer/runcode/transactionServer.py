@@ -493,6 +493,7 @@ def delegate(ch , method, properties, body):
 
         except (RuntimeError, TypeError, ArithmeticError, KeyError) as error:
             errorPrint(args, error)
+            print "got an error, args: ", args
             requestBody = auditFunctions.createErrorMessage(
                 int(time.time() * 1000),
                 "transactionServer",
@@ -503,9 +504,11 @@ def delegate(ch , method, properties, body):
             )
             auditClient.send(requestBody)
             returnClient = RabbitMQClient(queueName=RabbitMQClient.WEB+str(args['lineNum']))
+            print "sending error back to webserver on queue: ", RabbitMQClient.WEB+str(args['lineNum'])
             returnClient.send(
-                create_response(500, str(error))
+                create_response(500, args)
             )
+            print "error sent to webserver"
             returnClient.close()
 
 
