@@ -403,7 +403,7 @@ def on_request(ch, method, props, body):
 if __name__ == '__main__':
     print "starting AuditServer"
 
-    auditServer = AuditServer(port=44424)
+    auditServer = AuditServer()
 
 
     handleFunctionSwitch = {

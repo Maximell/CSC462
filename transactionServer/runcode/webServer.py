@@ -151,4 +151,4 @@ def displaySummary(userId):
 
 if __name__ == '__main__':
     transactionClient = RabbitMQClient(RabbitMQClient.TRANSACTION)
-    app.run()
+    app.run(port=44424)
