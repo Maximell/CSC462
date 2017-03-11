@@ -34,7 +34,7 @@ class RabbitMQClient(RabbitMQBase):
             print "sending", requestBody, "to", self.queueName, "with priority", priority
             properties = pika.BasicProperties(
                 priority=priority,
-                # reply_to='amq.rabbitmq.reply-to'
+                reply_to='amq.rabbitmq.reply-to'
             )
             self.channel.basic_publish(
                 exchange='',
