@@ -33,15 +33,18 @@ class RabbitMQClient(RabbitMQBase):
         try:
             print "sending", requestBody, "to", self.queueName, "with priority", priority
             properties = pika.BasicProperties(
-                priority=priority
+                priority=priority,
+                # reply_to='amq.rabbitmq.reply-to'
             )
             self.channel.basic_publish(
                 exchange='',
                 routing_key=self.queueName,
                 properties=properties,
-                body=json.dumps(requestBody)
+                body=json.dumps(requestBody),
+
             )
         except:
+            print "Problem with request send function: "
             print requestBody
 
 
@@ -54,6 +57,6 @@ class RabbitMQReceiver(RabbitMQBase):
         args = {'x-max-priority': 2}
         channel.queue_declare(queue=queueName, arguments=args)
 
-        channel.basic_consume(callback, queue=queueName)
+        channel.basic_consume(callback, queue=queueName, no_ack=True)
 
         channel.start_consuming()
