@@ -20,7 +20,7 @@ def add(userId):
     try:
         cash = float(request.form['cash'].decode('utf-8'))
     except:
-        data = {"command": "ADD", "userId": userId, "cash": request.form['cash'].decode('utf-8'), "lineNum": None}
+        data = {"command": "ADD", "userId": userId, "cash": -1, "lineNum": None}
         sendtoQueue(data)
         return "Can't convert Value to float" , request.form['cash'].decode('utf-8')
     data = {"command": "ADD", "userId": userId, "cash": cash, "lineNum": lineNum}
@@ -42,7 +42,7 @@ def buy(userId, stockSymbol):
     try:
         cash = float(request.form['cash'].decode('utf-8'))
     except:
-        data = {"command": "ADD", "userId": userId, "cash": request.form['cash'].decode('utf-8'), "lineNum": None}
+        data = {"command": "ADD", "userId": userId, "cash": -1, "lineNum": None}
         sendtoQueue(data)
         return "Can't convert Value to float" , request.form['cash'].decode('utf-8')
     data = {"command": "BUY", "userId": userId, "stockSymbol": stockSymbol, "cash": cash, "lineNum": lineNum}
@@ -72,7 +72,7 @@ def sell(userId, stockSymbol):
     try:
         cash = float(request.form['cash'].decode('utf-8'))
     except:
-        data = {"command": "ADD", "userId": userId, "cash": request.form['cash'].decode('utf-8'), "lineNum": None}
+        data = {"command": "ADD", "userId": userId, "cash": -1, "lineNum": None}
         sendtoQueue(data)
         return "Can't convert Value to float" , request.form['cash'].decode('utf-8')
     data = {"command": "SELL", "userId": userId, "stockSymbol": stockSymbol, "cash": cash, "lineNum": lineNum}
@@ -102,7 +102,7 @@ def setBuyAmount(userId, stockSymbol):
     try:
         cash = float(request.form['cash'].decode('utf-8'))
     except:
-        data = {"command": "ADD", "userId": userId, "cash": request.form['cash'].decode('utf-8'), "lineNum": None}
+        data = {"command": "ADD", "userId": userId, "cash": -1, "lineNum": None}
         sendtoQueue(data)
         return "Can't convert Value to float" , request.form['cash'].decode('utf-8')
     data = {"command": "SET_BUY_AMOUNT", "userId": userId, "stockSymbol": stockSymbol, "cash": cash, "lineNum": lineNum}
@@ -124,7 +124,7 @@ def setBuyTrigger(userId, stockSymbol):
     try:
         cash = float(request.form['cash'].decode('utf-8'))
     except:
-        data = {"command": "ADD", "userId": userId, "cash": request.form['cash'].decode('utf-8'), "lineNum": None}
+        data = {"command": "ADD", "userId": userId, "cash": -1, "lineNum": None}
         sendtoQueue(data)
         return "Can't convert Value to float" , request.form['cash'].decode('utf-8')
     data = {"command": "SET_BUY_TRIGGER", "userId": userId, "stockSymbol": stockSymbol, "cash": cash, "lineNum": lineNum}
@@ -138,7 +138,7 @@ def setSellAmount(userId, stockSymbol):
     try:
         cash = float(request.form['cash'].decode('utf-8'))
     except:
-        data = {"command": "ADD", "userId": userId, "cash": request.form['cash'].decode('utf-8'), "lineNum": None}
+        data = {"command": "ADD", "userId": userId, "cash": -1, "lineNum": None}
         sendtoQueue(data)
         return "Can't convert Value to float" , request.form['cash'].decode('utf-8')
     data = {"command": "SET_SELL_AMOUNT", "userId": userId, "stockSymbol": stockSymbol, "cash": cash, "lineNum": lineNum}
@@ -152,7 +152,7 @@ def setSellTrigger(userId, stockSymbol):
     try:
         cash = float(request.form['cash'].decode('utf-8'))
     except:
-        data = {"command": "ADD", "userId": userId, "cash": request.form['cash'].decode('utf-8'), "lineNum": None}
+        data = {"command": "ADD", "userId": userId, "cash": -1, "lineNum": None}
         sendtoQueue(data)
         return "Can't convert Value to float" , request.form['cash'].decode('utf-8')
     data = {"command": "SET_SELL_TRIGGER", "userId": userId, "stockSymbol": stockSymbol, "cash": cash, "lineNum": lineNum}
