@@ -100,23 +100,11 @@ def on_request(ch, method, props, body):
     payload["quote"] = quote["value"]
     payload["cryptoKey"] = quote["cryptoKey"]
     print "sending back:", payload
-
+    transactionServerID = payload["trans"]
     # Need to figure out which transaction server to send back to.
-    # transactionClient = RabbitMQClient( )
-    # transactionClient.send(payload)
-    try:
-        priority = 2
-        properties = pika.BasicProperties(
-            priority=priority,
-            reply_to='amq.rabbitmq.reply-to'
-        )
-        ch.basic_publish('',
-                         routing_key=properties.reply_to,
-                         properties=properties,
-                         body=json.dumps(payload)
-                         )
-    except:
-        print "Couldn't reach transaction "
+    transactionClient = RabbitMQClient(transactionServerID)
+    transactionClient.send(payload)
+
 
 if __name__ == '__main__':
     print "starting QuoteServer"
