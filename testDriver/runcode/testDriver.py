@@ -3,12 +3,14 @@ import requests
 import asyncio
 import sys
 
+# Worker machines IP:Port
 workerMap = [["http://142.104.91.144:44424" , 0] ,["http://142.104.91.145:44424",0]
              ,["http://142.104.91.146:44424" , 0],["http://142.104.91.147:44424" , 0]
              ,["http://142.104.91.148:44424" , 0],["http://142.104.91.149:44424" , 0]
              ,["http://142.104.91.150:44424" , 0], ["http://142.104.91.130:44424" , 0]
              ,["http://142.104.91.132:44424", 0] ,["http://142.104.91.133:44424", 0]
             , ["http://142.104.91.134:44424", 0]]
+# User to Worker Mapping.
 userMap = {}
 
 urls = {
@@ -109,13 +111,14 @@ async def sendRequests(userCommandList):
     for command in userCommandList:
         await asyncio.ensure_future( send(command['command'], command['args'], command['lineNum']) )
 
-def splitUsersFromFile():
+def splitUsersFromFile(file):
     userActions = {}
     lastLineNumber = -1
-    with open(sys.argv[1]) as f:
-        count = 0
-        finished = False
+    count = 0
+    finished = False
+    with open(file) as f:
         for line in f:
+
             if count > 9999:
                 break
             splitLine = line.split(" ")
@@ -136,15 +139,17 @@ def splitUsersFromFile():
                 if username not in userActions.keys():
                     userActions[username] = []
                 userActions[username].append({'command': command, 'args': args, 'lineNum': lineNumber})
-                finished = True
+    # when file is complete
+    finished = True
 
     return userActions, lastLineNumber , finished
 
 async def main():
+    file = sys.argv[1]
     finished = False
     while finished == False:
         print('reading file...')
-        userActions, lastLineNumber  , finished = splitUsersFromFile()
+        userActions, lastLineNumber  , finished = splitUsersFromFile(file)
 
         print('sending requests...')
         processes = []
