@@ -149,7 +149,6 @@ def splitUsersFromFile(start, chunk):
 
     return userActions, True, lastLineNumber
 
-    return userActions, finished, lastLineNumber
 
 async def main():
     finished = False
