@@ -119,6 +119,7 @@ def splitUsersFromFile(start, chunk):
         for line in f:
             if count < start:
                 # apparently python file reading is already lazy, so hopefully by skipping the lines, it will be alright
+                count += 1
                 continue
             elif count >= readAmount:
                 # TODO: check logic, that it is hitting all requests, and not cutting one short?
