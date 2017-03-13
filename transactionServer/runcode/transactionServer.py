@@ -99,7 +99,7 @@ def handleCommandQuote(args):
 
     quote = args.get("quote")
     cryptoKey = args.get("cryptoKey")
-
+    args["trans"] = RabbitMQClient.TRANSACTION
     if (quote is not None) and cryptoKey:
         print "Quote return: ", args
         return args
@@ -162,6 +162,7 @@ def handleCommandCommitBuy(args):
             databaseFunctions.createCommitBuyRequest(command, userId, buy, quote, transactionNum)
         )
     elif buy is not None:
+        args["trans"] = RabbitMQClient.TRANSACTION
         quoteClient.send(
             createQuoteRequest(userId, buy["symbol"], transactionNum, args)
         )
@@ -224,6 +225,7 @@ def handleCommandCommitSell(args):
         )
     elif sell is not None:
         # have the sell, need to get a quote
+        args["trans"] = RabbitMQClient.TRANSACTION
         quoteClient.send(
             createQuoteRequest(userId, sell["symbol"], lineNum, args)
         )
@@ -464,6 +466,10 @@ def delegate(ch , method, properties, body):
                     )
                     # Log User Command Call
                     auditClient.send(requestBody)
+
+            # Sanitizing for Negative values of cash
+            if args.get("cash") != None and args.get("cash") > 0:
+                create_response(501, "function not allowed" + str(args))
 
             function = functionSwitch.get(args["command"])
             if function:

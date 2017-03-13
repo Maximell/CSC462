@@ -3,6 +3,7 @@ import socket
 import time
 import json
 from random import randint
+import pika
 from rabbitMQSetups import RabbitMQClient, RabbitMQReceiver
 from mqAuditServer import auditFunctions
 
@@ -99,7 +100,9 @@ def on_request(ch, method, props, body):
     payload["quote"] = quote["value"]
     payload["cryptoKey"] = quote["cryptoKey"]
     print "sending back:", payload
-
+    transactionServerID = payload["trans"]
+    # Need to figure out which transaction server to send back to.
+    transactionClient = RabbitMQClient(transactionServerID)
     transactionClient.send(payload)
 
 
@@ -108,7 +111,7 @@ if __name__ == '__main__':
     quoteServer = Quotes()
 
     auditClient = RabbitMQClient(RabbitMQClient.AUDIT)
-    transactionClient = RabbitMQClient(RabbitMQClient.TRANSACTION)
+    # transactionClient = RabbitMQClient(RabbitMQClient.TRANSACTION)
     print "Awaiting quote requests"
     RabbitMQReceiver(on_request, RabbitMQReceiver.QUOTE)
 
