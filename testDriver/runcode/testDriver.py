@@ -109,15 +109,21 @@ async def sendRequests(userCommandList):
     for command in userCommandList:
         await asyncio.ensure_future( send(command['command'], command['args'], command['lineNum']) )
 
-def splitUsersFromFile():
+def splitUsersFromFile(start, chunk):
     userActions = {}
     lastLineNumber = -1
+    readAmount = start + chunk
+
     with open(sys.argv[1]) as f:
         count = 0
-        finished = False
         for line in f:
-            if count > 9999:
-                break
+            if count < start:
+                # apparently python file reading is already lazy, so hopefully by skipping the lines, it will be alright
+                continue
+            elif count >= readAmount:
+                # TODO: check logic, that it is hitting all requests, and not cutting one short?
+                return userActions, False, lastLineNumber
+
             splitLine = line.split(" ")
             lineNumber = splitLine[0].strip("[]")
             lastLineNumber = lineNumber
@@ -130,21 +136,26 @@ def splitUsersFromFile():
             args[0] = args[0].strip()
 
             username = args[0]
-            count += 1
 
             if not username.startswith("./"):
                 if username not in userActions.keys():
                     userActions[username] = []
                 userActions[username].append({'command': command, 'args': args, 'lineNum': lineNumber})
-                finished = True
 
-    return userActions, lastLineNumber , finished
+            count += 1
+
+    return userActions, True, lastLineNumber
 
 async def main():
     finished = False
+
+    start = 0
+    chunk = 10000
+
     while finished == False:
         print('reading file...')
-        userActions, lastLineNumber  , finished = splitUsersFromFile()
+        userActions, finished, lastLineNumber = splitUsersFromFile(start, chunk)
+        start += chunk
 
         print('sending requests...')
         processes = []
@@ -156,10 +167,10 @@ async def main():
         for process in processes:
             await process
 
-        print("last line number was calculated to be: " + str(lastLineNumber))
-        await asyncio.ensure_future(
-            send('DUMPLOG', ['./testLOG'], lastLineNumber)
-        )
+    print("last line number was calculated to be: " + str(lastLineNumber))
+    await asyncio.ensure_future(
+        send('DUMPLOG', ['./testLOG'], lastLineNumber)
+    )
 
 
 if __name__ == '__main__':
