@@ -145,14 +145,14 @@ def splitUsersFromFile(start, chunk):
                 if username not in userActions.keys():
                     userActions[username] = []
                 userActions[username].append({'command': command, 'args': args, 'lineNum': lineNumber})
-    # when file is complete
-        finished = True
-        countt += 1
+
+            count += 1
 
     return userActions, True, lastLineNumber
 
+    return userActions, finished, lastLineNumber
+
 async def main():
-    file = sys.argv[1]
     finished = False
 
     start = 0
@@ -160,7 +160,6 @@ async def main():
 
     while finished == False:
         print('reading file...')
-        userActions, lastLineNumber  , finished = splitUsersFromFile(file)
         userActions, finished, lastLineNumber = splitUsersFromFile(start, chunk)
         start += chunk
 
