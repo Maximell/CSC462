@@ -113,7 +113,11 @@ def splitUsersFromFile():
     userActions = {}
     lastLineNumber = -1
     with open(sys.argv[1]) as f:
+        count = 0
+        finished = False
         for line in f:
+            if count > 9999:
+                break
             splitLine = line.split(" ")
             lineNumber = splitLine[0].strip("[]")
             lastLineNumber = lineNumber
@@ -126,32 +130,36 @@ def splitUsersFromFile():
             args[0] = args[0].strip()
 
             username = args[0]
+            count += 1
 
             if not username.startswith("./"):
                 if username not in userActions.keys():
                     userActions[username] = []
                 userActions[username].append({'command': command, 'args': args, 'lineNum': lineNumber})
+                finished = True
 
-    return userActions, lastLineNumber
+    return userActions, lastLineNumber , finished
 
 async def main():
-    print('reading file...')
-    userActions, lastLineNumber = splitUsersFromFile()
+    finished = False
+    while finished == False:
+        print('reading file...')
+        userActions, lastLineNumber  , finished = splitUsersFromFile()
 
-    print('sending requests...')
-    processes = []
-    for userSpecificActions in userActions:
-        processes.append(
-            asyncio.ensure_future(sendRequests(userActions[userSpecificActions]))
+        print('sending requests...')
+        processes = []
+        for userSpecificActions in userActions:
+            processes.append(
+                asyncio.ensure_future(sendRequests(userActions[userSpecificActions]))
+            )
+
+        for process in processes:
+            await process
+
+        print("last line number was calculated to be: " + str(lastLineNumber))
+        await asyncio.ensure_future(
+            send('DUMPLOG', ['./testLOG'], lastLineNumber)
         )
-
-    for process in processes:
-        await process
-
-    print("last line number was calculated to be: " + str(lastLineNumber))
-    await asyncio.ensure_future(
-        send('DUMPLOG', ['./testLOG'], lastLineNumber)
-    )
 
 
 if __name__ == '__main__':
