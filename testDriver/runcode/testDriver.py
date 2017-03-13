@@ -91,6 +91,7 @@ async def send(command, args, lineNum):
         url = base_url + urls[command] % (args['userId'], args['stockSymbol'])
         method = 'POST'
     if command in ['DUMPLOG']:
+
         url = base_url + urls[command]
         data['fileName'] = args['fileName']
         method = 'POST'
@@ -111,18 +112,6 @@ async def sendRequests(userCommandList):
     for command in userCommandList:
         await asyncio.ensure_future( send(command['command'], command['args'], command['lineNum']) )
 
-<<<<<<< HEAD
-def splitUsersFromFile(file):
-    userActions = {}
-    lastLineNumber = -1
-    count = 0
-    finished = False
-    with open(file) as f:
-        for line in f:
-
-            if count > 9999:
-                break
-=======
 def splitUsersFromFile(start, chunk):
     userActions = {}
     lastLineNumber = -1
@@ -139,7 +128,6 @@ def splitUsersFromFile(start, chunk):
                 # TODO: check logic, that it is hitting all requests, and not cutting one short?
                 return userActions, False, lastLineNumber
 
->>>>>>> 7385dcfb01ed4831bb151d0dbc98867ec9a88f62
             splitLine = line.split(" ")
             lineNumber = splitLine[0].strip("[]")
             lastLineNumber = lineNumber
@@ -157,13 +145,9 @@ def splitUsersFromFile(start, chunk):
                 if username not in userActions.keys():
                     userActions[username] = []
                 userActions[username].append({'command': command, 'args': args, 'lineNum': lineNumber})
-<<<<<<< HEAD
     # when file is complete
-    finished = True
-=======
->>>>>>> 7385dcfb01ed4831bb151d0dbc98867ec9a88f62
-
-            count += 1
+        finished = True
+        countt += 1
 
     return userActions, True, lastLineNumber
 
@@ -176,12 +160,9 @@ async def main():
 
     while finished == False:
         print('reading file...')
-<<<<<<< HEAD
         userActions, lastLineNumber  , finished = splitUsersFromFile(file)
-=======
         userActions, finished, lastLineNumber = splitUsersFromFile(start, chunk)
         start += chunk
->>>>>>> 7385dcfb01ed4831bb151d0dbc98867ec9a88f62
 
         print('sending requests...')
         processes = []
