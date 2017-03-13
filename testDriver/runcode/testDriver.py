@@ -91,7 +91,6 @@ async def send(command, args, lineNum):
         url = base_url + urls[command] % (args['userId'], args['stockSymbol'])
         method = 'POST'
     if command in ['DUMPLOG']:
-
         url = base_url + urls[command]
         data['fileName'] = args['fileName']
         method = 'POST'
@@ -145,14 +144,12 @@ def splitUsersFromFile(start, chunk):
                 if username not in userActions.keys():
                     userActions[username] = []
                 userActions[username].append({'command': command, 'args': args, 'lineNum': lineNumber})
-    # when file is complete
-        finished = True
-        countt += 1
+
+            count += 1
 
     return userActions, True, lastLineNumber
 
 async def main():
-    file = sys.argv[1]
     finished = False
 
     start = 0
@@ -160,7 +157,6 @@ async def main():
 
     while finished == False:
         print('reading file...')
-        userActions, lastLineNumber  , finished = splitUsersFromFile(file)
         userActions, finished, lastLineNumber = splitUsersFromFile(start, chunk)
         start += chunk
 
