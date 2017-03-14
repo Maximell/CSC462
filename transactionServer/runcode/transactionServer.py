@@ -25,6 +25,7 @@ def handleCommandQuote(args):
         print "Quote return: ", args
         return args
     else:
+        args["trans"] = RabbitMQClient.TRANSACTION
         quoteClient.send(
             createQuoteRequest(userId, symbol, lineNum, args)
         )
@@ -352,7 +353,6 @@ def delegate(ch , method, properties, body):
             args["command"],
             error
         )
-        # TODO: errors currently arent finished on audit, and arent needed for submissions
         # auditClient.send(requestBody)
 
         returnClient = RabbitMQClient(queueName=RabbitMQClient.WEB + str(args['lineNum']))
@@ -362,7 +362,6 @@ def delegate(ch , method, properties, body):
         )
         print "error sent to webserver"
         returnClient.close()
-        # TODO: return this ^ to the webserver (through a rabbitClient)
     else:
         try:
             # send command to audit, if it is from web server
@@ -395,9 +394,12 @@ def delegate(ch , method, properties, body):
                     auditClient.send(requestBody)
 
             # Sanitizing for Negative values of cash
-            # TODO: return to webserver
             if args.get("cash") != None and args.get("cash") > 0:
-                create_response(501, "function not allowed" + str(args))
+                returnClient = RabbitMQClient(queueName=RabbitMQClient.WEB + str(args['lineNum']))
+                returnClient.send(
+                    create_response(400, "invalid arguments" + str(args))
+                )
+                returnClient.close()
 
             function = functionSwitch.get(args["command"])
             if function:
@@ -430,7 +432,6 @@ def delegate(ch , method, properties, body):
                 args["command"],
                 str(error)
             )
-            # TODO: same not sending error reason
             # auditClient.send(requestBody)
             returnClient = RabbitMQClient(queueName=RabbitMQClient.WEB+str(args['lineNum']))
             returnClient.send(

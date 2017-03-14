@@ -110,7 +110,7 @@ def on_request(ch, method, props, body):
     # Need to figure out which transaction server to send back to.
     transactionClient = RabbitMQClient(transactionServerID)
     if quoteServer.count % 50 == 0:
-        transactionClient.send(payload , processEvents=True)
+        transactionClient.send(payload, processEvents=True)
     else:
         transactionClient.send(payload)
     quoteServer.count += 1
