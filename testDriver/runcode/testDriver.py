@@ -91,7 +91,6 @@ async def send(command, args, lineNum):
         url = base_url + urls[command] % (args['userId'], args['stockSymbol'])
         method = 'POST'
     if command in ['DUMPLOG']:
-
         url = base_url + urls[command]
         data['fileName'] = args['fileName']
         method = 'POST'
