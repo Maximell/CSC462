@@ -1,5 +1,7 @@
-# This script is just to a test to start the servers
+# This script is just to start the servers
 # This script should be inside the transactionsServer/runcode dir
+# Right now the host computer will be B142.
+
 import os
 import sys
 
@@ -13,10 +15,6 @@ if __name__ == '__main__':
         os.system("python -u mqQuoteServer.py > quoteOutput.txt &")
     except:
         print "quote server failed to start"
-    try:
-        os.system("python3.5 ../../testDriver/runcode/testDriver.py " + str(sys.argv[1]))
-    except:
-        print "test driver failed to start"
 
 
 
