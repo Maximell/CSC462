@@ -8,6 +8,7 @@ from rabbitMQSetups import RabbitMQClient, RabbitMQReceiver
 from mqAuditServer import auditFunctions
 
 
+
 def createQuoteRequest(userId, stockSymbol, lineNum, args):
     args.update({"userId": userId, "stockSymbol": stockSymbol, "lineNum": lineNum})
     return args
@@ -18,6 +19,7 @@ class Quotes():
         self.cacheExpire = cacheExpire
         self.quoteCache = {}
         self.testing = testing
+        self.count = 0
 
     def getQuote(self, symbol, user, transactionNum):
         self._testPrint(True, "current cache state: ", self.quoteCache)
@@ -85,6 +87,7 @@ class Quotes():
         print self.quoteCache
 
 
+
 def on_request(ch, method, props, body):
     # expected body: {symbol, userId, transactionNum}
     payload = json.loads(body)
@@ -103,8 +106,11 @@ def on_request(ch, method, props, body):
     transactionServerID = payload["trans"]
     # Need to figure out which transaction server to send back to.
     transactionClient = RabbitMQClient(transactionServerID)
-    transactionClient.send(payload)
-
+    if quoteServer.count % 50 == 0:
+        transactionClient.send(payload , processEvents=True)
+    else:
+        transactionClient.send(payload)
+    quoteServer.count += 1
 
 if __name__ == '__main__':
     print "starting QuoteServer"
