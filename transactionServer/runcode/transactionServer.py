@@ -83,6 +83,7 @@ def handleCommandCommitBuy(args):
             databaseFunctions.createCommitBuyRequest(command, userId, buy, quote, transactionNum)
         )
     elif buy is not None:
+        args["trans"] = RabbitMQClient.TRANSACTION
         quoteClient.send(
             createQuoteRequest(userId, buy["symbol"], transactionNum, args)
         )
@@ -136,26 +137,21 @@ def handleCommandCommitSell(args):
     updatedUser = args.get("updatedUser")
     quote = args.get("quote")
 
-    errorString = args.get("errorString")
-
-    if updatedUser is not None or errorString:
-        print "returning args"
+    if updatedUser is not None:
         return args
     elif (sell is not None) and (quote is not None):
         # this is where we commit the sell
-        print "committing the sell"
         databaseClient.send(
             databaseFunctions.createCommitSellRequest(command, userId, lineNum, sell, quote)
         )
     elif sell is not None:
         # have the sell, need to get a quote
-        print "have sell, need to get quote"
+        args["trans"] = RabbitMQClient.TRANSACTION
         quoteClient.send(
             createQuoteRequest(userId, sell["symbol"], lineNum, args)
         )
     else:
         # this is where we need to go to the pop endpoint
-        print "going to pop endpoint"
         databaseClient.send(
             databaseFunctions.createPopSellRequest(command, userId, lineNum)
         )
@@ -356,7 +352,8 @@ def delegate(ch , method, properties, body):
             args["command"],
             error
         )
-        auditClient.send(requestBody)
+        # TODO: errors currently arent finished on audit, and arent needed for submissions
+        # auditClient.send(requestBody)
 
         returnClient = RabbitMQClient(queueName=RabbitMQClient.WEB + str(args['lineNum']))
         print "sending error back to webserver on queue: ", RabbitMQClient.WEB + str(args['lineNum'])
@@ -397,6 +394,11 @@ def delegate(ch , method, properties, body):
                     # Log User Command Call
                     auditClient.send(requestBody)
 
+            # Sanitizing for Negative values of cash
+            # TODO: return to webserver
+            if args.get("cash") != None and args.get("cash") > 0:
+                create_response(501, "function not allowed" + str(args))
+
             function = functionSwitch.get(args["command"])
             if function:
                 # if a function is complete, it should return a response to send back to web server
@@ -428,7 +430,8 @@ def delegate(ch , method, properties, body):
                 args["command"],
                 str(error)
             )
-            auditClient.send(requestBody)
+            # TODO: same not sending error reason
+            # auditClient.send(requestBody)
             returnClient = RabbitMQClient(queueName=RabbitMQClient.WEB+str(args['lineNum']))
             returnClient.send(
                 create_response(500, args)

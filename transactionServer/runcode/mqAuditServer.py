@@ -406,7 +406,9 @@ def on_request(ch, method, props, body):
 
 if __name__ == '__main__':
     print "starting AuditServer"
+
     auditServer = AuditServer()
+
 
     handleFunctionSwitch = {
         auditFunctions.USER_COMMAND: handleUserCommand,

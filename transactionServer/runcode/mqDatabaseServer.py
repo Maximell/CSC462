@@ -686,8 +686,9 @@ if __name__ == '__main__':
         databaseFunctions.BUY_TRIGGER: handleTriggerBuy,
         databaseFunctions.SELL_TRIGGER: handleTriggerSell,
     }
-
+    # Object to send back to Transaction client
     transactionClient = RabbitMQClient(RabbitMQClient.TRANSACTION)
 
     print("awaiting database requests")
+    # Object to listen for the Database
     RabbitMQReceiver(on_request, RabbitMQReceiver.DATABASE)

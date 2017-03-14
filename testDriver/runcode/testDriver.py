@@ -3,6 +3,16 @@ import requests
 import asyncio
 import sys
 
+# Worker machines IP:Port
+workerMap = [["http://142.104.91.144:44424" , 0] ,["http://142.104.91.145:44424",0]
+             ,["http://142.104.91.146:44424" , 0],["http://142.104.91.147:44424" , 0]
+             ,["http://142.104.91.148:44424" , 0],["http://142.104.91.149:44424" , 0]
+             ,["http://142.104.91.150:44424" , 0], ["http://142.104.91.130:44424" , 0]
+             ,["http://142.104.91.132:44424", 0] ,["http://142.104.91.133:44424", 0]
+            , ["http://142.104.91.134:44424", 0]]
+# User to Worker Mapping.
+userMap = {}
+
 urls = {
     'ADD': '/add/%s/',
     'BUY': '/buy/%s/%s/',
@@ -22,7 +32,28 @@ urls = {
     'DISPLAY_SUMMARY': '/display-summary/%s/'
 }
 
-def send(command, args, lineNum):
+async def send(command, args, lineNum):
+    user = args[0]
+    if user in userMap:
+        base_url = userMap[user]
+        print("In dict already")
+    else:
+        min = workerMap[0][1]
+        index = 0
+        for x in range(0 , len(workerMap)):
+            currentWorker = workerMap[x]
+            if currentWorker[1] <= min:
+                sendto = currentWorker
+                index = x
+                min = currentWorker[1]
+        if sendto != None:
+            print("adding User to map")
+            userMap[user] = sendto[0]
+            base_url = sendto[0]
+            workerMap[index][1] += 1
+
+        else:
+            print("problem with sending the workers")
 
     url = base_url
     data = {'lineNum': lineNum}
@@ -79,52 +110,88 @@ def send(command, args, lineNum):
 
 async def sendRequests(userCommandList):
     for command in userCommandList:
-        send(command['command'], command['args'], command['lineNum'])
+        await asyncio.ensure_future( send(command['command'], command['args'], command['lineNum']) )
 
-def splitUsersFromFile():
+def splitUsersFromFile(start, chunk):
     userActions = {}
-    with open(sys.argv[2]) as f:
+    lastLineNumber = -1
+    readAmount = start + chunk
+
+    with open(sys.argv[1]) as f:
+        count = 0
         for line in f:
+            if count < start:
+                # apparently python file reading is already lazy, so hopefully by skipping the lines, it will be alright
+                count += 1
+                continue
+            elif count >= readAmount:
+                # TODO: check logic, that it is hitting all requests, and not cutting one short?
+                return userActions, False, lastLineNumber
+
             splitLine = line.split(" ")
             lineNumber = splitLine[0].strip("[]")
+            lastLineNumber = lineNumber
 
             commandAndArgs = splitLine[1].split(",")
 
             command = commandAndArgs[0]
             args = commandAndArgs[1:]
+            # separate based on username and 'x' != 'x\n' which was happening a lot
+            args[0] = args[0].strip()
 
             username = args[0]
+
             if not username.startswith("./"):
                 if username not in userActions.keys():
                     userActions[username] = []
                 userActions[username].append({'command': command, 'args': args, 'lineNum': lineNumber})
 
-    return userActions
+            count += 1
+
+    return userActions, True, lastLineNumber
+
 
 async def main():
-    print('reading file...')
-    userActions = splitUsersFromFile()
-    print('sending requests...')
-    for userSpecificActions in userActions:
-        asyncio.ensure_future( sendRequests( userActions[userSpecificActions] ) )
+    finished = False
+
+    start = 0
+    chunk = 10000
+
+    while finished == False:
+        print('reading file...')
+        userActions, finished, lastLineNumber = splitUsersFromFile(start, chunk)
+        start += chunk
+
+        print('sending requests...')
+        processes = []
+        for userSpecificActions in userActions:
+            processes.append(
+                asyncio.ensure_future(sendRequests(userActions[userSpecificActions]))
+            )
+
+        for process in processes:
+            await process
+
+    print("last line number was calculated to be: " + str(lastLineNumber))
+    await asyncio.ensure_future(
+        send('DUMPLOG', ['./testLOG'], lastLineNumber)
+    )
 
 
 if __name__ == '__main__':
-    if len(sys.argv) < 3:
+    if len(sys.argv) < 2:
         print('INCORRECT PARAMETERS\n')
-        print('python3 testDriver.py <url> <file>')
-        print('example: python3 testDriver.py http://localhost:8000 2userWorkLoad.txt')
+        print('python3 testDriver.py <file>')
+        print('example: python3 testDriver.py 2userWorkLoad.txt')
         print(sys.argv)
     else:
-        # get last line number. if file cant fit in memory, this will break. how large a file can fit in memory?
-        lastLine = next(reversed(open(sys.argv[2]).readlines()))
-        lastLineNumber = lastLine.split(" ")[0].strip("[]")
+        base_url = None
 
-        base_url = sys.argv[1]
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(main())
+        loop.run_until_complete(
+            main()
+        )
         loop.close()
-        print("last line number was calculated to be: "+str(lastLineNumber))
-        send('DUMPLOG', ['./testLOG-test'], lastLineNumber)
+
         print('completed')
 		
