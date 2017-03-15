@@ -102,6 +102,8 @@ def on_request(ch, method, props, body):
 
     payload["quote"] = quote["value"]
     payload["cryptoKey"] = quote["cryptoKey"]
+    payload["quoteRetrieved"] = quote["retrieved"]
+
     print "sending back:", payload
     transactionServerID = payload["trans"]
     # Need to figure out which transaction server to send back to.

@@ -10,7 +10,6 @@ from mqQuoteServer import createQuoteRequest
 from mqTriggers import TriggerFunctions
 from mqAuditServer import auditFunctions
 
-
 # new RPC Database client using rabbitMQ
 class DatabaseRpcClient(object):
     def __init__(self):
@@ -90,6 +89,35 @@ class TriggerRpcClient(object):
         return self.response
 
 
+# quote shape: symbol: {value: string, retrieved: epoch time, user: string, cryptoKey: string}
+class Quotes():
+    def __init__(self, cacheExpire=60):
+        self.cacheExpire = cacheExpire
+        self.quoteCache = {}
+
+    def getQuote(self, symbol):
+        cache = self.quoteCache.get(symbol)
+        if cache:
+            if self._cacheIsActive(cache):
+                return cache
+        return None
+
+    def cacheQuote(self, symbol, retrieved, value):
+        self.quoteCache[symbol] = {"retrieved": retrieved, "value": value}
+
+    def useCache(self, quote, symbol, retrieved):
+        if quote is not None:
+            self.cacheQuote(symbol, retrieved, quote)
+        else:
+            localQuote = self.getQuote(symbol)
+            if localQuote is not None:
+                quote = localQuote["value"]
+        return quote
+
+    def _cacheIsActive(self, quote):
+        return (int(quote.get('retrieved', 0)) + self.cacheExpire) > int(time.time())
+
+
 # From webServer: {"transactionNum": lineNum, "command": "QUOTE", "userId": userId, "stockSymbol": stockSymbol}
 # From quoteServer: + "quote:, "cryptoKey"
 def handleCommandQuote(args):
@@ -97,10 +125,14 @@ def handleCommandQuote(args):
     userId = args["userId"]
     lineNum = args["lineNum"]
 
-    quote = args.get("quote")
-    cryptoKey = args.get("cryptoKey")
+    quote = localQuoteCache.useCache(
+        args.get("quote"),
+        symbol,
+        args.get("quoteRetrieved")
+    )
+
     args["trans"] = RabbitMQClient.TRANSACTION
-    if (quote is not None) and cryptoKey:
+    if quote is not None:
         print "Quote return: ", args
         return args
     else:
@@ -152,8 +184,14 @@ def handleCommandCommitBuy(args):
     transactionNum = args["lineNum"]
 
     buy = args.get("buy")
-    quote = args.get("quote")
     updatedUser = args.get("updatedUser")
+
+    if buy is not None:
+        quote = localQuoteCache.useCache(
+            args.get("quote"),
+            buy["symbol"],
+            args.get("quoteRetrieved")
+        )
 
     if updatedUser is not None:
         return args
@@ -214,7 +252,12 @@ def handleCommandCommitSell(args):
 
     sell = args.get("sell")
     updatedUser = args.get("updatedUser")
-    quote = args.get("quote")
+    if sell is not None:
+        quote = localQuoteCache.useCache(
+            args.get("quote"),
+            sell["symbol"],
+            args.get("quoteRetrieved")
+        )
 
     if updatedUser is not None:
         return args
@@ -501,6 +544,8 @@ def delegate(ch , method, properties, body):
 
 if __name__ == '__main__':
     print "starting TransactionServer"
+
+    localQuoteCache = Quotes()
 
     functionSwitch = {
         "QUOTE": handleCommandQuote,
