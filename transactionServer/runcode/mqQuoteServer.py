@@ -97,7 +97,9 @@ def on_request(ch, method, props, body):
     userId = payload["userId"]
     lineNum = payload["lineNum"]
 
-    quote = quoteServer.getQuote(symbol, userId, lineNum)
+    # TODO: bring this back, temp check for why quoteServer is failing
+    # quote = quoteServer.getQuote(symbol, userId, lineNum)
+    quote = {"value": 10, "cryptoKey": 'abc', "retrieved": int(time.time())}
     print "quote: ", quote
 
     payload["quote"] = quote["value"]
