@@ -19,6 +19,8 @@ echo killing RMQmanager
 docker kill RMQmanager
 echo starting RMQmanager
 docker start RMQmanager
+echo sleeping for 5 seconds so RMQmanager has time to boot
+sleep 5
 echo starting host servers
 python startHostServers.py
 
@@ -26,6 +28,7 @@ echo finished local configuration
 
 # Do the configuration on the worker machines
 echo attempting to configure workers
+echo changing to the runcode directory
 pssh -h workersHostFile.txt cd Desktop/seng462/CSC462/transactionServer/runcode
 echo getting latest code
 pssh -h workersHostFile.txt git pull
@@ -41,7 +44,6 @@ sleep 5
 echo done waiting
 
 if $1 then
-    #start the testDriver
     python3.5 runWorkload $1
 else
     echo This script must be run with the workload file as a parameter
