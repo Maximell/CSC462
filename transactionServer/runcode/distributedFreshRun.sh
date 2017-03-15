@@ -12,4 +12,4 @@
 git pull
 
 # Do the configuration on the worker machines
-pssh -h workersHostFile.txt ls
+pssh -h workersHostFile.txt cd Desktop/seng462/CSC462/transactionServer/runcode
