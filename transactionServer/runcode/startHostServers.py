@@ -6,7 +6,7 @@ import os
 import sys
 
 if __name__ == '__main__':
-    # start transaction server
+    # start audit server and quote server
     try:
         os.system("python -u mqAuditServer.py > auditOutput.txt &")
     except:
@@ -15,7 +15,3 @@ if __name__ == '__main__':
         os.system("python -u mqQuoteServer.py > quoteOutput.txt &")
     except:
         print "quote server failed to start"
-
-
-
-    #os.system("killall python")
