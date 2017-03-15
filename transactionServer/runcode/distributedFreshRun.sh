@@ -20,7 +20,7 @@ docker kill RMQmanager
 echo starting RMQmanager
 docker start RMQmanager
 echo starting host servers
-./startHostServers.py
+python startHostServers.py
 
 echo finished local configuration
 
@@ -42,7 +42,7 @@ echo done waiting
 
 if $1 then
     #start the testDriver
-    ./runWorkload $1
+    python3.5 runWorkload $1
 else
     echo This script must be run with the workload file as a parameter
 fi
