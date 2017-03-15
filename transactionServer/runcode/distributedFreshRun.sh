@@ -43,7 +43,7 @@ echo waiting for 5 seconds to make sure everything has started
 sleep 5
 echo done waiting
 
-if $1 then
+if [ $1 ] then
     python3.5 runWorkload $1
 else
     echo This script must be run with the workload file as a parameter
