@@ -100,11 +100,7 @@ class Quotes():
         self.pool = {}
 
 
-    def getQuote(self, payload):
-        symbol = payload["stockSymbol"]
-        user = payload["userId"]
-        transactionNum = payload["lineNum"]
-
+    def getQuote(self, symbol , user , transactionNum):
         cache = self.quoteCache.get(symbol)
         if cache:
             if self._cacheIsActive(cache):
