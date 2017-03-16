@@ -83,7 +83,9 @@ class getQuoteThread(Thread):
             newQuote['value'],
             newQuote['cryptoKey']
         )
-        auditClient.send(requestBody)
+        print "built request: ",requestBody
+        # auditClient.send(requestBody)
+        # print
         #     TODO might have to lock between all threads
         # if not self.cacheLock.locked():
 
