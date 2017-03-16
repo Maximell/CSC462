@@ -4,6 +4,8 @@ import time
 import json
 from random import randint
 import pika
+from threading import Thread
+import threading
 from rabbitMQSetups import RabbitMQClient, RabbitMQReceiver
 from mqAuditServer import auditFunctions
 
@@ -13,53 +15,126 @@ def createQuoteRequest(userId, stockSymbol, lineNum, args):
     args.update({"userId": userId, "stockSymbol": stockSymbol, "lineNum": lineNum})
     return args
 
+class poolHandler(Thread):
+    def __init__(self):
+        self.daemon = True
+        self.curCacheSize = len(quoteServer.quoteCache)
+        self.start()
+    def run(self):
+        while(True):
+#         look between pool of requests
+#          and the cache size.
+            if len(quoteServer.quoteCache) != self.curCacheSize:
+                self.curCacheSize = len(quoteServer.quoteCache)
+                for sym in quoteServer.pool:
+                    quote = quoteServer.quoteCache.get(sym)
+                    if quote is not None:
+                        for payload in quoteServer.pool[sym]:
+                            # if payload sym in cache
+                            payload["quote"] = quote["value"]
+                            payload["cryptoKey"] = quote["cryptoKey"]
+                            payload["quoteRetrieved"] = quote["retrieved"]
+
+                            print "sending back:", payload
+                            transactionServerID = payload["trans"]
+                            # Need to figure out which transaction server to send back to.
+                            transactionClient = RabbitMQClient(transactionServerID)
+                            transactionClient.send(payload)
+                        quoteServer.pool[sym] = []
+
+
+
+
+
+
+
+
+
+class getQuoteThread(Thread):
+    def __init__(self , symbol , user , transactionNum , portNum):
+        Thread.__init__(self)
+        self.cacheLock = threading.Lock()
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.daemon = True
+        # package to go to quote server
+        self.symbol = symbol
+        self.userId = user
+        self.transactionNum = transactionNum
+        self.portNum  = portNum
+        self.start()
+
+    def run(self):
+        request = self.symbol + "," + self.userId + "\n"
+        self.socket.connect(('quoteserve.seng.uvic.ca', self.portNum ))
+        self.socket.send(request)
+        data = self.socket.recv(1024)
+        self.socket.close()
+        # reset port to 0
+        quoteServer.quotePorts[self.port] = 0
+        quoteServer.MaxThreads += 1
+
+        newQuote = self._quoteStringToDictionary(data)
+        requestBody = auditFunctions.createQuoteServer(
+            int(time.time() * 1000),
+            "quoteServer",
+            self.transactionNum,
+            self.userId,
+            newQuote['serverTime'],
+            self.symbol,
+            newQuote['value'],
+            newQuote['cryptoKey']
+        )
+        auditClient.send(requestBody)
+        #     TODO might have to lock between all threads
+        # if not self.cacheLock.locked():
+
+        self.cacheLock.acquire()
+        quoteServer.quoteCache[self.symbol] = newQuote
+        del quoteServer.inflight[quoteServer.inflight.index(self.symbol)]
+        self.cacheLock.release()
+
+
 # quote shape: symbol: {value: string, retrieved: epoch time, user: string, cryptoKey: string}
 class Quotes():
-    def __init__(self, cacheExpire=60, testing=False):
+    def __init__(self, cacheExpire=60, ):
         self.cacheExpire = cacheExpire
         self.quoteCache = {}
-        self.testing = testing
-        self.count = 0
+        self.inflight = []
+        self.MaxThreads = 10
+        self.quotePorts = {44451:0,44452:0,44453:0,44454:0,44455:0,44456:0,44457:0,44458:0,44459:0}
+        self.pool = {}
 
-    def getQuote(self, symbol, user, transactionNum):
-        self._testPrint(True, "current cache state: ", self.quoteCache)
+
+    def getQuote(self, payload):
+        symbol = payload["stockSymbol"]
+        user = payload["userId"]
+        transactionNum = payload["lineNum"]
 
         cache = self.quoteCache.get(symbol)
         if cache:
             if self._cacheIsActive(cache):
-                self._testPrint(False, "from cache")
                 return cache
-            self._testPrint(False, "expired cache")
-        return self._hitQuoteServerAndCache(symbol, user, transactionNum)
+        self._hitQuoteServerAndCache(symbol, user, transactionNum)
+        return None
 
     def _hitQuoteServerAndCache(self, symbol, user, transactionNum):
-        self._testPrint(False, "not from cache")
-        request = symbol + "," + user + "\n"
+        # run new quote thread
+        if symbol in self.inflight:
+            return
 
-        if self.testing:
-            data = self._mockQuoteServer(request)
-            newQuote = self._quoteStringToDictionary(data)
-        else:
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.connect(('quoteserve.seng.uvic.ca', 4445))
-            s.send(request)
-            data = s.recv(1024)
-            s.close()
-            newQuote = self._quoteStringToDictionary(data)
-            requestBody = auditFunctions.createQuoteServer(
-                int(time.time() * 1000),
-                "quoteServer",
-                transactionNum,
-                user,
-                newQuote['serverTime'],
-                symbol,
-                newQuote['value'],
-                newQuote['cryptoKey']
-            )
-            auditClient.send(requestBody)
+        while(self.MaxThreads == 0):
+            # loop while all threads are taken
+            pass
+        for port in self.quotePorts:
+            if self.quotePorts[port] == 0:
+                getQuoteThread(symbol , user , transactionNum, port)
+                self.quotePorts[port] = 1
+                self.inflight.append(symbol)
+                self.MaxThreads -= 1
+                break
+        # added sym to quoteserver.inflight
 
-        self.quoteCache[symbol] = newQuote
-        return newQuote
+
 
     def _quoteStringToDictionary(self, quoteString):
         # "quote, sym, userId, timeStamp, cryptokey\n"
@@ -76,15 +151,15 @@ class Quotes():
         quoteArray = [randint(0, 50), symbol, user, int(time.time()), "cryptokey" + repr(randint(0, 50))]
         return ','.join(map(str, quoteArray))
 
-    def _testPrint(self, newLine, *args):
-        if self.testing:
-            for arg in args:
-                print arg,
-            if newLine:
-                print
 
     def _printQuoteCacheState(self):
         print self.quoteCache
+    def addRequestToPool(self, payload):
+        symbol = payload["stockSymbol"]
+        if self.pool.get(symbol) is None:
+            self.pool[symbol] = []
+        self.pool[symbol].append(payload)
+
 
 
 
@@ -98,8 +173,14 @@ def on_request(ch, method, props, body):
     lineNum = payload["lineNum"]
 
     # TODO: bring this back, temp check for why quoteServer is failing
-    # quote = quoteServer.getQuote(symbol, userId, lineNum)
-    quote = {"value": 10, "cryptoKey": 'abc', "retrieved": int(time.time())}
+    quote = quoteServer.getQuote(symbol, userId, lineNum)
+    # quote = {"value": 10, "cryptoKey": 'abc', "retrieved": int(time.time())}
+
+#     go in pool
+    if quote is None:
+        quoteServer.addRequestToPool(payload)
+        return None
+
     print "quote: ", quote
 
     payload["quote"] = quote["value"]
@@ -110,15 +191,12 @@ def on_request(ch, method, props, body):
     transactionServerID = payload["trans"]
     # Need to figure out which transaction server to send back to.
     transactionClient = RabbitMQClient(transactionServerID)
-    if quoteServer.count % 50 == 0:
-        transactionClient.send(payload , processEvents=True)
-    else:
-        transactionClient.send(payload)
-    quoteServer.count += 1
+    transactionClient.send(payload)
 
 if __name__ == '__main__':
     print "starting QuoteServer"
     quoteServer = Quotes()
+    poolHandler()
 
     auditClient = RabbitMQClient(RabbitMQClient.AUDIT)
     # transactionClient = RabbitMQClient(RabbitMQClient.TRANSACTION)
