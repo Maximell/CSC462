@@ -57,7 +57,7 @@ class getQuoteThread(Thread):
         self.userId = user
         self.transactionNum = transactionNum
         self.portNum  = portNum
-        self.start()
+        # self.start()
 
     def run(self):
         request = self.symbol + "," + self.userId + "\n"
@@ -85,11 +85,11 @@ class getQuoteThread(Thread):
         #     TODO might have to lock between all threads
         # if not self.cacheLock.locked():
 
-        self.cacheLock.acquire()
+        # self.cacheLock.acquire()
         quoteServer.quoteCache[self.symbol] = newQuote
         del quoteServer.inflight[quoteServer.inflight.index(self.symbol)]
-        self.cacheLock.release()
-        self.is_alive = False
+        # self.cacheLock.release()
+
 
 
 # quote shape: symbol: {value: string, retrieved: epoch time, user: string, cryptoKey: string}
@@ -124,7 +124,8 @@ class Quotes():
         for port in self.quotePorts:
             if self.quotePorts[port] == 0:
                 print "new thread on port: ",port
-                getQuoteThread(symbol , user , transactionNum, port)
+                qThread = getQuoteThread(symbol , user , transactionNum, port)
+                qThread.start()
                 self.quotePorts[port] = 1
                 self.inflight.append(symbol)
                 self.MaxThreads -= 1
