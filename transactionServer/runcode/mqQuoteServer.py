@@ -69,8 +69,8 @@ class getQuoteThread(Thread):
         # reset port to 0
         quoteServer.quotePorts[self.port] = 0
         quoteServer.MaxThreads += 1
-        #
-        newQuote = self._quoteStringToDictionary(data)
+        # #
+        newQuote = quoteServer.quoteStringToDictionary(data)
         # newQuote = {"value": 10, "cryptoKey": 'abc', "retrieved": int(time.time())}
         print "got quote: ",newQuote
         # requestBody = auditFunctions.createQuoteServer(
@@ -139,7 +139,7 @@ class Quotes():
 
 
 
-    def _quoteStringToDictionary(self, quoteString):
+    def quoteStringToDictionary(self, quoteString):
         # "quote, sym, userId, timeStamp, cryptokey\n"
         split = quoteString.split(",")
         return {'value': float(split[0]), 'retrieved': int(time.time()), 'serverTime': split[3], 'cryptoKey': split[4].strip("\n")}
