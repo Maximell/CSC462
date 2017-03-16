@@ -68,6 +68,7 @@ class getQuoteThread(Thread):
         quoteServer.MaxThreads += 1
 
         newQuote = self._quoteStringToDictionary(data)
+        print "got quote: ",newQuote
         requestBody = auditFunctions.createQuoteServer(
             int(time.time() * 1000),
             "quoteServer",
@@ -171,6 +172,7 @@ def on_request(ch, method, props, body):
 
 #     go in pool
     if quote is None:
+        print "going into pool"
         quoteServer.addRequestToPool(payload)
         return
 
