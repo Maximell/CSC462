@@ -44,13 +44,6 @@ class poolHandler(Thread):
                         quoteServer.pool[sym] = []
 
 
-
-
-
-
-
-
-
 class getQuoteThread(Thread):
     def __init__(self , symbol , user , transactionNum , portNum):
         Thread.__init__(self)
@@ -116,7 +109,7 @@ class Quotes():
             if self._cacheIsActive(cache):
                 return cache
         self._hitQuoteServerAndCache(symbol, user, transactionNum)
-        return None
+        return
 
     def _hitQuoteServerAndCache(self, symbol, user, transactionNum):
         # run new quote thread
@@ -173,14 +166,13 @@ def on_request(ch, method, props, body):
     userId = payload["userId"]
     lineNum = payload["lineNum"]
 
-    # TODO: bring this back, temp check for why quoteServer is failing
     quote = quoteServer.getQuote(symbol, userId, lineNum)
     # quote = {"value": 10, "cryptoKey": 'abc', "retrieved": int(time.time())}
 
 #     go in pool
     if quote is None:
         quoteServer.addRequestToPool(payload)
-        return None
+        return
 
     print "quote: ", quote
 
