@@ -17,6 +17,7 @@ def createQuoteRequest(userId, stockSymbol, lineNum, args):
 
 class poolHandler(Thread):
     def __init__(self):
+        Thread.__init__(self)
         self.daemon = True
         self.curCacheSize = len(quoteServer.quoteCache)
         self.start()
