@@ -36,7 +36,7 @@ pssh -i -h workersHostFile.txt -x "cd $workingDirectoryPath" git pull
 echo killing all python
 pssh -i -h workersHostFile.txt killall python
 echo starting workers
-pssh -i -h workersHostFile.txt ./runScript.py
+pssh -i -h workersHostFile.txt -x "cd $workingDirectoryPath" python runScript.py
 echo worker configuration complete
 
 #waiting to make sure everything has started
@@ -45,7 +45,7 @@ sleep 5
 echo done waiting
 
 if [ $1 ]; then
-    python3.5 runWorkload.py $1
+    python runWorkload.py $1
 else
     echo This script must be run with the workload file as a parameter
 fi
