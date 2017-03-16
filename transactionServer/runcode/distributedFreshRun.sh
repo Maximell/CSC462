@@ -8,9 +8,13 @@
 #   audit server (also runs on 142)
 #   quote server (also runs on 142
 
+echo this should be run ./distributedFreshRun.sh <branch> <testFile>
+
 # Do the configuration on the local machine
 echo doing local configuration
 echo this script should be run in the runcode folder of the project
+echo switching branches to $1
+git checkout $1
 echo getting latest code
 git pull
 echo killing current python processes
@@ -30,7 +34,8 @@ echo finished local configuration
 echo attempting to configure workers
 echo assigning the working directory path to a variable
 workingDirectoryPath="Desktop/seng462/CSC462/transactionServer/runcode"
-
+echo switching branches to $1
+pssh -i -h workersHostFile.txt -x "cd $workingDirectoryPath" git checkout $1
 echo getting latest code
 pssh -i -h workersHostFile.txt -x "cd $workingDirectoryPath" git pull
 echo killing all python
@@ -44,8 +49,8 @@ echo waiting for 5 seconds to make sure everything has started
 sleep 5
 echo done waiting
 
-if [ $1 ]; then
-    python runWorkload.py $1
+if [ $2 ]; then
+    python runWorkload.py $2
 else
     echo This script must be run with the workload file as a parameter
 fi
