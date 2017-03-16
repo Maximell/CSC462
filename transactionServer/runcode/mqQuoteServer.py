@@ -22,6 +22,7 @@ class poolHandler(Thread):
         self.curCacheSize = len(quoteServer.quoteCache)
         self.start()
     def run(self):
+        print "starting thread for poolhandler"
         while(True):
 #         look between pool of requests
 #          and the cache size.
@@ -31,6 +32,7 @@ class poolHandler(Thread):
                     quote = quoteServer.quoteCache.get(sym)
                     if quote is not None:
                         for payload in quoteServer.pool[sym]:
+                            print "found a match for: ", sym
                             # if payload sym in cache
                             payload["quote"] = quote["value"]
                             payload["cryptoKey"] = quote["cryptoKey"]
@@ -87,6 +89,7 @@ class getQuoteThread(Thread):
         quoteServer.quoteCache[self.symbol] = newQuote
         del quoteServer.inflight[quoteServer.inflight.index(self.symbol)]
         self.cacheLock.release()
+        self.is_alive = False
 
 
 # quote shape: symbol: {value: string, retrieved: epoch time, user: string, cryptoKey: string}
@@ -116,8 +119,10 @@ class Quotes():
         while(self.MaxThreads == 0):
             # loop while all threads are taken
             pass
+        print "free port"
         for port in self.quotePorts:
             if self.quotePorts[port] == 0:
+                print "new thread on port: ",port
                 getQuoteThread(symbol , user , transactionNum, port)
                 self.quotePorts[port] = 1
                 self.inflight.append(symbol)
