@@ -28,14 +28,15 @@ echo finished local configuration
 
 # Do the configuration on the worker machines
 echo attempting to configure workers
-echo changing to the runcode directory
-pssh -h workersHostFile.txt cd Desktop/seng462/CSC462/transactionServer/runcode
+echo assigning the working directory path to a variable
+workingDirectoryPath="Desktop/seng462/CSC462/transactionServer/runcode"
+
 echo getting latest code
-pssh -h workersHostFile.txt git pull
+pssh -i -h workersHostFile.txt -x "cd $workingDirectoryPath" git pull
 echo killing all python
-pssh -h workersHostFile.txt killall python
+pssh -i -h workersHostFile.txt killall python
 echo starting workers
-pssh -h workersHostFile.txt ./runScript.py
+pssh -i -h workersHostFile.txt ./runScript.py
 echo worker configuration complete
 
 #waiting to make sure everything has started
@@ -44,7 +45,7 @@ sleep 5
 echo done waiting
 
 if [ $1 ]; then
-    python3.5 runWorkload $1
+    python3.5 runWorkload.py $1
 else
     echo This script must be run with the workload file as a parameter
 fi
