@@ -68,31 +68,31 @@ class getQuoteThread(Thread):
         # self.socket.close()
         # # reset port to 0
         # quoteServer.quotePorts[self.port] = 0
-        # quoteServer.MaxThreads += 1
+        quoteServer.MaxThreads += 1
         #
         # newQuote = self._quoteStringToDictionary(data)
         newQuote = {"value": 10, "cryptoKey": 'abc', "retrieved": int(time.time())}
         print "got quote: ",newQuote
-        requestBody = auditFunctions.createQuoteServer(
-            int(time.time() * 1000),
-            "quoteServer",
-            self.transactionNum,
-            self.userId,
-            newQuote['serverTime'],
-            self.symbol,
-            newQuote['value'],
-            newQuote['cryptoKey']
-        )
-        print "built request: ",requestBody
+        # requestBody = auditFunctions.createQuoteServer(
+        #     int(time.time() * 1000),
+        #     "quoteServer",
+        #     self.transactionNum,
+        #     self.userId,
+        #     newQuote['serverTime'],
+        #     self.symbol,
+        #     newQuote['value'],
+        #     newQuote['cryptoKey']
+        # )
+        # print "built request: ",requestBody
         # auditClient.send(requestBody)
         # print
         #     TODO might have to lock between all threads
         # if not self.cacheLock.locked():
 
-        # self.cacheLock.acquire()
+        self.cacheLock.acquire()
         quoteServer.quoteCache[self.symbol] = newQuote
         del quoteServer.inflight[quoteServer.inflight.index(self.symbol)]
-        # self.cacheLock.release()
+        self.cacheLock.release()
 
 
 
@@ -113,10 +113,10 @@ class Quotes():
         if cache:
             if self._cacheIsActive(cache):
                 return cache
-        self._hitQuoteServerAndCache(symbol, user, transactionNum)
+        self.hitQuoteServerAndCache(symbol, user, transactionNum)
         return
 
-    def _hitQuoteServerAndCache(self, symbol, user, transactionNum):
+    def hitQuoteServerAndCache(self, symbol, user, transactionNum):
         # run new quote thread
         if symbol in self.inflight:
             return
