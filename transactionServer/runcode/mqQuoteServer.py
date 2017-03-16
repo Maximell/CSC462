@@ -61,17 +61,17 @@ class getQuoteThread(Thread):
         # self.start()
 
     def run(self):
-        # request = self.symbol + "," + self.userId + "\n"
-        # self.socket.connect(('quoteserve.seng.uvic.ca', self.portNum ))
-        # self.socket.send(request)
-        # data = self.socket.recv(1024)
-        # self.socket.close()
-        # # reset port to 0
-        # quoteServer.quotePorts[self.port] = 0
+        request = self.symbol + "," + self.userId + "\n"
+        self.socket.connect(('quoteserve.seng.uvic.ca', self.portNum ))
+        self.socket.send(request)
+        data = self.socket.recv(1024)
+        self.socket.close()
+        # reset port to 0
+        quoteServer.quotePorts[self.port] = 0
         quoteServer.MaxThreads += 1
         #
-        # newQuote = self._quoteStringToDictionary(data)
-        newQuote = {"value": 10, "cryptoKey": 'abc', "retrieved": int(time.time())}
+        newQuote = self._quoteStringToDictionary(data)
+        # newQuote = {"value": 10, "cryptoKey": 'abc', "retrieved": int(time.time())}
         print "got quote: ",newQuote
         # requestBody = auditFunctions.createQuoteServer(
         #     int(time.time() * 1000),
