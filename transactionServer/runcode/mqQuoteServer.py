@@ -105,6 +105,7 @@ class Quotes():
 
     def getQuote(self, symbol , user , transactionNum):
         cache = self.quoteCache.get(symbol)
+        print "current cache = ",self.quoteCache
         if cache:
             if self._cacheIsActive(cache):
                 return cache
@@ -127,6 +128,7 @@ class Quotes():
                 self.quotePorts[port] = 1
                 self.inflight.append(symbol)
                 self.MaxThreads -= 1
+                print "maxthreads = ",self.MaxThreads
                 break
         # added sym to quoteserver.inflight
 
