@@ -149,6 +149,8 @@ class Quotes():
         return {'value': float(split[0]), 'retrieved': int(time.time()), 'serverTime': split[3], 'cryptoKey': split[4].strip("\n")}
 
     def _cacheIsActive(self, quote):
+        print "_cacheIsActive", (int(quote.get('retrieved', 0)) + self.cacheExpire),  int(time.time())
+        print "returning", (int(quote.get('retrieved', 0)) + self.cacheExpire) > int(time.time())
         return (int(quote.get('retrieved', 0)) + self.cacheExpire) > int(time.time())
 
     def _mockQuoteServer(self, queryString):
