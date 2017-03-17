@@ -58,10 +58,11 @@ class getQuoteThread(Thread):
         self.userId = user
         self.transactionNum = transactionNum
         self.portNum  = portNum
-        # self.start()
+        self.start()
 
     def run(self):
         request = self.symbol + "," + self.userId + "\n"
+        print "request to quoteserver: ", request
         self.socket.connect(('quoteserve.seng.uvic.ca', self.portNum ))
         self.socket.send(request)
         data = self.socket.recv(1024)
@@ -128,8 +129,7 @@ class Quotes():
         for port in self.quotePorts:
             if self.quotePorts[port] == 0:
                 print "new thread on port: ",port
-                qThread = getQuoteThread(symbol , user , transactionNum, port)
-                qThread.start()
+                getQuoteThread(symbol , user , transactionNum, port)
                 self.quotePorts[port] = 1
                 self.inflight.append(symbol)
                 self.MaxThreads -= 1
