@@ -106,8 +106,8 @@ class Quotes():
         self.cacheExpire = cacheExpire
         self.quoteCache = {}
         self.inflight = []
-        self.MaxThreads = 9
-        self.quotePorts = {4441:0,4443:0,4444:0,4445:0,4446:0,4447:0,4448:0,4449:0}
+        self.quotePorts = {4445:0}
+        self.MaxThreads = len(self.quotePorts)
         self.pool = {}
 
 
