@@ -62,21 +62,21 @@ class getQuoteThread(Thread):
 
     def run(self):
         request = self.symbol + "," + self.userId + "\n"
-        print "request to quoteserver: ", request
+        # print "request to quoteserver: ", request
         # print "portNum:", self.portNum
         self.socket.connect(('quoteserve.seng.uvic.ca', 4442 ))
         self.socket.send(request)
         data = self.socket.recv(1024)
         self.socket.close()
-        print "close socket"
+        # print "close socket"
         # reset port to 0
         # quoteServer.quotePorts[self.portNum] = 0
         # quoteServer.MaxThreads += 1
         # #
-        print "new quote to string"
+        # print "new quote to string"
         newQuote = quoteServer.quoteStringToDictionary(data)
         # newQuote = {"value": 10, "cryptoKey": 'abc', "retrieved": int(time.time())}
-        print "got quote: ",newQuote
+        print "got new quote from server: ",newQuote
         # requestBody = auditFunctions.createQuoteServer(
         #     int(time.time() * 1000),
         #     "quoteServer",
@@ -113,6 +113,7 @@ class Quotes():
 
     def getQuote(self, symbol , user , transactionNum):
         cache = self.quoteCache.get(symbol)
+        print "checking quote cache: ", cache,  symbol
         print "current cache = ",self.quoteCache
         if cache:
             if self._cacheIsActive(cache):
@@ -179,7 +180,7 @@ def on_request(ch, method, props, body):
 
     quote = quoteServer.getQuote(symbol, userId, lineNum)
     # quote = {"value": 10, "cryptoKey": 'abc', "retrieved": int(time.time())}
-
+    print "return from quote cache: ", quote
 #     go in pool
     if quote is None:
         print "going into pool"
