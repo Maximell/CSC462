@@ -48,7 +48,7 @@ class poolHandler(Thread):
 
 
 class getQuoteThread(Thread):
-    def __init__(self , symbol , user , transactionNum , portNum):
+    def __init__(self , symbol , user , transactionNum):
         Thread.__init__(self)
         self.cacheLock = threading.Lock()
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -57,21 +57,21 @@ class getQuoteThread(Thread):
         self.symbol = symbol
         self.userId = user
         self.transactionNum = transactionNum
-        self.portNum  = portNum
+        # self.portNum  = portNum
         self.start()
 
     def run(self):
         request = self.symbol + "," + self.userId + "\n"
         print "request to quoteserver: ", request
         print "portNum:", self.portNum
-        self.socket.connect(('quoteserve.seng.uvic.ca', self.portNum ))
+        self.socket.connect(('quoteserve.seng.uvic.ca', 4442 ))
         self.socket.send(request)
         data = self.socket.recv(1024)
         self.socket.close()
         print "close socket"
         # reset port to 0
         quoteServer.quotePorts[self.portNum] = 0
-        quoteServer.MaxThreads += 1
+        # quoteServer.MaxThreads += 1
         # #
         print "new quote to string"
         newQuote = quoteServer.quoteStringToDictionary(data)
@@ -106,8 +106,8 @@ class Quotes():
         self.cacheExpire = cacheExpire
         self.quoteCache = {}
         self.inflight = []
-        self.MaxThreads = 9
-        self.quotePorts = {4441:0,4443:0,4444:0,4445:0,4446:0,4447:0,4448:0,4449:0}
+        # self.MaxThreads = 9
+        # self.quotePorts = {4441:0,4443:0,4444:0,4445:0,4446:0,4447:0,4448:0,4449:0}
         self.pool = {}
 
 
@@ -125,19 +125,18 @@ class Quotes():
         if symbol in self.inflight:
             return
 
-        while(self.MaxThreads == 0):
+        # while(self.MaxThreads == 0):
             # loop while all threads are taken
-            pass
-        print "free port"
-        for port in self.quotePorts:
-            if self.quotePorts[port] == 0:
-                print "new thread on port: ",port
-                getQuoteThread(symbol , user , transactionNum, port)
-                self.quotePorts[port] = 1
-                self.inflight.append(symbol)
-                self.MaxThreads -= 1
-                print "maxthreads = ",self.MaxThreads
-                break
+            # pass
+        # print "free port"
+        # for port in self.quotePorts:
+        #     if self.quotePorts[port] == 0:
+        #         print "new thread on port: ",port
+        getQuoteThread(symbol , user , transactionNum)
+        # self.quotePorts[port] = 1
+        self.inflight.append(symbol)
+        # self.MaxThreads -= 1
+        # print "maxthreads = ",self.MaxThreads
         # added sym to quoteserver.inflight
 
 
