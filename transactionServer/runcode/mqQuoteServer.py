@@ -63,14 +63,14 @@ class getQuoteThread(Thread):
     def run(self):
         request = self.symbol + "," + self.userId + "\n"
         print "request to quoteserver: ", request
-        self.socket.connect(('quoteserve.seng.uvic.ca', 4445 ))
+        self.socket.connect(('quoteserve.seng.uvic.ca', self.portNum ))
         self.socket.send(request)
         data = self.socket.recv(1024)
         print "data from quote server:", data
         self.socket.close()
         print "close socket"
         # reset port to 0
-        quoteServer.quotePorts[self.port] = 0
+        quoteServer.quotePorts[self.portNum] = 0
         quoteServer.MaxThreads += 1
         # #
         print "new quote to string"
@@ -106,8 +106,8 @@ class Quotes():
         self.cacheExpire = cacheExpire
         self.quoteCache = {}
         self.inflight = []
-        self.MaxThreads = 10
-        self.quotePorts = {44451:0,44452:0,44453:0,44454:0,44455:0,44456:0,44457:0,44458:0,44459:0}
+        self.MaxThreads = 9
+        self.quotePorts = {4441:0,4443:0,4444:0,4445:0,4446:0,4447:0,4448:0,4449:0}
         self.pool = {}
 
 
