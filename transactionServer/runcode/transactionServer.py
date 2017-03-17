@@ -125,14 +125,11 @@ def handleCommandQuote(args):
     userId = args["userId"]
     lineNum = args["lineNum"]
 
-    # TODO: bring local cache back
-    # quote = localQuoteCache.useCache(
-    #     args.get("quote"),
-    #     symbol,
-    #     args.get("quoteRetrieved")
-    # )
-
-    quote = args.get("quote")
+    quote = localQuoteCache.useCache(
+        args.get("quote"),
+        symbol,
+        args.get("quoteRetrieved")
+    )
 
     args["trans"] = RabbitMQClient.TRANSACTION
     if quote is not None:
