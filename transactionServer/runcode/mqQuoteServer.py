@@ -67,10 +67,12 @@ class getQuoteThread(Thread):
         self.socket.send(request)
         data = self.socket.recv(1024)
         self.socket.close()
+        print "close socket"
         # reset port to 0
         quoteServer.quotePorts[self.port] = 0
         quoteServer.MaxThreads += 1
         # #
+        print "new quote to string"
         newQuote = quoteServer.quoteStringToDictionary(data)
         # newQuote = {"value": 10, "cryptoKey": 'abc', "retrieved": int(time.time())}
         print "got quote: ",newQuote
