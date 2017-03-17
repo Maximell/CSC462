@@ -63,14 +63,14 @@ class getQuoteThread(Thread):
     def run(self):
         request = self.symbol + "," + self.userId + "\n"
         print "request to quoteserver: ", request
-        print "portNum:", self.portNum
+        # print "portNum:", self.portNum
         self.socket.connect(('quoteserve.seng.uvic.ca', 4442 ))
         self.socket.send(request)
         data = self.socket.recv(1024)
         self.socket.close()
         print "close socket"
         # reset port to 0
-        quoteServer.quotePorts[self.portNum] = 0
+        # quoteServer.quotePorts[self.portNum] = 0
         # quoteServer.MaxThreads += 1
         # #
         print "new quote to string"
