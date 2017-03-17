@@ -39,7 +39,7 @@ class poolHandler(Thread):
                             payload["cryptoKey"] = quote["cryptoKey"]
                             payload["quoteRetrieved"] = quote["retrieved"]
 
-                            print "sending back:", payload
+                            print "sending back form handler:", payload
                             transactionServerID = payload["trans"]
                             # Need to figure out which transaction server to send back to.
                             transactionClient = RabbitMQClient(transactionServerID)
@@ -196,7 +196,7 @@ def on_request(ch, method, props, body):
     payload["cryptoKey"] = quote["cryptoKey"]
     payload["quoteRetrieved"] = quote["retrieved"]
 
-    print "sending back:", payload
+    print "sending back from cache:", payload
     transactionServerID = payload["trans"]
     # Need to figure out which transaction server to send back to.
     transactionClient = RabbitMQClient(transactionServerID)
