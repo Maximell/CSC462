@@ -81,7 +81,7 @@ class getQuoteThread(Thread):
         #     int(time.time() * 1000),
         #     "quoteServer",
         #     self.transactionNum,
-        #     self.userId,
+        #     self.userId,it
         #     newQuote['serverTime'],
         #     self.symbol,
         #     newQuote['value'],
