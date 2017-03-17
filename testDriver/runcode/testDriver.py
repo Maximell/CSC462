@@ -119,6 +119,7 @@ def splitUsersFromFile(start, chunk):
     with open(sys.argv[1]) as f:
         count = 0
         for line in f:
+            line = line.strip()
             if count < start:
                 # apparently python file reading is already lazy, so hopefully by skipping the lines, it will be alright
                 count += 1
@@ -136,7 +137,7 @@ def splitUsersFromFile(start, chunk):
             command = commandAndArgs[0]
             args = commandAndArgs[1:]
             # separate based on username and 'x' != 'x\n' which was happening a lot
-            args[0] = args[0].strip()
+            # args[0] = args[0].strip()
 
             username = args[0]
 
