@@ -63,7 +63,7 @@ class getQuoteThread(Thread):
     def run(self):
         request = self.symbol + "," + self.userId + "\n"
         print "request to quoteserver: ", request
-        self.socket.connect(('quoteserve.seng.uvic.ca', self.portNum ))
+        self.socket.connect(('quoteserve.seng.uvic.ca', 4445 ))
         self.socket.send(request)
         data = self.socket.recv(1024)
         print "data from quote server:", data
