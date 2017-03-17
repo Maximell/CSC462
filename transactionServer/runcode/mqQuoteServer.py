@@ -117,6 +117,7 @@ class Quotes():
         print "current cache = ",self.quoteCache
         if cache:
             if self._cacheIsActive(cache):
+                print "cache value is active"
                 return cache
         self.hitQuoteServerAndCache(symbol, user, transactionNum)
         return
