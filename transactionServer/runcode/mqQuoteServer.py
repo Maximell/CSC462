@@ -77,18 +77,18 @@ class getQuoteThread(Thread):
         newQuote = quoteServer.quoteStringToDictionary(data)
         # newQuote = {"value": 10, "cryptoKey": 'abc', "retrieved": int(time.time())}
         print "got new quote from server: ",newQuote
-        # requestBody = auditFunctions.createQuoteServer(
-        #     int(time.time() * 1000),
-        #     "quoteServer",
-        #     self.transactionNum,
-        #     self.userId,it
-        #     newQuote['serverTime'],
-        #     self.symbol,
-        #     newQuote['value'],
-        #     newQuote['cryptoKey']
-        # )
-        # print "built request: ",requestBody
-        # auditClient.send(requestBody)
+        requestBody = auditFunctions.createQuoteServer(
+            int(time.time() * 1000),
+            "quoteServer",
+            self.transactionNum,
+            self.userId,
+            newQuote['serverTime'],
+            self.symbol,
+            newQuote['value'],
+            newQuote['cryptoKey']
+        )
+        print "built request: ",requestBody
+        auditClient.send(requestBody)
         # print
         #     TODO might have to lock between all threads
         # if not self.cacheLock.locked():
