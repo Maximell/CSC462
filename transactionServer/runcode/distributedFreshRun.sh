@@ -51,6 +51,8 @@ echo done waiting
 
 if [ $2 ]; then
     echo the file we are trying to run is: $2
+    echo $PATH
+    pwd
     python runWorkload.py 1userWorkload.txt
 else
     echo This script must be run with the workload file as a parameter
