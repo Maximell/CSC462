@@ -36,7 +36,8 @@ startvm
 #Doing the configuration for other machines.
 while read p; do
   echo $p
-  ssh -l $1 -n -b $p  "$(typeset -f);startvm"
+  host = $1$p
+  ssh $host  "$(typeset -f);startvm"
 done <computerIPS.txt
 
 
