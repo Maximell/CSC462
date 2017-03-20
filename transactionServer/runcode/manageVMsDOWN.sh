@@ -11,8 +11,6 @@
 #   audit server (also runs on 142)
 #   quote server (also runs on 142
 
-echo This should be run ./manageVMsUP.sh username
-echo
 echo This work is been done on $1
 echo This script should be run on the LAB COMPUTER b142
 echo This is not to be run on the VM
@@ -24,6 +22,7 @@ shutdownVMs () {
     vbm=($(VBoxManage list runningvms))
     echo ${vbm[0]}
     if  test -n ${vbm[0]} ; then
+        echo "shutting down vm"
         VBoxManage controlvm seng462scratch acpipowerbutton
     else
         exit

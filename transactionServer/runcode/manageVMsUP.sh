@@ -11,9 +11,7 @@
 #   audit server (also runs on 142)
 #   quote server (also runs on 142
 
-echo This should be run ./manageVMsUP.sh username
-echo
-echo This work is been done on $1
+echo This work is been done by $1
 echo This script should be run on the LAB COMPUTER b142
 echo This is not to be run on the VM
 
@@ -26,6 +24,7 @@ startvm () {
     if  test -n ${vbm[0]} ; then
         echo VM already on
     else
+        echo "turning vm on"
         VBoxManage startvm seng462scratch --type headless
     fi
 }
@@ -40,10 +39,3 @@ while read p; do
   echo $login
   ssh $login -n -t -t "$(typeset -f);startvm"
 done <computerIPS.txt
-
-#
-
-
-
-
-#VBoxManage controlvm <vm> acpipowerbutton
