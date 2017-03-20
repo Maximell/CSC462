@@ -27,14 +27,19 @@ startvm () {
     else
         echo Start seng462scratch
         #VBoxManage startvm seng462scratch --type headless
+    fi
 }
 
 # Doing the configuration for the local machine
 startvm
 
+#Doing the configuration for other machines.
+while read p; do
+  echo $p
+  ssh -l $1 -n $p  "$(typeset -f);startvm"
+done <computerIPS.txt
 
-#checking and starting other vms.
-pssh -i $1 -h computerIPS.txt -x "startvm"
+
 
 
 
