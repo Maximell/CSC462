@@ -36,12 +36,11 @@ startvm
 host=$1
 
 #Doing the configuration for other machines.
-for ip in 'computerIPS.txt'; do
-  login=$host$ip
-  ssh $login -t -t "$(typeset -f);startvm"
+while read p; do
+  login=$host$p
   echo $login
-
-
+  ssh $login -n -t -t "$(typeset -f);startvm"
+done <computerIPS.txt
 
 #
 
