@@ -17,7 +17,7 @@ echo This work is been done on $1
 echo This script should be run on the LAB COMPUTER b142
 echo This is not to be run on the VM
 
-starrvm(){
+startvm () {
 echo doing local configuration
 echo List all VMs:
 vbm=($(VBoxManage list runningvms))
