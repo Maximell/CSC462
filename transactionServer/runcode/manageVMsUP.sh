@@ -19,12 +19,12 @@ echo doing local configuration
 echo List all VMs:
 vbm=($(VBoxManage list runningvms))
 echo ${vbm[0]}
-if vbm[0]; then
+if  test -n ${vbm[0]} ; then
     echo VM already on
-else;
+else
     echo Start seng462scratch
 #VBoxManage list vms
-
+fi
 
 #VBoxManage startvm seng462scratch --type headless
 #VBoxManage controlvm <vm> acpipowerbutton
