@@ -37,10 +37,13 @@ startvm
 while read p; do
   echo $p
   host=$1$p
-  ssh $host  "$(typeset -f);startvm"
+  echo host
+  echo $host
+  ssh $host
+
 done <computerIPS.txt
 
-
+#"$(typeset -f);startvm"
 
 
 
