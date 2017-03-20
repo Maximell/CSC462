@@ -8,9 +8,13 @@
 #   audit server (also runs on 142)
 #   quote server (also runs on 142
 
+echo this should be run ./distributedFreshRun.sh branch testFile
+
 # Do the configuration on the local machine
 echo doing local configuration
 echo this script should be run in the runcode folder of the project
+echo switching branches to $1
+git checkout $1
 echo getting latest code
 git pull
 echo killing current python processes
@@ -19,20 +23,25 @@ echo killing RMQmanager
 docker kill RMQmanager
 echo starting RMQmanager
 docker start RMQmanager
+echo sleeping for 5 seconds so RMQmanager has time to boot
+sleep 5
 echo starting host servers
-./startHostServers.py
+python startHostServers.py
 
 echo finished local configuration
 
 # Do the configuration on the worker machines
 echo attempting to configure workers
-pssh -h workersHostFile.txt cd Desktop/seng462/CSC462/transactionServer/runcode
+echo assigning the working directory path to a variable
+workingDirectoryPath="Desktop/seng462/CSC462/transactionServer/runcode"
+echo switching branches to $1
+pssh -i -h workersHostFile.txt -x "cd $workingDirectoryPath" git checkout $1
 echo getting latest code
-pssh -h workersHostFile.txt git pull
+pssh -i -h workersHostFile.txt -x "cd $workingDirectoryPath" git pull
 echo killing all python
-pssh -h workersHostFile.txt killall python
+pssh -i -h workersHostFile.txt killall python
 echo starting workers
-pssh -h workersHostFile.txt ./runScript.py
+pssh -i -h workersHostFile.txt -x "cd $workingDirectoryPath" python runScript.py
 echo worker configuration complete
 
 #waiting to make sure everything has started
@@ -40,9 +49,10 @@ echo waiting for 5 seconds to make sure everything has started
 sleep 5
 echo done waiting
 
-if $1 then
-    #start the testDriver
-    ./runWorkload $1
+if [ $2 ]; then
+    echo the file we are trying to run is: $2
+    pwd
+    python runWorkLoad.py $2
 else
     echo This script must be run with the workload file as a parameter
 fi
