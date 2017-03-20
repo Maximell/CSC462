@@ -34,7 +34,7 @@ startvm
 
 
 #checking and starting other vms.
-pssh -i $1 -h workersHostFile.txt -x "startvm"
+pssh -i $1 -h computerIPS.txt -x "startvm"
 
 
 
