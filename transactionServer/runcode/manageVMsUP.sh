@@ -1,4 +1,6 @@
 # ssh keys added for each worker, as here: https://www.digitalocean.com/community/tutorials/how-to-set-up-ssh-keys--2
+# you need your own keykey to run this script across other machines. Follow ^ these instructions.
+
 
 # this command needs to be run from machine 142, as that is where the private-key is held.
 # this script is for starting up all the vms.
@@ -9,12 +11,13 @@
 #   audit server (also runs on 142)
 #   quote server (also runs on 142
 
-echo this should be run ./manageVMsUP.sh
+echo This should be run ./manageVMsUP.sh username
 echo
+echo This work is been done on $1
 echo This script should be run on the LAB COMPUTER b142
 echo This is not to be run on the VM
 
-# Doing the configuration for the local machine
+starrvm(){
 echo doing local configuration
 echo List all VMs:
 vbm=($(VBoxManage list runningvms))
@@ -23,8 +26,17 @@ if  test -n ${vbm[0]} ; then
     echo VM already on
 else
     echo Start seng462scratch
-#VBoxManage list vms
-fi
+    #VBoxManage startvm seng462scratch --type headless
+}
 
-#VBoxManage startvm seng462scratch --type headless
+# Doing the configuration for the local machine
+startvm
+
+
+#checking and starting other vms.
+pssh -i $1 -h workersHostFile.txt -x "startvm"
+
+
+
+
 #VBoxManage controlvm <vm> acpipowerbutton
