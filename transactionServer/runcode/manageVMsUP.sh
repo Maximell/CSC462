@@ -18,15 +18,15 @@ echo This script should be run on the LAB COMPUTER b142
 echo This is not to be run on the VM
 
 startvm () {
-echo doing local configuration
-echo List all VMs:
-vbm=($(VBoxManage list runningvms))
-echo ${vbm[0]}
-if  test -n ${vbm[0]} ; then
-    echo VM already on
-else
-    echo Start seng462scratch
-    #VBoxManage startvm seng462scratch --type headless
+    echo doing local configuration
+    echo List all VMs:
+    vbm=($(VBoxManage list runningvms))
+    echo ${vbm[0]}
+    if  test -n ${vbm[0]} ; then
+        echo VM already on
+    else
+        echo Start seng462scratch
+        #VBoxManage startvm seng462scratch --type headless
 }
 
 # Doing the configuration for the local machine
