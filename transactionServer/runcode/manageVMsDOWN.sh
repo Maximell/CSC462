@@ -24,8 +24,7 @@ shutdownVMs () {
     vbm=($(VBoxManage list runningvms))
     echo ${vbm[0]}
     if  test -n ${vbm[0]} ; then
-        echo "shutdownnnn"
-        #VBoxManage controlvm ${vbm[0]} acpipowerbutton
+        VBoxManage controlvm ${vbm[0]} acpipowerbutton
     else
         exit
     fi

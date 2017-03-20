@@ -26,8 +26,8 @@ startvm () {
     if  test -n ${vbm[0]} ; then
         echo VM already on
     else
-        echo Start seng462scratch
-        #VBoxManage startvm seng462scratch --type headless
+        echo Start ${vbm[0]}
+        VBoxManage startvm seng462scratch --type headless
     fi
 }
 
