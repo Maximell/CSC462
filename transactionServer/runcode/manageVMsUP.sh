@@ -25,12 +25,13 @@ startvm () {
         echo VM already on
     else
         echo "turning vm on"
-        VBoxManage startvm seng462scratch --type headless
+        VBoxManage startvm "seng462scratch" --type headless
     fi
 }
 
 # Doing the configuration for the local machine
 startvm
+
 host=$1
 
 #Doing the configuration for other machines.
