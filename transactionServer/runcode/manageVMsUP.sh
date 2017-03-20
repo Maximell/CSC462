@@ -34,13 +34,12 @@ startvm () {
 # Doing the configuration for the local machine
 startvm
 host=$1
+
 #Doing the configuration for other machines.
 while read p; do
-  echo $p
   login=$host$p
-  echo $login
   ssh $login -t -t "$(typeset -f);startvm"
-
+  echo $login
 done <computerIPS.txt
 
 #
