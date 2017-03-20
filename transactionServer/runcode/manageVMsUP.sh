@@ -18,7 +18,8 @@ echo This script should be run on the LAB COMPUTER b142
 echo This is not to be run on the VM
 
 startvm () {
-    echo doing local configuration
+    echo doing configuration for :
+    hostname
     echo List all VMs:
     vbm=($(VBoxManage list runningvms))
     echo ${vbm[0]}
@@ -32,13 +33,13 @@ startvm () {
 
 # Doing the configuration for the local machine
 startvm
-
+host=$1
 #Doing the configuration for other machines.
 while read p; do
   echo $p
-  host=$1$p
-  echo $host
-  ssh $host -t -t "$(typeset -f);startvm"
+  login=$host$p
+  echo $login
+  ssh $login -t -t "$(typeset -f);startvm"
 
 done <computerIPS.txt
 
