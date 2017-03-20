@@ -14,10 +14,17 @@ echo
 echo This script should be run on the LAB COMPUTER b142
 echo This is not to be run on the VM
 
-# Do the configuration for the local machine
+# Doing the configuration for the local machine
 echo doing local configuration
 echo List all VMs:
-VBoxManage list vms
-echo Start seng462scratch
-VBoxManage startvm seng462scratch --type headless
+vbm=($(VBoxManage list runningvms))
+echo ${vbm[0]}
+if vbm[0]; then
+    echo VM already on
+else;
+    echo Start seng462scratch
+#VBoxManage list vms
 
+
+#VBoxManage startvm seng462scratch --type headless
+#VBoxManage controlvm <vm> acpipowerbutton
