@@ -17,8 +17,12 @@ echo This is not to be run on the VM
 
 startvm () {
     echo doing configuration for :
+    echo hostname:
     hostname
-    echo List all VMs:
+    vbm=($(VBoxManage list vms))
+    echo All vms:
+    echo ${vbm[0]}
+    echo List all RunningVMs:
     vbm=($(VBoxManage list runningvms))
     echo ${vbm[0]}
     if  test -n ${vbm[0]} ; then
@@ -26,7 +30,11 @@ startvm () {
     else
         echo "turning vm on"
         VBoxManage startvm "seng462scratch" --type headless
+
+    vbm=($(VBoxManage list runningvms))
+    echo ${vbm[0]}
     fi
+
 }
 
 # Doing the configuration for the local machine
