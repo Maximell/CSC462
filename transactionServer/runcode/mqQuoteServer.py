@@ -33,13 +33,13 @@ class poolHandler(Thread):
                     quote = quoteServer.quoteCache.get(sym)
                     if quote is not None:
                         for payload in quoteServer.pool[sym]:
-                            print "found a match for: ", sym
+                            # print "found a match for: ", sym
                             # if payload sym in cache
                             payload["quote"] = quote["value"]
                             payload["cryptoKey"] = quote["cryptoKey"]
                             payload["quoteRetrieved"] = quote["retrieved"]
 
-                            print "sending back form handler:", payload
+                            # print "sending back form handler:", payload
                             transactionServerID = payload["trans"]
                             # Need to figure out which transaction server to send back to.
                             transactionClient = RabbitMQClient(transactionServerID)
@@ -70,7 +70,7 @@ class getQuoteThread(Thread):
 
         newQuote = quoteServer.quoteStringToDictionary(data)
         # newQuote = {"value": 10, "cryptoKey": 'abc', "retrieved": int(time.time())}
-        print "got new quote from server: ", newQuote
+        # print "got new quote from server: ", newQuote
         requestBody = auditFunctions.createQuoteServer(
             int(time.time() * 1000),
             "quoteServer",
@@ -81,7 +81,7 @@ class getQuoteThread(Thread):
             newQuote['value'],
             newQuote['cryptoKey']
         )
-        print "built request: ",requestBody
+        # print "built request: ",requestBody
         auditClient.send(requestBody)
 
         self.cacheLock.acquire()
@@ -102,11 +102,11 @@ class Quotes():
 
     def getQuote(self, symbol , user , transactionNum):
         cache = self.quoteCache.get(symbol)
-        print "checking quote cache: ", cache,  symbol
-        print "current cache = ",self.quoteCache
+        # print "checking quote cache: ", cache,  symbol
+        # print "current cache = ",self.quoteCache
         if cache:
             if self._cacheIsActive(cache):
-                print "cache value is active"
+                # print "cache value is active"
                 return cache
         self.hitQuoteServerAndCache(symbol, user, transactionNum)
         return
@@ -126,8 +126,8 @@ class Quotes():
         return {'value': float(split[0]), 'retrieved': int(split[3])/1000, 'serverTime': split[3], 'cryptoKey': split[4].strip("\n")}
 
     def _cacheIsActive(self, quote):
-        print "_cacheIsActive", (int(quote.get('retrieved', 0)) + self.cacheExpire),  int(time.time())
-        print "returning", (int(quote.get('retrieved', 0)) + self.cacheExpire) > int(time.time())
+        # print "_cacheIsActive", (int(quote.get('retrieved', 0)) + self.cacheExpire),  int(time.time())
+        # print "returning", (int(quote.get('retrieved', 0)) + self.cacheExpire) > int(time.time())
         return (int(quote.get('retrieved', 0)) + self.cacheExpire) > int(time.time())
 
     def _mockQuoteServer(self, queryString):
@@ -152,7 +152,7 @@ class Quotes():
 def on_request(ch, method, props, body):
     # expected body: {symbol, userId, transactionNum}
     payload = json.loads(body)
-    print "received payload", payload
+    # print "received payload", payload
 
     symbol = payload["stockSymbol"]
     userId = payload["userId"]
@@ -160,20 +160,20 @@ def on_request(ch, method, props, body):
 
     quote = quoteServer.getQuote(symbol, userId, lineNum)
     # quote = {"value": 10, "cryptoKey": 'abc', "retrieved": int(time.time())}
-    print "return from quote cache: ", quote
+    # print "return from quote cache: ", quote
 #     go in pool
     if quote is None:
         print "going into pool"
         quoteServer.addRequestToPool(payload)
         return
 
-    print "quote: ", quote
+    # print "quote: ", quote
 
     payload["quote"] = quote["value"]
     payload["cryptoKey"] = quote["cryptoKey"]
     payload["quoteRetrieved"] = quote["retrieved"]
 
-    print "sending back from cache:", payload
+    # print "sending back from cache:", payload
     transactionServerID = payload["trans"]
     # Need to figure out which transaction server to send back to.
     transactionClient = RabbitMQClient(transactionServerID)
