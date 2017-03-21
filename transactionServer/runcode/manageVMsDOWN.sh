@@ -21,16 +21,16 @@ shutdownVMs () {
     echo List all VMs:
     vbm=($(VBoxManage list runningvms))
     echo ${vbm[0]}
-    if  ['seng462scratch' -eq ${vbm[0]}] ; then
-        echo "shutting down vm"
-        VBoxManage controlvm 'seng462scratch' acpipowerbutton
-        vbm=($(VBoxManage list runningvms))
-        echo ${vbm[0]}
-    else
-        echo "vm already down"
-        exit
+    #if  ['seng462scratch' -eq ${vbm[0]}] ; then
+    echo "shutting down vm"
+    VBoxManage controlvm 'seng462scratch' acpipowerbutton
+    vbm=($(VBoxManage list runningvms))
+    echo ${vbm[0]}
+    #else
+    echo "vm already down"
+    exit
 
-    fi
+    #fi
 }
 
 # Doing the configuration for the local machine
