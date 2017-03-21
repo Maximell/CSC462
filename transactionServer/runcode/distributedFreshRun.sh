@@ -25,9 +25,9 @@ echo starting RMQmanager
 docker start RMQmanager
 echo sleeping for 10 seconds so RMQmanager has time to boot
 sleep 10
-echo starting host servers
-python startHostServers.py
-
+echo start local audit on:
+hostname
+python startAuditServer.py
 echo finished local configuration
 
 echo assigning the working directory path to a variable
@@ -51,9 +51,9 @@ echo done configuring iptables
 echo starting workers
 pssh -i -h workersHostFile.txt -x "cd $workingDirectoryPath;" python runScript.py
 echo worker configuration complete
-echo starting audit server
+echo starting quote server
 pssh -i -H root@142.104.91.130:44421 -x "cd $workingDirectoryPath;" python startQuoteServer.py
-echo done starting audit
+echo done starting quote
 
 #waiting to make sure everything has started
 echo waiting for 10 seconds to make sure everything has started
