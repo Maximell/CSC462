@@ -23,8 +23,8 @@ echo killing RMQmanager
 docker kill RMQmanager
 echo starting RMQmanager
 docker start RMQmanager
-echo sleeping for 5 seconds so RMQmanager has time to boot
-sleep 5
+echo sleeping for 20 seconds so RMQmanager has time to boot
+sleep 20
 echo starting host servers
 python startHostServers.py
 
