@@ -21,12 +21,13 @@ shutdownVMs () {
     echo List all VMs:
     vbm=($(VBoxManage list runningvms))
     echo ${vbm[0]}
-    if  test -n ${vbm[0]} ; then
+    if  ["seng462scratch" -eq ${vbm[0]}] ; then
         echo "shutting down vm"
         VBoxManage controlvm "seng462scratch" acpipowerbutton
         vbm=($(VBoxManage list runningvms))
         echo ${vbm[0]}
     else
+        echo "vm already down"
         exit
 
     fi
