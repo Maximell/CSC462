@@ -16,23 +16,16 @@ echo This script should be run on the LAB COMPUTER b142
 echo This is not to be run on the VM
 
 shutdownVMs () {
-    echo doing configuration for :
+    echo "doing configuration for:"
     hostname
-    echo List all VMs:
+    echo List all runningvms:
     vbm=($(VBoxManage list runningvms))
     echo ${vbm[0]}
-    #if  ['seng462scratch' -eq ${vbm[0]}] ; then
+
     echo "shutting down vm"
     VBoxManage controlvm 'seng462scratch' acpipowerbutton
-    vbm=($(VBoxManage list runningvms))
-    echo ${vbm[0]}
-    #else
-    echo "vm already down"
 
-    #fi
 }
-
-# Doing the configuration for the local machine
 
 host=$1
 
@@ -43,6 +36,9 @@ while read p; do
   ssh $login -n -t -t "$(typeset -f);shutdownVMs"
 done <computerIPS.txt
 
+
+# Doing the configuration for the local machine
+echo "Doing Local Shutdown of 142:"
 shutdownVMs
 
 
