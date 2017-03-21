@@ -25,11 +25,11 @@ startvm () {
     echo List all RunningVMs:
     vbm=($(VBoxManage list runningvms))
     echo ${vbm[0]}
-    if  ["seng462scratch" -eq ${vbm[0]}] ; then
+    if ['seng462scratch' -eq ${vbm[0]}] ; then
         echo VM already on
     else
         echo "turning vm on"
-        VBoxManage startvm "seng462scratch" --type headless
+        VBoxManage startvm 'seng462scratch' --type headless
 
     vbm=($(VBoxManage list runningvms))
     echo ${vbm[0]}
