@@ -56,7 +56,7 @@ async def send(command, args, lineNum):
             workerMap[index][1] += 1
 
         else:
-            # print("problem with sending the workers")
+            print("problem with sending the workers")
 
     url = base_url
     data = {'lineNum': lineNum}
