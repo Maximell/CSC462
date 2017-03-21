@@ -39,7 +39,7 @@ async def send(command, args, lineNum):
     user = args[0]
     if user in userMap:
         base_url = userMap[user]
-        print("In dict already")
+        # print("In dict already")
     else:
         min = workerMap[0][1]
         index = 0
@@ -50,13 +50,13 @@ async def send(command, args, lineNum):
                 index = x
                 min = currentWorker[1]
         if sendto != None:
-            print("adding User to map")
+            # print("adding User to map")
             userMap[user] = sendto[0]
             base_url = sendto[0]
             workerMap[index][1] += 1
 
         else:
-            print("problem with sending the workers")
+            # print("problem with sending the workers")
 
     url = base_url
     data = {'lineNum': lineNum}
@@ -101,14 +101,14 @@ async def send(command, args, lineNum):
         url = base_url + urls[command] % (args['userId'])
         method = 'GET'
 
-    print(method)
-    print(url)
-    print(data)
+    # print(method)
+    # print(url)
+    # print(data)
     if method == 'GET':
         r = requests.get( url, data=data , verify=False)
     else:
         r = requests.post( url, data=data , verify=False)
-    print(r.status_code)
+    # print(r.status_code)
 
 async def sendRequests(userCommandList):
     for command in userCommandList:
