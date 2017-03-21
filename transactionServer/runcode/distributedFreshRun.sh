@@ -35,13 +35,13 @@ echo attempting to configure workers
 echo assigning the working directory path to a variable
 workingDirectoryPath="Desktop/seng462/CSC462/transactionServer/runcode"
 echo switching branches to $1
-pssh -i -h workersHostFile.txt -x "cd $workingDirectoryPath" git checkout $1
+pssh -i -h workersHostFile.txt -x "cd $workingDirectoryPath;" git checkout $1
 echo getting latest code
-pssh -i -h workersHostFile.txt -x "cd $workingDirectoryPath" git pull
+pssh -i -h workersHostFile.txt -x "cd $workingDirectoryPath;" git pull
 echo killing all python
 pssh -i -h workersHostFile.txt killall python
 echo starting workers
-pssh -i -h workersHostFile.txt -x "cd $workingDirectoryPath" python runScript.py
+pssh -i -h workersHostFile.txt -x "cd $workingDirectoryPath;" python runScript.py
 echo worker configuration complete
 
 #waiting to make sure everything has started
