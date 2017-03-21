@@ -33,7 +33,6 @@ startvm () {
 
     vbm=($(VBoxManage list runningvms))
     echo ${vbm[0]}
-    exit
     #fi
 
 }

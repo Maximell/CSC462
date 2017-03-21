@@ -28,7 +28,6 @@ shutdownVMs () {
     echo ${vbm[0]}
     #else
     echo "vm already down"
-    exit
 
     #fi
 }
