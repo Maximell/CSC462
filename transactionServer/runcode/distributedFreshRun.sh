@@ -40,6 +40,9 @@ echo getting latest code
 pssh -i -h workersHostFile.txt -x "cd $workingDirectoryPath;" git pull
 echo killing all python
 pssh -i -h workersHostFile.txt killall python
+echo configuring iptables
+pssh -i -h workersHostFile.txt iptables -I INPUT -p tcp --dport 44424 -j ACCEPT
+echo done configuring iptables
 echo starting workers
 pssh -i -h workersHostFile.txt -x "cd $workingDirectoryPath;" python runScript.py
 echo worker configuration complete
