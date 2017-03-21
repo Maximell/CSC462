@@ -2,8 +2,9 @@ import os
 import sys
 
 if __name__ == '__main__':
-    # start audit server
+    # start quoteserver 
     try:
-        os.system("python -u mqAuditServer.py > auditOutput.txt &")
+        os.system("python -u mqQuoteServer.py > quoteOutput.txt &")
     except:
-        print "Audit server failed to start"
+        print "quote server failed to start"
+
