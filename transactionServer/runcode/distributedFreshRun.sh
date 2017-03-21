@@ -32,30 +32,27 @@ echo finished local configuration
 
 echo assigning the working directory path to a variable
 workingDirectoryPath="Desktop/seng462/CSC462/transactionServer/runcode"
-echo configuring quote server
-pssh -i -h root@142.104.91.130:44421
-echo done configuring quote server
 
 # Do the configuration on the worker machines
 echo attempting to configure workers
 echo switching branches to $1
 pssh -i -h workersHostFile.txt -x "cd $workingDirectoryPath;" git checkout $1
-pssh -i -h root@142.104.91.130:44421 -x "cd $workingDirectoryPath;" git checkout $1
+pssh -i -H root@142.104.91.130:44421 -x "cd $workingDirectoryPath;" git checkout $1
 echo getting latest code
 pssh -i -h workersHostFile.txt -x "cd $workingDirectoryPath;" git pull
-pssh -i -h root@142.104.91.130:44421 -x "cd $workingDirectoryPath;" git pull
+pssh -i -H root@142.104.91.130:44421 -x "cd $workingDirectoryPath;" git pull
 echo killing all python
 pssh -i -h workersHostFile.txt killall python
-pssh -i -h root@142.104.91.130:44421 killall python
+pssh -i -H root@142.104.91.130:44421 killall python
 echo configuring iptables
 pssh -i -h workersHostFile.txt iptables -I INPUT -p tcp --dport 44424 -j ACCEPT
-pssh -i -h root@142.104.91.130:44421 iptables -I INPUT -p tcp --dport 44424 -j ACCEPT
+pssh -i -H root@142.104.91.130:44421 iptables -I INPUT -p tcp --dport 44424 -j ACCEPT
 echo done configuring iptables
 echo starting workers
 pssh -i -h workersHostFile.txt -x "cd $workingDirectoryPath;" python runScript.py
 echo worker configuration complete
 echo starting audit server
-pssh -i -h root@142.104.91.130:44421 -x "cd $workingDirectoryPath;" python startQuoteServer.py
+pssh -i -H root@142.104.91.130:44421 -x "cd $workingDirectoryPath;" python startQuoteServer.py
 echo done starting audit
 
 #waiting to make sure everything has started
