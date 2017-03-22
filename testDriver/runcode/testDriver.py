@@ -2,17 +2,25 @@
 import requests
 import asyncio
 import sys
+from transactionServer.runcode.rabbitMQSetups import RabbitMQClient, RabbitMQReceiver
+def sendtoQueue(data):
+    transactionClient.send(data, priority=1)
 
 # Our quote Server is:
 # ["http://142.104.91.130:44424", 0]
 
-# Worker machines IP:Port
-workerMap = [["http://142.104.91.144:44424" , 0] ,["http://142.104.91.145:44424",0]
-             ,["http://142.104.91.146:44424" , 0],["http://142.104.91.147:44424", 0]
-             ,["http://142.104.91.148:44424" , 0],["http://142.104.91.149:44424", 0]
-             ,["http://142.104.91.150:44424" , 0]
-             ,["http://142.104.91.131:44424", 0],["http://142.104.91.132:44424", 0]
-             ,["http://142.104.91.133:44424", 0] ,["http://142.104.91.134:44424", 0]]
+# Worker machines via queues + mac
+workerMap = [["transactionIn193596476298033", 0 ],
+["transactionIn193596744799041",0 ],
+["transactionIn193601473895188",0 ],
+["transactionIn193601742334740",0 ],
+["transactionIn193724819779889",0 ],
+["transactionIn193809078333764",0 ],
+["transactionIn193821963432263",0 ],
+["transactionIn193826241687624",0 ],
+["transactionIn193830553497929",0 ],
+["transactionIn193860618727760",0 ],
+["transactionIn8796760983851",0 ]]
 # User to Worker Mapping.
 userMap = {}
 
@@ -58,7 +66,8 @@ async def send(command, args, lineNum):
         else:
             print("problem with sending the workers")
 
-    url = base_url
+    transactionServerID = base_url
+    url = ''
     data = {'lineNum': lineNum}
     if len(args) > 2:
         args = {'userId':args[0] , 'stockSymbol':args[1], 'cash':args[2]
@@ -77,38 +86,40 @@ async def send(command, args, lineNum):
     method = 'GET'
 
     if command in ['ADD']:
-        url = base_url + urls[command] % (args['userId'])
+        url =   urls[command] % (args['userId'])
         data['cash'] = args['cash']
         method = 'POST'
     if command in ['BUY', 'SELL', 'SET_BUY_AMOUNT', 'SET_BUY_TRIGGER', 'SET_SELL_AMOUNT', 'SET_SELL_TRIGGER']:
-        url = base_url + urls[command] % (args['userId'], args['stockSymbol'])
+        url =   urls[command] % (args['userId'], args['stockSymbol'])
         data['cash'] = args['cash']
         method = 'POST'
     if command in ['QUOTE']:
-        url = base_url + urls[command] % (args['userId'], args['stockSymbol'])
+        url =   urls[command] % (args['userId'], args['stockSymbol'])
         method = 'GET'
     if command in ['COMMIT_BUY', 'CANCEL_BUY', 'COMMIT_SELL', 'CANCEL_SELL']:
-        url = base_url + urls[command] % (args['userId'])
+        url =   urls[command] % (args['userId'])
         method = 'POST'
     if command in ['CANCEL_SET_BUY', 'CANCEL_SET_SELL']:
-        url = base_url + urls[command] % (args['userId'], args['stockSymbol'])
+        url =   urls[command] % (args['userId'], args['stockSymbol'])
         method = 'POST'
     if command in ['DUMPLOG']:
-        url = base_url + urls[command]
+        url =   urls[command]
         data['fileName'] = args['fileName']
         method = 'POST'
     if command in ['DISPLAY_SUMMARY']:
-        url = base_url + urls[command] % (args['userId'])
+        url =   urls[command] % (args['userId'])
         method = 'GET'
-
+    #
     # print(method)
     # print(url)
     # print(data)
-    if method == 'GET':
-        r = requests.get( url, data=data , verify=False)
-    else:
-        r = requests.post( url, data=data , verify=False)
-    # print(r.status_code)
+    # if method == 'GET':
+    #     r = requests.get( url, data=data , verify=False)
+    # else:
+    #     r = requests.post( url, data=data , verify=False)
+    # # print(r.status_code)
+    transactionClient = RabbitMQClient(transactionServerID)
+    transactionClient.send(url)
 
 async def sendRequests(userCommandList):
     for command in userCommandList:
