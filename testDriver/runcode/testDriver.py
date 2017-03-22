@@ -165,7 +165,7 @@ async def main():
         userActions, finished, lastLineNumber = splitUsersFromFile(start, chunk)
         start += chunk
 
-        print('sending requests...')
+        print('sending requests...' + str(start))
         processes = []
         for userSpecificActions in userActions:
             processes.append(
