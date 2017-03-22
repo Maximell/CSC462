@@ -1,4 +1,5 @@
 import sys
+import time
 from pprint import pprint
 import json
 import pika
@@ -91,6 +92,8 @@ def send(command, args, lineNum):
             'stockSymbol': args[1]
         }
     elif len(args) == 1 and command in ['DUMPLOG']:
+        # TODO: remove the sleep, temp solution
+        time.sleep(10)
         args = {
             'userId': args[0]
         }
