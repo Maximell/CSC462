@@ -109,27 +109,18 @@ def send(command, args, lineNum):
 
 def main():
     # read file and push into queues as you are reading
-    lastLineNumber = 0
     with open(sys.argv[1]) as f:
         for line in f:
             line = line.strip()
-
             splitLine = line.split(" ")
+
             lineNumber = splitLine[0].strip("[]")
-            lastLineNumber = lineNumber
 
             commandAndArgs = splitLine[1].split(",")
-
             command = commandAndArgs[0]
             args = commandAndArgs[1:]
 
-            username = args[0]
-
-            if not username.startswith("./"):
-                send(command, args, lineNumber)
-
-    # send it last
-    send('DUMPLOG', ['./testLOG'], lastLineNumber)
+            send(command, args, lineNumber)
 
 
 if __name__ == '__main__':
