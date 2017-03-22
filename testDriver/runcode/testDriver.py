@@ -3,13 +3,16 @@ import requests
 import asyncio
 import sys
 
+# Our quote Server is:
+# ["http://142.104.91.130:44424", 0]
+
 # Worker machines IP:Port
 workerMap = [["http://142.104.91.144:44424" , 0] ,["http://142.104.91.145:44424",0]
-             ,["http://142.104.91.146:44424" , 0],["http://142.104.91.147:44424" , 0]
-             ,["http://142.104.91.148:44424" , 0],["http://142.104.91.149:44424" , 0]
-             ,["http://142.104.91.150:44424" , 0], ["http://142.104.91.130:44424" , 0]
-             ,["http://142.104.91.132:44424", 0] ,["http://142.104.91.133:44424", 0]
-            , ["http://142.104.91.134:44424", 0]]
+             ,["http://142.104.91.146:44424" , 0],["http://142.104.91.147:44424", 0]
+             ,["http://142.104.91.148:44424" , 0],["http://142.104.91.149:44424", 0]
+             ,["http://142.104.91.150:44424" , 0]
+             ,["http://142.104.91.131:44424", 0],["http://142.104.91.132:44424", 0]
+             ,["http://142.104.91.133:44424", 0] ,["http://142.104.91.134:44424", 0]]
 # User to Worker Mapping.
 userMap = {}
 
@@ -36,7 +39,7 @@ async def send(command, args, lineNum):
     user = args[0]
     if user in userMap:
         base_url = userMap[user]
-        print("In dict already")
+        # print("In dict already")
     else:
         min = workerMap[0][1]
         index = 0
@@ -47,7 +50,7 @@ async def send(command, args, lineNum):
                 index = x
                 min = currentWorker[1]
         if sendto != None:
-            print("adding User to map")
+            # print("adding User to map")
             userMap[user] = sendto[0]
             base_url = sendto[0]
             workerMap[index][1] += 1
@@ -98,15 +101,14 @@ async def send(command, args, lineNum):
         url = base_url + urls[command] % (args['userId'])
         method = 'GET'
 
-    print(method)
-    print(url)
-    print(data)
+    # print(method)
+    # print(url)
+    # print(data)
     if method == 'GET':
         r = requests.get( url, data=data , verify=False)
     else:
         r = requests.post( url, data=data , verify=False)
-    print(r.status_code)
-    print(r.json())
+    # print(r.status_code)
 
 async def sendRequests(userCommandList):
     for command in userCommandList:
@@ -120,6 +122,7 @@ def splitUsersFromFile(start, chunk):
     with open(sys.argv[1]) as f:
         count = 0
         for line in f:
+            line = line.strip()
             if count < start:
                 # apparently python file reading is already lazy, so hopefully by skipping the lines, it will be alright
                 count += 1
@@ -137,7 +140,7 @@ def splitUsersFromFile(start, chunk):
             command = commandAndArgs[0]
             args = commandAndArgs[1:]
             # separate based on username and 'x' != 'x\n' which was happening a lot
-            args[0] = args[0].strip()
+            # args[0] = args[0].strip()
 
             username = args[0]
 
@@ -162,7 +165,7 @@ async def main():
         userActions, finished, lastLineNumber = splitUsersFromFile(start, chunk)
         start += chunk
 
-        print('sending requests...')
+        print('sending requests...' + str(start))
         processes = []
         for userSpecificActions in userActions:
             processes.append(

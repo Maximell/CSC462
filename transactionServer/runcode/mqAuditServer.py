@@ -290,7 +290,8 @@ class AuditServer:
             file.write('\t\t<timestamp>' + str(log['timeStamp']) + '</timestamp>\n')
             file.write('\t\t<server>' + str(log['server']) + '</server>\n')
             file.write('\t\t<transactionNum>' + str(log['transactionNum']) + '</transactionNum>\n')
-            file.write('\t\t<username>' + str(log['userId']) + '</username>\n')
+            if log['userId'] != "./testLOG":
+                file.write('\t\t<username>' + str(log['userId']) + '</username>\n')
             if logType == 'userCommand':
                 file.write('\t\t<command>' + str(log['commandName']) + '</command>\n')
                 if log.get('stockSymbol'):

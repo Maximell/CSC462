@@ -10,6 +10,113 @@ from mqQuoteServer import createQuoteRequest
 from mqTriggers import TriggerFunctions
 from mqAuditServer import auditFunctions
 
+# new RPC Database client using rabbitMQ
+class DatabaseRpcClient(object):
+    def __init__(self):
+        self.response = None
+        self.corr_id = None
+
+        self.connection = pika.BlockingConnection(pika.ConnectionParameters('142.104.91.142',44429))
+
+        self.channel = self.connection.channel()
+
+        result = self.channel.queue_declare(exclusive=True)
+        self.callback_queue = result.method.queue
+
+        self.channel.basic_consume(self.on_response, no_ack=True, queue=self.callback_queue)
+
+    def on_response(self, ch, method, props, body):
+        # make sure its the right package
+        if self.corr_id == props.correlation_id:
+            # self.response is essential the return of this function, because call() waits on it to be not None
+            self.response = json.loads(body)
+
+    def call(self, requestBody):
+        self.response = None
+        self.corr_id = str(uuid.uuid4())
+        print "sending Database request Id:", self.corr_id
+        self.channel.basic_publish(
+            exchange='',
+            routing_key=RabbitMQClient.DATABASE,
+            properties=pika.BasicProperties(
+                reply_to=self.callback_queue,
+                correlation_id=self.corr_id
+            ),
+            body=json.dumps(requestBody)
+        )
+        while self.response is None:
+            self.connection.process_data_events()
+        print "From Database server: ",  self.response
+        return self.response
+
+
+class TriggerRpcClient(object):
+    def __init__(self):
+        self.response = None
+        self.corr_id = None
+
+        self.connection = pika.BlockingConnection(pika.ConnectionParameters('142.104.91.142',44429))
+
+        self.channel = self.connection.channel()
+
+        result = self.channel.queue_declare(exclusive=True)
+        self.callback_queue = result.method.queue
+
+        self.channel.basic_consume(self.on_response, no_ack=True, queue=self.callback_queue)
+
+    def on_response(self, ch, method, props, body):
+        # make sure its the right package
+        if self.corr_id == props.correlation_id:
+            # self.response is essential the return of this function, because call() waits on it to be not None
+            self.response = json.loads(body)
+
+    def call(self, requestBody):
+        self.response = None
+        self.corr_id = str(uuid.uuid4())
+        print "sending Trigger request Id:", self.corr_id , requestBody
+        self.channel.basic_publish(
+            exchange='',
+            routing_key=RabbitMQClient.TRIGGERS,
+            properties=pika.BasicProperties(
+                reply_to=self.callback_queue,
+                correlation_id=self.corr_id
+            ),
+            body=json.dumps(requestBody)
+        )
+        while self.response is None:
+            self.connection.process_data_events()
+        print "From Trigger server: ",  self.response
+        return self.response
+
+
+# quote shape: symbol: {value: string, retrieved: epoch time, user: string, cryptoKey: string}
+class Quotes():
+    def __init__(self, cacheExpire=60):
+        self.cacheExpire = cacheExpire
+        self.quoteCache = {}
+
+    def getQuote(self, symbol):
+        cache = self.quoteCache.get(symbol)
+        if cache:
+            if self._cacheIsActive(cache):
+                return cache
+        return None
+
+    def cacheQuote(self, symbol, retrieved, value):
+        self.quoteCache[symbol] = {"retrieved": retrieved, "value": value}
+
+    def useCache(self, quote, symbol, retrieved):
+        if quote is not None:
+            self.cacheQuote(symbol, retrieved, quote)
+        else:
+            localQuote = self.getQuote(symbol)
+            if localQuote is not None:
+                quote = localQuote["value"]
+        return quote
+
+    def _cacheIsActive(self, quote):
+        return (int(quote.get('retrieved', 0)) + self.cacheExpire) > int(time.time())
+
 
 # From webServer: {"transactionNum": lineNum, "command": "QUOTE", "userId": userId, "stockSymbol": stockSymbol}
 # From quoteServer: + "quote:, "cryptoKey"
@@ -18,10 +125,13 @@ def handleCommandQuote(args):
     userId = args["userId"]
     lineNum = args["lineNum"]
 
-    quote = args.get("quote")
-    cryptoKey = args.get("cryptoKey")
+    quote = localQuoteCache.useCache(
+        args.get("quote"),
+        symbol,
+        args.get("quoteRetrieved")
+    )
 
-    if (quote is not None) and cryptoKey:
+    if quote is not None:
         print "Quote return: ", args
         return args
     else:
@@ -74,8 +184,14 @@ def handleCommandCommitBuy(args):
     transactionNum = args["lineNum"]
 
     buy = args.get("buy")
-    quote = args.get("quote")
     updatedUser = args.get("updatedUser")
+
+    if buy is not None:
+        quote = localQuoteCache.useCache(
+            args.get("quote"),
+            buy["symbol"],
+            args.get("quoteRetrieved")
+        )
 
     if updatedUser is not None:
         return args
@@ -136,7 +252,12 @@ def handleCommandCommitSell(args):
 
     sell = args.get("sell")
     updatedUser = args.get("updatedUser")
-    quote = args.get("quote")
+    if sell is not None:
+        quote = localQuoteCache.useCache(
+            args.get("quote"),
+            sell["symbol"],
+            args.get("quoteRetrieved")
+        )
 
     if updatedUser is not None:
         return args
@@ -442,6 +563,8 @@ def delegate(ch , method, properties, body):
 
 if __name__ == '__main__':
     print "starting TransactionServer"
+
+    localQuoteCache = Quotes()
 
     functionSwitch = {
         "QUOTE": handleCommandQuote,

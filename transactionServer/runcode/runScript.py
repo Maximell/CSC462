@@ -4,25 +4,23 @@ import os
 import sys
 
 if __name__ == '__main__':
-    # start transaction server
-    # start Webserver
+    # start a 'worker' module, which includes:
+    #   transactionServer
+    #   triggerServer
+    #   databaseServer
     try:
         os.system("python -u webServer.py > webserverOutput.txt &")
     except:
-        print "quote server failed to start"
+        print "web server failed to start"
     try:
         os.system("python -u mqTriggers.py > triggerOutput.txt &")
     except:
-        print "Audit server failed to start"
+        print "trigger server failed to start"
     try:
         os.system("python -u transactionServer.py > transOutput.txt &")
     except:
         print "transaction server failed to start"
-    # start database
     try:
         os.system("python -u mqDatabaseServer.py > databaseOutput.txt &")
     except:
         print "Database Server failed to start"
-
-
-    #os.system("killall python")

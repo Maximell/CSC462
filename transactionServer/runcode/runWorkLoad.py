@@ -2,9 +2,11 @@
 # Right now this is to be run on b131
 #
 import os
+import sys
 
 
 try:
     os.system("python3.5 ../../testDriver/runcode/testDriver.py " + str(sys.argv[1]))
-except:
+except Exception as e:
+    print e
     print "test driver failed to start"

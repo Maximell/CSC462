@@ -6,16 +6,8 @@ import os
 import sys
 
 if __name__ == '__main__':
-    # start transaction server
+    # start quote server
     try:
         os.system("python -u mqAuditServer.py > auditOutput.txt &")
     except:
-        print "Audit server failed to start"
-    try:
-        os.system("python -u mqQuoteServer.py > quoteOutput.txt &")
-    except:
-        print "quote server failed to start"
-
-
-
-    #os.system("killall python")
+        print "audit server failed to start"
