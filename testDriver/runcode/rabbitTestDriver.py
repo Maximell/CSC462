@@ -1,4 +1,5 @@
 import sys
+import time
 from pprint import pprint
 import json
 import pika
@@ -90,8 +91,10 @@ def send(command, args, lineNum):
             'stockSymbol': args[1]
         }
     elif len(args) == 1 and command in ['DUMPLOG']:
+        # TODO: remove the sleep, temp solution
+        time.sleep(10)
         args = {
-            'fileName': args[0]
+            'userId': args[0]
         }
     elif len(args) == 1:
         args = {
@@ -99,7 +102,13 @@ def send(command, args, lineNum):
         }
 
     args["command"] = command
-    args["linNum"] = lineNum
+    args["lineNum"] = lineNum
+
+    if args.get("cash"):
+        try:
+            float(args["cash"])
+        except:
+            args["cash"] = -1
 
     print "sending:", args
     # push into rabbit
