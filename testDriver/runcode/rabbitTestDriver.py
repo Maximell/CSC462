@@ -100,7 +100,7 @@ def send(command, args, lineNum):
         }
 
     args["command"] = command
-    args["linNum"] = lineNum
+    args["lineNum"] = lineNum
 
     print "sending:", args
     # push into rabbit
