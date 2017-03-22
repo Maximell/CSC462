@@ -1,7 +1,8 @@
 # ssh keys added for each worker, as here: https://www.digitalocean.com/community/tutorials/how-to-set-up-ssh-keys--2
 
 # this command needs to be run from machine 142, as that is where the private-key is held.
-
+# quote server is running from root@142.104.91.130:44421
+# Audit server and testdriver are on root@142.104.91.131:44421
 # there are 4 'types' of servers:
 #   test driver (run on 142)
 #   'workers' that contain a transactionserver, triggerserver, and db
@@ -24,10 +25,9 @@ docker kill RMQmanager
 echo starting RMQmanager
 docker start RMQmanager
 echo sleeping for 10 seconds so RMQmanager has time to boot
+echo b142 is our host for the RMQ docker
 sleep 10
-echo start local audit on:
-hostname
-python startAuditServer.py
+
 echo finished local configuration
 
 echo assigning the working directory path to a variable
@@ -38,15 +38,17 @@ echo attempting to configure workers
 echo switching branches to $1
 pssh -i -h workersHostFile.txt -x "cd $workingDirectoryPath;" git checkout $1
 pssh -i -H root@142.104.91.130:44421 -x "cd $workingDirectoryPath;" git checkout $1
+pssh -i -H root@142.104.91.131:44421 -x "cd $workingDirectoryPath;" git checkout $1
 echo getting latest code
 pssh -i -h workersHostFile.txt -x "cd $workingDirectoryPath;" git pull
 pssh -i -H root@142.104.91.130:44421 -x "cd $workingDirectoryPath;" git pull
+pssh -i -H root@142.104.91.131:44421 -x "cd $workingDirectoryPath;" git pull
 echo killing all python
 pssh -i -h workersHostFile.txt killall python
 pssh -i -H root@142.104.91.130:44421 killall python
 echo configuring iptables
 pssh -i -h workersHostFile.txt iptables -I INPUT -p tcp --dport 44424 -j ACCEPT
-pssh -i -H root@142.104.91.130:44421 iptables -I INPUT -p tcp --dport 44424 -j ACCEPT
+
 echo done configuring iptables
 echo starting workers
 pssh -i -h workersHostFile.txt -x "cd $workingDirectoryPath;" python runScript.py
@@ -54,7 +56,9 @@ echo worker configuration complete
 echo starting quote server
 pssh -i -H root@142.104.91.130:44421 -x "cd $workingDirectoryPath;" python startQuoteServer.py
 echo done starting quote
-
+echo starting audit server on b131:
+pssh -i -H root@142.104.91.131:44421 -x "cd $workingDirectoryPath;" python startAuditServer.py
+echo audit server started
 #waiting to make sure everything has started
 echo waiting for 10 seconds to make sure everything has started
 sleep 10
@@ -63,7 +67,8 @@ echo done waiting
 if [ $2 ]; then
     echo the file we are trying to run is: $2
     pwd
-    python runWorkLoad.py $2
+    echo running testdriver from 131
+    pssh -i -H root@142.104.91.131:44421 -x "cd $workingDirectoryPath;" python runWorkLoad.py $2
 else
     echo This script must be run with the workload file as a parameter
 fi
