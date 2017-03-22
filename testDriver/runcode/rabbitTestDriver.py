@@ -92,7 +92,7 @@ def send(command, args, lineNum):
         }
     elif len(args) == 1 and command in ['DUMPLOG']:
         args = {
-            'fileName': args[0]
+            'userId': args[0]
         }
     elif len(args) == 1:
         args = {
