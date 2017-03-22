@@ -105,6 +105,12 @@ def send(command, args, lineNum):
     args["command"] = command
     args["lineNum"] = lineNum
 
+    if args.get("cash"):
+        try:
+            float(args["cash"])
+        except:
+            args["cash"] = -1
+
     print "sending:", args
     # push into rabbit
     client.send(args)
