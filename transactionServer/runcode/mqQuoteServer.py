@@ -84,12 +84,12 @@ class getQuoteThread(Thread):
         # print "built request: ",requestBody
         auditClient.send(requestBody)
 
-        self.cacheLock.acquire()
+        # self.cacheLock.acquire()
         quoteServer.quoteCache[self.symbol] = newQuote
         del quoteServer.inflight[quoteServer.inflight.index(self.symbol)]
         quoteServer.threadCount -= 1
         print "thread terminating"
-        self.cacheLock.release()
+        # self.cacheLock.release()
 
 
 
@@ -101,6 +101,7 @@ class Quotes():
         self.inflight = []
         self.pool = {}
         self.threadCount = 0
+        self.maxthread = 15
 
 
     def getQuote(self, symbol , user , transactionNum):
@@ -116,8 +117,11 @@ class Quotes():
 
     def hitQuoteServerAndCache(self, symbol, user, transactionNum):
         # run new quote thread
+
         if symbol in self.inflight:
             return
+        while(quoteServer.maxthread <= quoteServer.threadCount):
+            pass
         getQuoteThread(symbol , user , transactionNum)
         print "making new thread"
         quoteServer.threadCount += 1
