@@ -87,6 +87,8 @@ class getQuoteThread(Thread):
         self.cacheLock.acquire()
         quoteServer.quoteCache[self.symbol] = newQuote
         del quoteServer.inflight[quoteServer.inflight.index(self.symbol)]
+        quoteServer.threadCount -= 1
+        print "thread terminating"
         self.cacheLock.release()
 
 
@@ -98,6 +100,7 @@ class Quotes():
         self.quoteCache = {}
         self.inflight = []
         self.pool = {}
+        self.threadCount = 0
 
 
     def getQuote(self, symbol , user , transactionNum):
@@ -116,6 +119,9 @@ class Quotes():
         if symbol in self.inflight:
             return
         getQuoteThread(symbol , user , transactionNum)
+        print "making new thread"
+        quoteServer.threadCount += 1
+        print "current thread count = ",quoteServer.threadCount
         self.inflight.append(symbol)
 
 
