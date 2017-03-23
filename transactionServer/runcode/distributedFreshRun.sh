@@ -92,8 +92,6 @@ pssh -i -H root@142.104.91.141:44421 -x "cd $gitpath;" git pull
 pssh -i -H root@142.104.91.131:44421 -x "cd $gitpath;" git pull
 pssh -i -H root@142.104.91.143:44421 -x "cd $gitpath;" git pull
 
-
-
 echo configuring iptables
 pssh -i -h workersHostFile.txt iptables -I INPUT -p tcp --dport 44424 -j ACCEPT
 
