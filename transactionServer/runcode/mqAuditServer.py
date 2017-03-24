@@ -432,6 +432,7 @@ def handleWriteLogs(payload):
 
 def on_request(ch, method, props, payload):
     print "received payload", payload
+    print props
 
     function = payload["function"]
     print "function: ", function
