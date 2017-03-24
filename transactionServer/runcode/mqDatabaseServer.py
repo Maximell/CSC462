@@ -693,11 +693,11 @@ if __name__ == '__main__':
     # Object to listen for the Database
     consumeRabbit = consumer(RabbitMQReceiver.DATABASE)
     while (True):
-        if consumeRabbit.rabbitReceiver.empty() == False:
+        if consumeRabbit.rabbitReceiver.queue.empty():
+            continue
+        else:
             msg = consumeRabbit.rabbitReceiver.queue.get()
             payload = msg[1]
             args = payload[1]
             props = msg[0]
             on_request(None, None, props, args)
-        else:
-            continue

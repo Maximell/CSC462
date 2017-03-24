@@ -403,13 +403,13 @@ if __name__ == '__main__':
     print("awaiting trigger requests")
     consumeRabbit = consumer(RabbitMQReceiver.TRIGGERS)
     while (True):
-        if consumeRabbit.rabbitReceiver.empty() == False:
+        if consumeRabbit.rabbitReceiver.queue.empty():
+           continue
+        else:
             msg = consumeRabbit.rabbitReceiver.queue.get()
             payload = msg[1]
             args = payload[1]
             props = msg[0]
             on_request(None, None, props, args)
-        else:
-            continue
 
 
