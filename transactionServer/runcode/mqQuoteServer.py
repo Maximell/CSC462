@@ -39,7 +39,7 @@ class rabbitConsumer():
             line = payload.get("transactionNum")
 
         if props.priority == 1:
-            # flipping priority b/c Priority works lowestest to highest
+            # flipping priority b/c PriorityQueues works lowestest to highest
             # But our system works the other way.
 
             # We need to display lineNum infront of payload to so get() works properly
