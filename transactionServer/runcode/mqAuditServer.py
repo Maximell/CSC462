@@ -420,7 +420,8 @@ if __name__ == '__main__':
     print consumeRabbit.rabbitReceiver
     while (True):
         if consumeRabbit.rabbitReceiver.empty():
-            print "empty"
+            # print "empty"
+            continue
         else:
             msg = consumeRabbit.rabbitReceiver.get()
             payload = msg[1]

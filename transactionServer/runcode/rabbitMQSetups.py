@@ -24,7 +24,7 @@ class rabbitConsumer():
 
     def consume(self, ch, method, props, body):
         payload = json.loads(body)
-        print "got one"
+        print "payload = ",payload
         if props.priority == 1:
             # flipping priority b/c Priority works lowestest to highest
             # But our system works the other way.

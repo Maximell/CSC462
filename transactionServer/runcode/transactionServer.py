@@ -503,7 +503,7 @@ if __name__ == '__main__':
     while(True):
         try:
             if consumeRabbit.rabbitReceiver.empty():
-                print "empty"
+                # print "empty"
                 continue
             else:
                 msg = consumeRabbit.rabbitReceiver.get()
