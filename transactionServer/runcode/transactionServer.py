@@ -402,7 +402,7 @@ def handleCommandDumplog(args):
         args["userId"],
         args["command"]
     )
-    auditClient.send(requestBody)
+    auditClient.send(requestBody , 3)
 
 
 def errorPrint(args, error):
