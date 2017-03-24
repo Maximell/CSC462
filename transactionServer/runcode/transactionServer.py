@@ -499,13 +499,19 @@ if __name__ == '__main__':
 
     # This is the new python in memory queue for the transation Server to eat from.
     consumeRabbit = consumer(RabbitMQReceiver.TRANSACTION)
+    print "made thread"
     while(True):
-        if consumeRabbit.rabbitReceiver.queue.empty():
-            print "empty"
-            continue
-        else:
-            msg = consumeRabbit.rabbitReceiver.queue.get()
-            payload = msg[1]
-            args = payload[1]
-            props = msg[0]
-            delegate(None, None, props, args)
+        try:
+            if consumeRabbit.rabbitReceiver.queue.empty():
+                print "empty"
+                continue
+            else:
+                msg = consumeRabbit.rabbitReceiver.queue.get()
+                payload = msg[1]
+                args = payload[1]
+                props = msg[0]
+                delegate(None, None, props, args)
+        except:
+            if consumeRabbit.rabbitReceiver == None:
+                print "Not running yet"
+                continue
