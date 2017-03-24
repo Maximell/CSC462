@@ -473,6 +473,6 @@ if __name__ == '__main__':
             payload = msg[1]
             args = payload[1]
             props = msg[0]
-            print "queue size: ", rabbit.queue.queue()
+            print "queue size: ", rabbit.queue.qsize()
             on_request(None, None, props, args)
 
