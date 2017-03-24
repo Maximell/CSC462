@@ -3,7 +3,7 @@ import json
 from rabbitMQSetups import RabbitMQReceiver
 from threading import Thread
 import Queue
-
+import time
 
 
 class auditFunctions:
@@ -457,8 +457,11 @@ if __name__ == '__main__':
     while (True):
         if rabbit.queue.empty():
             # print "empty"
+            time.sleep(2)
+            print rabbit.queue
             continue
         else:
+            print "dealing with data"
             msg = rabbit.queue.get()
             payload = msg[1]
             args = payload[1]
