@@ -1,6 +1,36 @@
 import json
 import pika
 from uuid import getnode as get_mac
+import Queue
+from threading import Thread
+
+class consumer (Thread):
+    def __init__(self , queueName):
+        Thread.__init__(self)
+        self.daemon = True
+        self.rabbitReceiver = None
+        self.queueName = queueName
+        self.start()
+
+    def run(self):
+        self.rabbitReceiver = rabbitConsumer(self.queueName)
+
+
+class rabbitConsumer():
+    def __init__(self , queueName):
+        self.queue = Queue.PriorityQueue()
+        self.connection = RabbitMQReceiver(self.consume , queueName)
+
+    def consume(self, ch, method, props, body):
+        payload = json.loads(body)
+        if props.priority == 1:
+            # flipping priority b/c Priority works lowestest to highest
+            # But our system works the other way.
+
+            # We need to display lineNum infront of payload to so get() works properly
+            self.queue.put((2, [payload["lineNum"] , payload]))
+        else:
+            self.queue.put((1, [payload["lineNum"] , payload]))
 
 
 # Names for RabbitMQ queues

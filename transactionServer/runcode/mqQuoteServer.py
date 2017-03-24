@@ -6,8 +6,9 @@ from random import randint
 import pika
 from threading import Thread
 import threading
-from rabbitMQSetups import RabbitMQClient, RabbitMQReceiver
+from rabbitMQSetups import RabbitMQClient, RabbitMQReceiver , rabbitConsumer , consumer
 from mqAuditServer import auditFunctions
+
 
 
 
@@ -101,7 +102,7 @@ class Quotes():
         self.inflight = []
         self.pool = {}
         self.threadCount = 0
-        self.maxthread = 15
+        self.maxthread = 30
 
 
     def getQuote(self, symbol , user , transactionNum):
@@ -196,5 +197,14 @@ if __name__ == '__main__':
     auditClient = RabbitMQClient(RabbitMQClient.AUDIT)
     # transactionClient = RabbitMQClient(RabbitMQClient.TRANSACTION)
     print "Awaiting quote requests"
-    RabbitMQReceiver(on_request, RabbitMQReceiver.QUOTE)
-
+    # Start Consumer Thread
+    consumeRabbit = consumer(RabbitMQReceiver.QUOTE)
+    while(True):
+        if consumeRabbit.rabbitReceiver.queue.empty() == False:
+            msg = consumeRabbit.rabbitReceiver.queue.get()
+            payload = msg[1]
+            args = payload[1]
+            props = msg[0]
+            on_request(None, None , props , args)
+        else:
+            continue

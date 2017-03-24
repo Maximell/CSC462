@@ -4,7 +4,7 @@ import time
 import json
 import math
 import ast
-from rabbitMQSetups import RabbitMQClient, RabbitMQReceiver
+from rabbitMQSetups import RabbitMQClient, RabbitMQReceiver , consumer
 
 class databaseFunctions:
     ADD = 1
@@ -691,4 +691,13 @@ if __name__ == '__main__':
 
     print("awaiting database requests")
     # Object to listen for the Database
-    RabbitMQReceiver(on_request, RabbitMQReceiver.DATABASE)
+    consumeRabbit = consumer(RabbitMQReceiver.DATABASE)
+    while (True):
+        if consumeRabbit.rabbitReceiver.queue.empty() == False:
+            msg = consumeRabbit.rabbitReceiver.queue.get()
+            payload = msg[1]
+            args = payload[1]
+            props = msg[0]
+            on_request(None, None, props, args)
+        else:
+            continue
