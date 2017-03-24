@@ -200,10 +200,10 @@ if __name__ == '__main__':
     # Start Consumer Thread
     consumeRabbit = consumer(RabbitMQReceiver.QUOTE)
     while(True):
-        if consumeRabbit.rabbitReceiver.queue.empty():
+        if consumeRabbit.rabbitReceiver.empty():
             continue
         else:
-            msg = consumeRabbit.rabbitReceiver.queue.get()
+            msg = consumeRabbit.rabbitReceiver.get()
             payload = msg[1]
             args = payload[1]
             props = msg[0]
