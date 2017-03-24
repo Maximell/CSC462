@@ -32,6 +32,10 @@ echo finished local configuration
 
 echo assigning the working directory path to a variable
 workingDirectoryPath="Desktop/seng462/CSC462/transactionServer/runcode"
+echo reset branch
+pssh -i -h workersHostFile.txt -x "cd $workingDirectoryPath;" git reset --hard
+pssh -i -H root@142.104.91.130:44421 -x "cd $workingDirectoryPath;" git reset --hard
+pssh -i -H root@142.104.91.131:44421 -x "cd $workingDirectoryPath;" git reset --hard
 
 # Do the configuration on the worker machines
 echo attempting to configure workers
