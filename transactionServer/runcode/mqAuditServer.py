@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import json
-from rabbitMQSetups import RabbitMQReceiver
+from rabbitMQSetups import RabbitMQReceiver, consumer
 
 class auditFunctions:
     USER_COMMAND = 1
@@ -416,4 +416,15 @@ if __name__ == '__main__':
         auditFunctions.WRITE_LOGS: handleWriteLogs
     }
 
-    RabbitMQReceiver(on_request, RabbitMQReceiver.AUDIT)
+    consumeRabbit = consumer(RabbitMQReceiver.AUDIT)
+    while (True):
+        if consumeRabbit.rabbitReceiver.queue.empty() == False:
+            msg = consumeRabbit.rabbitReceiver.queue.get()
+            payload = msg[1]
+            args = payload[1]
+            props = msg[0]
+            on_request(None, None, props, args)
+        else:
+            print "empty"
+            continue
+

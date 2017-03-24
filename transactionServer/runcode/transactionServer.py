@@ -507,4 +507,5 @@ if __name__ == '__main__':
             props = msg[0]
             delegate(None, None , props , args)
         else:
+            print "empty"
             continue
