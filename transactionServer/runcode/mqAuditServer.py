@@ -5,37 +5,6 @@ from threading import Thread
 import Queue
 
 
-class rabbitQueue:
-    def __init__(self):
-        self.queue = Queue.PriorityQueue()
-
-class consumer (Thread):
-    def __init__(self , queueName):
-        Thread.__init__(self)
-        self.daemon = True
-        self.queueName = queueName
-        self.start()
-
-    def run(self):
-        print "started"
-        rabbitConsumer(self.queueName)
-
-
-class rabbitConsumer():
-    def __init__(self , queueName):
-        self.connection = RabbitMQReceiver(self.consume , queueName)
-
-    def consume(self, ch, method, props, body):
-        payload = json.loads(body)
-        print "payload = ",payload
-        if props.priority == 1:
-            # flipping priority b/c Priority works lowestest to highest
-            # But our system works the other way.
-
-            # We need to display lineNum infront of payload to so get() works properly
-            rabbit.queue.put((2, [payload["lineNum"] , payload]))
-        else:
-            rabbit.queue.put((1, [payload["lineNum"] , payload]))
 
 class auditFunctions:
     USER_COMMAND = 1
@@ -432,6 +401,39 @@ def on_request(ch, method, props, payload):
         handleFunctionSwitch[function](payload)
     except KeyError as error:
         print "keyError (possible function not found):", str(error)
+
+
+class rabbitQueue:
+    def __init__(self):
+        self.queue = Queue.PriorityQueue()
+
+class consumer (Thread):
+    def __init__(self , queueName):
+        Thread.__init__(self)
+        self.daemon = True
+        self.queueName = queueName
+        self.start()
+
+    def run(self):
+        print "started"
+        rabbitConsumer(self.queueName)
+
+
+class rabbitConsumer():
+    def __init__(self , queueName):
+        self.connection = RabbitMQReceiver(self.consume , queueName)
+
+    def consume(self, ch, method, props, body):
+        payload = json.loads(body)
+        print "payload = ",payload
+        if props.priority == 1:
+            # flipping priority b/c Priority works lowestest to highest
+            # But our system works the other way.
+
+            # We need to display lineNum infront of payload to so get() works properly
+            rabbit.queue.put((2, [payload["lineNum"] , payload]))
+        else:
+            rabbit.queue.put((1, [payload["lineNum"] , payload]))
 
 
 if __name__ == '__main__':
