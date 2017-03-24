@@ -394,9 +394,6 @@ if __name__ == '__main__':
         TriggerFunctions.GET_SELL: handleGetSell
     }
 
-    quote_rpc = QuoteRpcClient()
-    db_rpc = DatabaseRpcClient()
-
     # self.start() currently commented out in both threads
     buyThread = BuyTriggerThread()
     sellThread = SellTriggerThread()
@@ -406,12 +403,12 @@ if __name__ == '__main__':
     print("awaiting trigger requests")
     consumeRabbit = consumer(RabbitMQReceiver.TRIGGERS)
     while (True):
-        if consumeRabbit.rabbitReceiver.queue.empty() == False:
+        if consumeRabbit.rabbitReceiver.empty() == False:
             msg = consumeRabbit.rabbitReceiver.queue.get()
             payload = msg[1]
             args = payload[1]
             props = msg[0]
-            delegate(None, None, props, args)
+            on_request(None, None, props, args)
         else:
             continue
 

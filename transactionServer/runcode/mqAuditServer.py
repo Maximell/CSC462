@@ -418,7 +418,7 @@ if __name__ == '__main__':
 
     consumeRabbit = consumer(RabbitMQReceiver.AUDIT)
     while (True):
-        if consumeRabbit.rabbitReceiver.queue.empty() == False:
+        if consumeRabbit.rabbitReceiver.empty() == False:
             msg = consumeRabbit.rabbitReceiver.queue.get()
             payload = msg[1]
             args = payload[1]
