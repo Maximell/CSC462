@@ -10,7 +10,7 @@ class consumer (Thread):
         self.daemon = True
         self.rabbitReceiver = None
         self.queueName = queueName
-        self.start()
+        self.run()
 
     def run(self):
         self.rabbitReceiver = rabbitConsumer(self.queueName)
