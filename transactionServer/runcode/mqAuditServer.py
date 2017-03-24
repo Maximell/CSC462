@@ -417,7 +417,7 @@ if __name__ == '__main__':
     }
 
     consumeRabbit = consumer(RabbitMQReceiver.AUDIT)
-    print consumeRabbit
+    print consumeRabbit.rabbitReceiver
     while (True):
         if consumeRabbit.rabbitReceiver.queue.empty():
             print "empty"
