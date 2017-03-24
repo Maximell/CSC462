@@ -73,6 +73,9 @@ pssh -i -H root@142.104.91.143:44421 -x "cd $gitpath;" git fetch
 
 # Do the configuration on the worker machines
 echo attempting to configure workers
+echo doing a hard reset on origin/branch
+pssh -i -h workersHostFile.txt -x "cd $workingDirectoryPath;" git reset --hard
+pssh -i -h quoteHostFile.txt -x "cd $workingDirectoryPath;" git reset --hard
 echo switching branches to $1
 pssh -i -h workersHostFile.txt -x "cd $gitpath;" git checkout $1
 pssh -i -H root@142.104.91.130:44421 -x "cd $gitpath;" git checkout $1
