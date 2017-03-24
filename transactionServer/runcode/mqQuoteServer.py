@@ -22,11 +22,10 @@ class consumer (Thread):
         self.daemon = True
         self.queueName = queueName
         self.start()
-        # self.join()
 
     def run(self):
         print "started"
-        rabbitConsumer(self.queueName).queue
+        rabbitConsumer(self.queueName)
 
 
 class rabbitConsumer():

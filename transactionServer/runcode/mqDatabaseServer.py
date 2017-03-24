@@ -22,7 +22,7 @@ class consumer (Thread):
 
     def run(self):
         print "started"
-        rabbitConsumer(self.queueName).queue
+        rabbitConsumer(self.queueName)
 
 
 class rabbitConsumer():

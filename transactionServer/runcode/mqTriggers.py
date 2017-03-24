@@ -27,7 +27,7 @@ class consumer (Thread):
 
     def run(self):
         print "started"
-        rabbitConsumer(self.queueName).queue
+        rabbitConsumer(self.queueName)
 
 
 class rabbitConsumer():
@@ -429,8 +429,8 @@ if __name__ == '__main__':
     }
 
     # self.start() currently commented out in both threads
-    # buyThread = BuyTriggerThread()
-    # sellThread = SellTriggerThread()
+    buyThread = BuyTriggerThread()
+    sellThread = SellTriggerThread()
 
     transactionClient = RabbitMQClient(RabbitMQClient.TRANSACTION)
 
