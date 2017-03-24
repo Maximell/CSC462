@@ -562,5 +562,6 @@ if __name__ == '__main__':
             payload = msg[1]
             args = payload[1]
             props = msg[0]
+            print "queue size: ", rabbit.queue.queue()
             delegate(None, None, props, args)
 
