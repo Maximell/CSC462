@@ -86,7 +86,7 @@ if [ $2 ]; then
     echo the file we are trying to run is: $2
     pwd
     echo running testdriver from 131
-    pssh -i -H root@142.104.91.131:44421 -x -t 1000000000000 "cd $workingDirectoryPath;" python runWorkLoad.py $2
+    pssh -i -t 1000000000000 -H root@142.104.91.131:44421  -x  "cd $workingDirectoryPath;" python runWorkLoad.py $2
 else
     echo This script must be run with the workload file as a parameter
 fi
