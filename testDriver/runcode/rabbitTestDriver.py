@@ -32,7 +32,6 @@ workerMap = [
     [RabbitMQClient("transactionIn193596744799041"), 0],
     [RabbitMQClient("transactionIn193601473895188"), 0],
     [RabbitMQClient("transactionIn193601742334740"), 0],
-    [RabbitMQClient("transactionIn193724819779889"), 0],
     [RabbitMQClient("transactionIn193809078333764"), 0],
     [RabbitMQClient("transactionIn193821963432263"), 0],
     [RabbitMQClient("transactionIn193826241687624"), 0],

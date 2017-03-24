@@ -1,92 +1,49 @@
 import math
 import time
-import uuid
-import pika
 import json
-import ast
 from rabbitMQSetups import RabbitMQClient, RabbitMQReceiver
 from mqDatabaseServer import databaseFunctions
 from mqQuoteServer import createQuoteRequest
 from mqTriggers import TriggerFunctions
 from mqAuditServer import auditFunctions
+from threading import Thread
+import Queue
 
-# new RPC Database client using rabbitMQ
-class DatabaseRpcClient(object):
+class rabbitQueue:
     def __init__(self):
-        self.response = None
-        self.corr_id = None
+        self.queue = Queue.PriorityQueue()
 
-        self.connection = pika.BlockingConnection(pika.ConnectionParameters('142.104.91.142',44429))
+class consumer (Thread):
+    def __init__(self , queueName):
+        Thread.__init__(self)
+        self.daemon = True
+        self.queueName = queueName
+        self.start()
+        # self.join()
 
-        self.channel = self.connection.channel()
-
-        result = self.channel.queue_declare(exclusive=True)
-        self.callback_queue = result.method.queue
-
-        self.channel.basic_consume(self.on_response, no_ack=True, queue=self.callback_queue)
-
-    def on_response(self, ch, method, props, body):
-        # make sure its the right package
-        if self.corr_id == props.correlation_id:
-            # self.response is essential the return of this function, because call() waits on it to be not None
-            self.response = json.loads(body)
-
-    def call(self, requestBody):
-        self.response = None
-        self.corr_id = str(uuid.uuid4())
-        print "sending Database request Id:", self.corr_id
-        self.channel.basic_publish(
-            exchange='',
-            routing_key=RabbitMQClient.DATABASE,
-            properties=pika.BasicProperties(
-                reply_to=self.callback_queue,
-                correlation_id=self.corr_id
-            ),
-            body=json.dumps(requestBody)
-        )
-        while self.response is None:
-            self.connection.process_data_events()
-        print "From Database server: ",  self.response
-        return self.response
+    def run(self):
+        print "started"
+        rabbitConsumer(self.queueName)
 
 
-class TriggerRpcClient(object):
-    def __init__(self):
-        self.response = None
-        self.corr_id = None
+class rabbitConsumer():
+    def __init__(self, queueName):
+        self.connection = RabbitMQReceiver(self.consume, queueName)
 
-        self.connection = pika.BlockingConnection(pika.ConnectionParameters('142.104.91.142',44429))
+    def consume(self, ch, method, props, body):
+        payload = json.loads(body)
+        line = payload.get("lineNum")
+        if line is None:
+            line = payload.get("transactionNum")
 
-        self.channel = self.connection.channel()
+        if props.priority == 1:
+            # flipping priority b/c Priority works lowestest to highest
+            # But our system works the other way.
 
-        result = self.channel.queue_declare(exclusive=True)
-        self.callback_queue = result.method.queue
-
-        self.channel.basic_consume(self.on_response, no_ack=True, queue=self.callback_queue)
-
-    def on_response(self, ch, method, props, body):
-        # make sure its the right package
-        if self.corr_id == props.correlation_id:
-            # self.response is essential the return of this function, because call() waits on it to be not None
-            self.response = json.loads(body)
-
-    def call(self, requestBody):
-        self.response = None
-        self.corr_id = str(uuid.uuid4())
-        print "sending Trigger request Id:", self.corr_id , requestBody
-        self.channel.basic_publish(
-            exchange='',
-            routing_key=RabbitMQClient.TRIGGERS,
-            properties=pika.BasicProperties(
-                reply_to=self.callback_queue,
-                correlation_id=self.corr_id
-            ),
-            body=json.dumps(requestBody)
-        )
-        while self.response is None:
-            self.connection.process_data_events()
-        print "From Trigger server: ",  self.response
-        return self.response
+            # We need to display lineNum infront of payload to so get() works properly
+            rabbit.queue.put((2, [line, payload]))
+        else:
+            rabbit.queue.put((1, [line, payload]))
 
 
 # quote shape: symbol: {value: string, retrieved: epoch time, user: string, cryptoKey: string}
@@ -443,7 +400,7 @@ def handleCommandDumplog(args):
         args["userId"],
         args["command"]
     )
-    auditClient.send(requestBody)
+    auditClient.send(requestBody, 3)
 
 
 def errorPrint(args, error):
@@ -457,9 +414,10 @@ def create_response(status, response):
     return {'status': status, 'body': response}
 
 
-def delegate(ch , method, properties, body):
-    args = json.loads(body)
+def delegate(ch , method, prop, args):
+    # args = json.loads(body)
     print "incoming args: ", args
+    print prop
 
     # error checking from other components
     if args.get("response") >= 400:
@@ -486,7 +444,7 @@ def delegate(ch , method, properties, body):
     else:
         try:
             # send command to audit, if it is from web server
-            if properties.priority == 1:
+            if prop == 2:
                 if args["userId"] != "./testLOG":
                     requestBody = auditFunctions.createUserCommand(
                         int(time.time() * 1000),
@@ -584,9 +542,25 @@ if __name__ == '__main__':
         "DUMPLOG": handleCommandDumplog
     }
 
+
+
     quoteClient = RabbitMQClient(RabbitMQClient.QUOTE)
     auditClient = RabbitMQClient(RabbitMQClient.AUDIT)
     databaseClient = RabbitMQClient(RabbitMQClient.DATABASE)
     triggerClient = RabbitMQClient(RabbitMQClient.TRIGGERS)
 
-    RabbitMQReceiver(delegate, RabbitMQReceiver.TRANSACTION)
+    # This is the new python in memory queue for the transation Server to eat from.
+    rabbit = rabbitQueue()
+    consumeRabbit = consumer(RabbitMQReceiver.TRANSACTION)
+    print "made thread"
+    while(True):
+        if rabbit.queue.empty():
+            # print "empty"
+            continue
+        else:
+            msg = rabbit.queue.get()
+            payload = msg[1]
+            args = payload[1]
+            props = msg[0]
+            delegate(None, None, props, args)
+

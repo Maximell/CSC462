@@ -8,7 +8,44 @@ from threading import Thread
 import threading
 from rabbitMQSetups import RabbitMQClient, RabbitMQReceiver
 from mqAuditServer import auditFunctions
+import Queue
 
+
+
+class rabbitQueue:
+    def __init__(self):
+        self.queue = Queue.PriorityQueue()
+
+class consumer (Thread):
+    def __init__(self , queueName):
+        Thread.__init__(self)
+        self.daemon = True
+        self.queueName = queueName
+        self.start()
+
+    def run(self):
+        print "started"
+        rabbitConsumer(self.queueName)
+
+
+class rabbitConsumer():
+    def __init__(self, queueName):
+        self.connection = RabbitMQReceiver(self.consume, queueName)
+
+    def consume(self, ch, method, props, body):
+        payload = json.loads(body)
+        line = payload.get("lineNum")
+        if line is None:
+            line = payload.get("transactionNum")
+
+        if props.priority == 1:
+            # flipping priority b/c Priority works lowestest to highest
+            # But our system works the other way.
+
+            # We need to display lineNum infront of payload to so get() works properly
+            rabbit.queue.put((2, [line, payload]))
+        else:
+            rabbit.queue.put((1, [line, payload]))
 
 
 def createQuoteRequest(userId, stockSymbol, lineNum, args):
@@ -84,10 +121,12 @@ class getQuoteThread(Thread):
         # print "built request: ",requestBody
         auditClient.send(requestBody)
 
-        self.cacheLock.acquire()
+        # self.cacheLock.acquire()
         quoteServer.quoteCache[self.symbol] = newQuote
         del quoteServer.inflight[quoteServer.inflight.index(self.symbol)]
-        self.cacheLock.release()
+        quoteServer.threadCount -= 1
+        print "thread terminating"
+        # self.cacheLock.release()
 
 
 
@@ -98,6 +137,8 @@ class Quotes():
         self.quoteCache = {}
         self.inflight = []
         self.pool = {}
+        self.threadCount = 0
+        self.maxthread = 30
 
 
     def getQuote(self, symbol , user , transactionNum):
@@ -113,9 +154,15 @@ class Quotes():
 
     def hitQuoteServerAndCache(self, symbol, user, transactionNum):
         # run new quote thread
+
         if symbol in self.inflight:
             return
+        while(quoteServer.maxthread <= quoteServer.threadCount):
+            pass
         getQuoteThread(symbol , user , transactionNum)
+        print "making new thread"
+        quoteServer.threadCount += 1
+        print "current thread count = ",quoteServer.threadCount
         self.inflight.append(symbol)
 
 
@@ -149,10 +196,9 @@ class Quotes():
 
 
 
-def on_request(ch, method, props, body):
+def on_request(ch, method, props, payload):
     # expected body: {symbol, userId, transactionNum}
-    payload = json.loads(body)
-    # print "received payload", payload
+    print "received payload", payload
 
     symbol = payload["stockSymbol"]
     userId = payload["userId"]
@@ -186,5 +232,17 @@ if __name__ == '__main__':
     auditClient = RabbitMQClient(RabbitMQClient.AUDIT)
     # transactionClient = RabbitMQClient(RabbitMQClient.TRANSACTION)
     print "Awaiting quote requests"
-    RabbitMQReceiver(on_request, RabbitMQReceiver.QUOTE)
-
+    # Start Consumer Thread
+    rabbit = rabbitQueue()
+    consumeRabbit = consumer(RabbitMQReceiver.QUOTE)
+    print rabbit.queue
+    while (True):
+        if rabbit.queue.empty():
+            # print "empty"
+            continue
+        else:
+            msg = rabbit.queue.get()
+            payload = msg[1]
+            args = payload[1]
+            props = msg[0]
+            on_request(None, None, props, args)
