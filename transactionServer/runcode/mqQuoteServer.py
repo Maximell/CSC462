@@ -138,7 +138,7 @@ class Quotes():
         self.inflight = []
         self.pool = {}
         self.threadCount = 0
-        self.maxthread = 100
+        self.maxthread = 300
 
 
     def getQuote(self, symbol , user , transactionNum):
@@ -245,5 +245,5 @@ if __name__ == '__main__':
             payload = msg[1]
             args = payload[1]
             props = msg[0]
-            print "dealing with, ", args
+            print "queue size: ",rabbit.queue.queue()
             on_request(None, None, props, args)
