@@ -419,6 +419,7 @@ def create_response(status, response):
 def delegate(ch , method, prop, args):
     # args = json.loads(body)
     print "incoming args: ", args
+    print prop
 
     # error checking from other components
     if args.get("response") >= 400:
@@ -433,14 +434,14 @@ def delegate(ch , method, prop, args):
             args["command"],
             error
         )
-        # auditClient.send(requestBody)
+        auditClient.send(requestBody)
 
         create_response(args.get("response"), str(args.get("errorString")))
         # TODO: return this ^ to the webserver (through a rabbitClient)
     else:
         try:
             # send command to audit, if it is from web server
-            if prop == 1:
+            if prop == 2:
                 if args["userId"] != "./testLOG":
                     requestBody = auditFunctions.createUserCommand(
                         int(time.time() * 1000),
