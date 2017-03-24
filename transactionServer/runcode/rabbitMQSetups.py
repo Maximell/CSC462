@@ -8,12 +8,11 @@ class consumer (Thread):
     def __init__(self , queueName):
         Thread.__init__(self)
         self.daemon = True
-        self.rabbitReceiver = None
+        self.rabbitReceiver = rabbitConsumer(self.queueName)
         self.queueName = queueName
         self.start()
 
-    def run(self):
-        self.rabbitReceiver = rabbitConsumer(self.queueName)
+
 
 
 class rabbitConsumer():
