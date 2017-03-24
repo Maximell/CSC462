@@ -38,10 +38,14 @@ echo reset branch
 pssh -i -h workersHostFile.txt -x "cd $gitpath;" git pull
 pssh -i -H root@142.104.91.130:44421 -x "cd $gitpath;" git pull
 pssh -i -H root@142.104.91.131:44421 -x "cd $gitpath;" git pull
+pssh -i -H root@142.104.91.143:44421 -x "cd $gitpath;" git pull
+
 echo killing all python
 pssh -i -h workersHostFile.txt killall python
 pssh -i -H root@142.104.91.130:44421 killall python
 pssh -i -H root@142.104.91.131:44421 killall python
+pssh -i -H root@142.104.91.143:44421 killall python
+
 echo configuring iptables
 pssh -i -h workersHostFile.txt iptables -I INPUT -p tcp --dport 44424 -j ACCEPT
 
@@ -64,7 +68,7 @@ if [ $2 ]; then
     echo the file we are trying to run is: $2
     pwd
     echo running testdriver from 131
-    pssh -i -t 1000000000000 -H root@142.104.91.131:44421 -x  "cd $workingDirectoryPath;" python runWorkLoad.py $2
+    pssh -i -t 1000000000000 -H root@142.104.91.143:44421 -x  "cd $workingDirectoryPath;" python runWorkLoad.py $2
 else
     echo This script must be run with the workload file as a parameter
 fi
