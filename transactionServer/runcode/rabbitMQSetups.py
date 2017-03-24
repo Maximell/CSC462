@@ -11,6 +11,7 @@ class consumer (Thread):
         self.rabbitReceiver = Queue.PriorityQueue()
         self.queueName = queueName
         self.start()
+        self.join()
 
     def run(self):
         print "started"
