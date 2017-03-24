@@ -8,8 +8,8 @@ class consumer (Thread):
     def __init__(self , queueName):
         Thread.__init__(self)
         self.daemon = True
-        self.rabbitReceiver = rabbitConsumer(self.queueName)
         self.queueName = queueName
+        self.rabbitReceiver = rabbitConsumer(queueName)
         self.start()
 
 
