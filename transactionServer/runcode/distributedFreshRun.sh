@@ -83,13 +83,15 @@ echo done configuring iptables
 echo starting workers
 pssh -i -h workersHostFile.txt -x "cd $workingDirectoryPath;" python runScript.py
 echo worker configuration complete
+
 echo starting quote server
 pssh -i -H root@142.104.91.130:44421 -x "cd $workingDirectoryPath;" python startQuoteServer.py
 echo done starting quote
+
 echo starting audit server on b131:
 pssh -i -H root@142.104.91.131:44421 -x "cd $workingDirectoryPath;" python startAuditServer.py
 echo audit server started
-#waiting to make sure everything has started
+
 echo waiting for 10 seconds to make sure everything has started
 sleep 10
 echo done waiting
