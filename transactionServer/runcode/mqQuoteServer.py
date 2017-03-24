@@ -194,10 +194,9 @@ class Quotes():
 
 
 
-def on_request(ch, method, props, body):
+def on_request(ch, method, props, payload):
     # expected body: {symbol, userId, transactionNum}
-    payload = json.loads(body)
-    # print "received payload", payload
+    print "received payload", payload
 
     symbol = payload["stockSymbol"]
     userId = payload["userId"]

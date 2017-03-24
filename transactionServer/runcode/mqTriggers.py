@@ -397,8 +397,7 @@ def handleGetSell(payload):
     return payload
 
 
-def on_request(ch, method, props, body):
-    payload = json.loads(body)
+def on_request(ch, method, props, payload):
     print "payload: ", payload
 
     function = handleFunctionSwitch.get(payload["function"])

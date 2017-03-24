@@ -681,8 +681,7 @@ def handleTriggerSell(payload):
     return create_response(400, "not enough portfolio reserved")
 
 
-def on_request(ch, method, props, body):
-    payload = json.loads(body)
+def on_request(ch, method, props, payload):
     print "payload: ", payload
 
     userId = payload['userId']

@@ -424,8 +424,7 @@ def handleWriteLogs(payload):
     return auditServer.writeLogs(payload["userId"])
 
 
-def on_request(ch, method, props, body):
-    payload = json.loads(body)
+def on_request(ch, method, props, payload):
     print "received payload", payload
 
     function = payload["function"]
