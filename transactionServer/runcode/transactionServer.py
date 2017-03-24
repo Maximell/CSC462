@@ -27,20 +27,24 @@ class consumer (Thread):
 
 
 class rabbitConsumer():
-    def __init__(self , queueName):
-        self.connection = RabbitMQReceiver(self.consume , queueName)
+    def __init__(self, queueName):
+        self.connection = RabbitMQReceiver(self.consume, queueName)
 
     def consume(self, ch, method, props, body):
         payload = json.loads(body)
-        print "payload = ",payload
+        print "payload = ", payload
+        line = payload.get("lineNum")
+        if line is None:
+            line = payload.get("transactionNum")
+
         if props.priority == 1:
             # flipping priority b/c Priority works lowestest to highest
             # But our system works the other way.
 
             # We need to display lineNum infront of payload to so get() works properly
-            rabbit.queue.put((2, [payload["lineNum"] , payload]))
+            rabbit.queue.put((2, [line, payload]))
         else:
-            rabbit.queue.put((1, [payload["lineNum"] , payload]))
+            rabbit.queue.put((1, [line, payload]))
 
 
 # quote shape: symbol: {value: string, retrieved: epoch time, user: string, cryptoKey: string}
