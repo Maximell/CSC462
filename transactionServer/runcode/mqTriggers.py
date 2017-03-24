@@ -6,10 +6,45 @@ import json
 import uuid
 import math
 from threading import Thread
-from rabbitMQSetups import RabbitMQClient, RabbitMQReceiver , consumer
+from rabbitMQSetups import RabbitMQClient, RabbitMQReceiver
 from mqDatabaseServer import databaseFunctions
 from mqQuoteServer import createQuoteRequest
+import Queue
 
+
+
+class rabbitQueue:
+    def __init__(self):
+        self.queue = Queue.PriorityQueue()
+
+class consumer (Thread):
+    def __init__(self , queueName):
+        Thread.__init__(self)
+        self.daemon = True
+        self.queueName = queueName
+        self.start()
+        # self.join()
+
+    def run(self):
+        print "started"
+        rabbitConsumer(self.queueName).queue
+
+
+class rabbitConsumer():
+    def __init__(self , queueName):
+        self.connection = RabbitMQReceiver(self.consume , queueName)
+
+    def consume(self, ch, method, props, body):
+        payload = json.loads(body)
+        print "payload = ",payload
+        if props.priority == 1:
+            # flipping priority b/c Priority works lowestest to highest
+            # But our system works the other way.
+
+            # We need to display lineNum infront of payload to so get() works properly
+            rabbit.queue.put((2, [payload["lineNum"] , payload]))
+        else:
+            rabbit.queue.put((1, [payload["lineNum"] , payload]))
 
 class TriggerFunctions:
     BUY = 1
@@ -395,18 +430,21 @@ if __name__ == '__main__':
     }
 
     # self.start() currently commented out in both threads
-    buyThread = BuyTriggerThread()
-    sellThread = SellTriggerThread()
+    # buyThread = BuyTriggerThread()
+    # sellThread = SellTriggerThread()
 
     transactionClient = RabbitMQClient(RabbitMQClient.TRANSACTION)
 
     print("awaiting trigger requests")
+    rabbit = rabbitQueue()
     consumeRabbit = consumer(RabbitMQReceiver.TRIGGERS)
+    print rabbit.queue
     while (True):
-        if consumeRabbit.rabbitReceiver.empty():
-           continue
+        if rabbit.queue.empty():
+            # print "empty"
+            continue
         else:
-            msg = consumeRabbit.rabbitReceiver.get()
+            msg = rabbit.queue.get()
             payload = msg[1]
             args = payload[1]
             props = msg[0]

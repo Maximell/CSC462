@@ -1,6 +1,42 @@
 #!/usr/bin/env python
 import json
-from rabbitMQSetups import RabbitMQReceiver, consumer
+from rabbitMQSetups import RabbitMQReceiver
+from threading import Thread
+import Queue
+
+
+class rabbitQueue:
+    def __init__(self):
+        self.queue = Queue.PriorityQueue()
+
+class consumer (Thread):
+    def __init__(self , queueName):
+        Thread.__init__(self)
+        self.daemon = True
+        self.queueName = queueName
+        self.start()
+        # self.join()
+
+    def run(self):
+        print "started"
+        rabbitConsumer(self.queueName).queue
+
+
+class rabbitConsumer():
+    def __init__(self , queueName):
+        self.connection = RabbitMQReceiver(self.consume , queueName)
+
+    def consume(self, ch, method, props, body):
+        payload = json.loads(body)
+        print "payload = ",payload
+        if props.priority == 1:
+            # flipping priority b/c Priority works lowestest to highest
+            # But our system works the other way.
+
+            # We need to display lineNum infront of payload to so get() works properly
+            rabbit.queue.put((2, [payload["lineNum"] , payload]))
+        else:
+            rabbit.queue.put((1, [payload["lineNum"] , payload]))
 
 class auditFunctions:
     USER_COMMAND = 1
@@ -415,15 +451,15 @@ if __name__ == '__main__':
         auditFunctions.DEBUG_MESSAGE: handleDebugMessage,
         auditFunctions.WRITE_LOGS: handleWriteLogs
     }
-
+    rabbit = rabbitQueue()
     consumeRabbit = consumer(RabbitMQReceiver.AUDIT)
-    print consumeRabbit.rabbitReceiver
+    print rabbit.queue
     while (True):
-        if consumeRabbit.rabbitReceiver.empty():
+        if rabbit.queue.empty():
             # print "empty"
             continue
         else:
-            msg = consumeRabbit.rabbitReceiver.get()
+            msg = rabbit.queue.get()
             payload = msg[1]
             args = payload[1]
             props = msg[0]
