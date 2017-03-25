@@ -567,6 +567,8 @@ def handleCommitSell(payload):
 
     symbol = sell["symbol"]
     amount = sell["number"]
+    print "not a key error"
+    print userId, sell, costPer
 
     if databaseServer.isBuySellActive(sell):
         numberOfStocks = math.floor(amount / costPer)
@@ -578,6 +580,7 @@ def handleCommitSell(payload):
     else:
         payload["response"] = 400
         payload["errorString"] = "no active sell"
+    print "new payload =", payload
     return payload
 
 def handleCancelSell(payload):
