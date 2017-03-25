@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    {% block head %}
+        {% block styles %}
+            <link rel="stylesheet" href="css/flat-ui.css">
+        {% endblock %}
+        <title>
+            {% block title %}Seng462 Project{% endblock %}
+        </title>
+    {% endblock %}
+</head>
+<body>
+    <div class="container">
+        <div class="heading"><h1>{% block heading %}Base Template{% endblock %}</h1></div>
+        <div class="content">
+            {% block content %}Put content here{% endblock %}
+        </div>
+        <div class="footer">
+            {% block footer %}Footer{% endblock %}
+        </div>
+    </div>
+</body>
+</html>
