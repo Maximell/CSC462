@@ -9,7 +9,7 @@
 #   audit server (also runs on 142)
 #   quote server (also runs on 142
 
-echo this should be run ./distributedFreshRun.sh branch testFile
+echo this should be run ./distributedSetup.sh branch
 
 # Do the configuration on the local machine
 echo doing local configuration
