@@ -572,9 +572,11 @@ def handleCommitSell(payload):
 
     if databaseServer.isBuySellActive(sell):
         numberOfStocks = math.floor(amount / costPer)
-
+        print "NOS = ", numberOfStocks
         databaseServer.removeFromPortfolio(userId, symbol, numberOfStocks)
+        print "removeFROMportfolio"
         user = databaseServer.addCash(userId, numberOfStocks * costPer)
+        print "addCASH"
         payload["response"] = 200
         payload["updatedUser"] = user
     else:
