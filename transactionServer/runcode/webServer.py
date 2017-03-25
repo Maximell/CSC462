@@ -43,7 +43,7 @@ def sendAndReceive(data, host='localhost', queueName=None):
     return result
 
 
-@app.route('/add/<string:userId>/', methods=['POST'])
+@app.route('/api/add/<string:userId>/', methods=['POST'])
 def add(userId):
     lineNum = int(request.form['lineNum'].decode('utf-8'))
     try:
@@ -57,7 +57,7 @@ def add(userId):
     return sendAndReceive(data)
 
 
-@app.route('/quote/<string:userId>/<string:stockSymbol>/', methods=['GET'])
+@app.route('/api/quote/<string:userId>/<string:stockSymbol>/', methods=['GET'])
 def quote(userId, stockSymbol):
     lineNum = int(request.form['lineNum'].decode('utf-8'))
     data = {"lineNum": lineNum, "command": "QUOTE", "userId": userId, "stockSymbol": stockSymbol}
@@ -65,7 +65,7 @@ def quote(userId, stockSymbol):
     return sendAndReceive(data)
 
 
-@app.route('/buy/<string:userId>/<string:stockSymbol>/', methods=['POST'])
+@app.route('/api/buy/<string:userId>/<string:stockSymbol>/', methods=['POST'])
 def buy(userId, stockSymbol):
     lineNum = int(request.form['lineNum'].decode('utf-8'))
     try:
@@ -79,7 +79,7 @@ def buy(userId, stockSymbol):
     return sendAndReceive(data)
 
 
-@app.route('/commit-buy/<string:userId>/', methods=['POST'])
+@app.route('/api/commit-buy/<string:userId>/', methods=['POST'])
 def commitBuy(userId):
     lineNum = int(request.form['lineNum'].decode('utf-8'))
     data = {"command": "COMMIT_BUY", "userId": userId, "lineNum": lineNum}
@@ -87,7 +87,7 @@ def commitBuy(userId):
     return sendAndReceive(data)
 
 
-@app.route('/cancel-buy/<string:userId>/', methods=['POST'])
+@app.route('/api/cancel-buy/<string:userId>/', methods=['POST'])
 def cancelBuy(userId):
     lineNum = int(request.form['lineNum'].decode('utf-8'))
     data = {"command": "CANCEL_BUY", "userId": userId, "lineNum": lineNum}
@@ -95,7 +95,7 @@ def cancelBuy(userId):
     return sendAndReceive(data)
 
 
-@app.route('/sell/<string:userId>/<string:stockSymbol>/', methods=['POST'])
+@app.route('/api/sell/<string:userId>/<string:stockSymbol>/', methods=['POST'])
 def sell(userId, stockSymbol):
     lineNum = int(request.form['lineNum'].decode('utf-8'))
     try:
@@ -109,7 +109,7 @@ def sell(userId, stockSymbol):
     return sendAndReceive(data)
 
 
-@app.route('/commit-sell/<string:userId>/', methods=['POST'])
+@app.route('/api/commit-sell/<string:userId>/', methods=['POST'])
 def commitSell(userId):
     lineNum = int(request.form['lineNum'].decode('utf-8'))
     data = {"command": "COMMIT_SELL", "userId": userId, "lineNum": lineNum}
@@ -117,7 +117,7 @@ def commitSell(userId):
     return sendAndReceive(data)
 
 
-@app.route('/cancel-sell/<string:userId>/', methods=['POST'])
+@app.route('/api/cancel-sell/<string:userId>/', methods=['POST'])
 def cancelSell(userId):
     lineNum = int(request.form['lineNum'].decode('utf-8'))
     data = {"command": "CANCEL_SELL", "userId": userId, "lineNum": lineNum}
@@ -125,7 +125,7 @@ def cancelSell(userId):
     return sendAndReceive(data)
 
 
-@app.route('/set-buy-amount/<string:userId>/<string:stockSymbol>/', methods=['POST'])
+@app.route('/api/set-buy-amount/<string:userId>/<string:stockSymbol>/', methods=['POST'])
 def setBuyAmount(userId, stockSymbol):
     lineNum = int(request.form['lineNum'].decode('utf-8'))
     try:
@@ -139,7 +139,7 @@ def setBuyAmount(userId, stockSymbol):
     return sendAndReceive(data)
 
 
-@app.route('/cancel-set-buy/<string:userId>/<string:stockSymbol>/', methods=['POST'])
+@app.route('/api/cancel-set-buy/<string:userId>/<string:stockSymbol>/', methods=['POST'])
 def cancelSetBuy(userId, stockSymbol):
     lineNum = int(request.form['lineNum'].decode('utf-8'))
     data = {"command": "CANCEL_SET_BUY", "userId": userId, "stockSymbol": stockSymbol, "lineNum": lineNum}
@@ -147,7 +147,7 @@ def cancelSetBuy(userId, stockSymbol):
     return sendAndReceive(data)
 
 
-@app.route('/set-buy-trigger/<string:userId>/<string:stockSymbol>/', methods=['POST'])
+@app.route('/api/set-buy-trigger/<string:userId>/<string:stockSymbol>/', methods=['POST'])
 def setBuyTrigger(userId, stockSymbol):
     lineNum = int(request.form['lineNum'].decode('utf-8'))
     try:
@@ -161,7 +161,7 @@ def setBuyTrigger(userId, stockSymbol):
     return sendAndReceive(data)
 
 
-@app.route('/set-sell-amount/<string:userId>/<string:stockSymbol>/', methods=['POST'])
+@app.route('/api/set-sell-amount/<string:userId>/<string:stockSymbol>/', methods=['POST'])
 def setSellAmount(userId, stockSymbol):
     lineNum = int(request.form['lineNum'].decode('utf-8'))
     try:
@@ -175,7 +175,7 @@ def setSellAmount(userId, stockSymbol):
     return sendAndReceive(data)
 
 
-@app.route('/set-sell-trigger/<string:userId>/<string:stockSymbol>/', methods=['POST'])
+@app.route('/api/set-sell-trigger/<string:userId>/<string:stockSymbol>/', methods=['POST'])
 def setSellTrigger(userId, stockSymbol):
     lineNum = int(request.form['lineNum'].decode('utf-8'))
     try:
@@ -189,7 +189,7 @@ def setSellTrigger(userId, stockSymbol):
     return sendAndReceive(data)
 
 
-@app.route('/cancel-set-sell/<string:userId>/<string:stockSymbol>/', methods=['POST'])
+@app.route('/api/cancel-set-sell/<string:userId>/<string:stockSymbol>/', methods=['POST'])
 def cancelSetSell(userId, stockSymbol):
     lineNum = int(request.form['lineNum'].decode('utf-8'))
     data = {"command": "CANCEL_SET_SELL", "userId": userId, "stockSymbol": stockSymbol, "lineNum": lineNum}
@@ -197,7 +197,7 @@ def cancelSetSell(userId, stockSymbol):
     return sendAndReceive(data)
 
 
-@app.route('/dumplog/', methods=['POST'])
+@app.route('/api/dumplog/', methods=['POST'])
 def dumpLog():
     lineNum = int(request.form['lineNum'].decode('utf-8'))
     fileName = request.form['fileName']
@@ -207,7 +207,7 @@ def dumpLog():
     return sendAndReceive(data)
 
 
-@app.route('/display-summary/<string:userId>/', methods=['GET'])
+@app.route('/api/display-summary/<string:userId>/', methods=['GET'])
 def displaySummary(userId):
     lineNum = int(request.form['lineNum'].decode('utf-8'))
     data = {"command": "DISPLAY_SUMMARY", "userId": userId, "lineNum": lineNum}
