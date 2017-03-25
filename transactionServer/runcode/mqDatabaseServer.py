@@ -354,6 +354,7 @@ class database:
 
     # returns boolean
     def isBuySellActive(self, buyOrSellObject):
+        print "is BUYSELL active" , (int(buyOrSellObject.get('timestamp', 0)) + self.transactionExpire) > int(time.time())
         return (int(buyOrSellObject.get('timestamp', 0)) + self.transactionExpire) > int(time.time())
 
     # returns remaining amount
@@ -571,6 +572,7 @@ def handleCommitSell(payload):
     print userId, sell, costPer
 
     if databaseServer.isBuySellActive(sell):
+        print "not expired"
         numberOfStocks = math.floor(amount / costPer)
         print "NOS = ", numberOfStocks
         databaseServer.removeFromPortfolio(userId, symbol, numberOfStocks)
