@@ -692,14 +692,16 @@ def on_request(ch, method, props, payload):
     userId = payload['userId']
     if databaseServer.getUser(userId) is None:
         databaseServer.addUser(userId)
-
-    function = handleFunctionSwitch.get(payload["function"])
-    if function:
-        response = function(payload)
-    else:
-        payload['response'] = 404
-        payload['errorString'] = "function not found"
-        response = payload
+    try:
+        function = handleFunctionSwitch.get(payload["function"])
+        if function:
+            response = function(payload)
+        else:
+            payload['response'] = 404
+            payload['errorString'] = "function not found"
+            response = payload
+    except:
+        print "error in", payload["function"]
 
     transactionClient.send(response)
 
@@ -715,8 +717,8 @@ if __name__ == '__main__':
         databaseFunctions.CANCEL_BUY: handleCancelBuy,
         databaseFunctions.SELL: handleSell,
         databaseFunctions.POP_SELL: handlePopSell,
-        databaseFunctions.COMMIT_SELL: handleCommitSell,
-        databaseFunctions.CANCEL_SELL: handleCancelSell,
+        # databaseFunctions.COMMIT_SELL: handleCommitSell,
+        # databaseFunctions.CANCEL_SELL: handleCancelSell,
         databaseFunctions.RESERVE_CASH: handleReserveCash,
         databaseFunctions.RELEASE_CASH: handleReleaseCash,
         databaseFunctions.RESERVE_PORTFOLIO: handleReservePortfolio,
