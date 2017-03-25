@@ -1,7 +1,7 @@
 import time
 import json
 import pika
-from flask import Flask, request
+from flask import Flask, request, render_template
 from rabbitMQSetups import RabbitMQClient, RabbitMQReceiver
 import socket
 
@@ -43,8 +43,13 @@ def sendAndReceive(data, host='localhost', queueName=None):
     return result
 
 
+# Add methods
+def doAdd(userId, cash, lineNum=0):
+    data = {"command": "ADD", "userId": userId, "cash": cash, "lineNum": lineNum}
+    return sendAndReceive(data)
+
 @app.route('/api/add/<string:userId>/', methods=['POST'])
-def add(userId):
+def apiAdd(userId):
     lineNum = int(request.form['lineNum'].decode('utf-8'))
     try:
         cash = float(request.form['cash'].decode('utf-8'))
@@ -54,11 +59,16 @@ def add(userId):
         return "Can't convert Value to float" , request.form['cash'].decode('utf-8')
     data = {"command": "ADD", "userId": userId, "cash": cash, "lineNum": lineNum}
 
-    return sendAndReceive(data)
+    return doAdd(userId, cash, lineNum)
 
+@app.route('/add/<string:userId>/', methods=['POST'])
+def add(userId):
+    cash = float(request.form['cash'].decode('utf-8'))
+    result = doAdd(userId, cash)
+    return render_template('static/result.html', result)
 
 @app.route('/api/quote/<string:userId>/<string:stockSymbol>/', methods=['GET'])
-def quote(userId, stockSymbol):
+def apiQuote(userId, stockSymbol):
     lineNum = int(request.form['lineNum'].decode('utf-8'))
     data = {"lineNum": lineNum, "command": "QUOTE", "userId": userId, "stockSymbol": stockSymbol}
 
@@ -66,7 +76,7 @@ def quote(userId, stockSymbol):
 
 
 @app.route('/api/buy/<string:userId>/<string:stockSymbol>/', methods=['POST'])
-def buy(userId, stockSymbol):
+def apiBuy(userId, stockSymbol):
     lineNum = int(request.form['lineNum'].decode('utf-8'))
     try:
         cash = float(request.form['cash'].decode('utf-8'))
@@ -80,7 +90,7 @@ def buy(userId, stockSymbol):
 
 
 @app.route('/api/commit-buy/<string:userId>/', methods=['POST'])
-def commitBuy(userId):
+def apiCommitBuy(userId):
     lineNum = int(request.form['lineNum'].decode('utf-8'))
     data = {"command": "COMMIT_BUY", "userId": userId, "lineNum": lineNum}
 
@@ -88,7 +98,7 @@ def commitBuy(userId):
 
 
 @app.route('/api/cancel-buy/<string:userId>/', methods=['POST'])
-def cancelBuy(userId):
+def apiCancelBuy(userId):
     lineNum = int(request.form['lineNum'].decode('utf-8'))
     data = {"command": "CANCEL_BUY", "userId": userId, "lineNum": lineNum}
 
@@ -96,7 +106,7 @@ def cancelBuy(userId):
 
 
 @app.route('/api/sell/<string:userId>/<string:stockSymbol>/', methods=['POST'])
-def sell(userId, stockSymbol):
+def apiSell(userId, stockSymbol):
     lineNum = int(request.form['lineNum'].decode('utf-8'))
     try:
         cash = float(request.form['cash'].decode('utf-8'))
@@ -110,7 +120,7 @@ def sell(userId, stockSymbol):
 
 
 @app.route('/api/commit-sell/<string:userId>/', methods=['POST'])
-def commitSell(userId):
+def apiCommitSell(userId):
     lineNum = int(request.form['lineNum'].decode('utf-8'))
     data = {"command": "COMMIT_SELL", "userId": userId, "lineNum": lineNum}
 
@@ -118,7 +128,7 @@ def commitSell(userId):
 
 
 @app.route('/api/cancel-sell/<string:userId>/', methods=['POST'])
-def cancelSell(userId):
+def apiCancelSell(userId):
     lineNum = int(request.form['lineNum'].decode('utf-8'))
     data = {"command": "CANCEL_SELL", "userId": userId, "lineNum": lineNum}
 
@@ -126,7 +136,7 @@ def cancelSell(userId):
 
 
 @app.route('/api/set-buy-amount/<string:userId>/<string:stockSymbol>/', methods=['POST'])
-def setBuyAmount(userId, stockSymbol):
+def apiSetBuyAmount(userId, stockSymbol):
     lineNum = int(request.form['lineNum'].decode('utf-8'))
     try:
         cash = float(request.form['cash'].decode('utf-8'))
@@ -140,7 +150,7 @@ def setBuyAmount(userId, stockSymbol):
 
 
 @app.route('/api/cancel-set-buy/<string:userId>/<string:stockSymbol>/', methods=['POST'])
-def cancelSetBuy(userId, stockSymbol):
+def apiCancelSetBuy(userId, stockSymbol):
     lineNum = int(request.form['lineNum'].decode('utf-8'))
     data = {"command": "CANCEL_SET_BUY", "userId": userId, "stockSymbol": stockSymbol, "lineNum": lineNum}
 
@@ -148,7 +158,7 @@ def cancelSetBuy(userId, stockSymbol):
 
 
 @app.route('/api/set-buy-trigger/<string:userId>/<string:stockSymbol>/', methods=['POST'])
-def setBuyTrigger(userId, stockSymbol):
+def apiSetBuyTrigger(userId, stockSymbol):
     lineNum = int(request.form['lineNum'].decode('utf-8'))
     try:
         cash = float(request.form['cash'].decode('utf-8'))
@@ -162,7 +172,7 @@ def setBuyTrigger(userId, stockSymbol):
 
 
 @app.route('/api/set-sell-amount/<string:userId>/<string:stockSymbol>/', methods=['POST'])
-def setSellAmount(userId, stockSymbol):
+def apiSetSellAmount(userId, stockSymbol):
     lineNum = int(request.form['lineNum'].decode('utf-8'))
     try:
         cash = float(request.form['cash'].decode('utf-8'))
@@ -176,7 +186,7 @@ def setSellAmount(userId, stockSymbol):
 
 
 @app.route('/api/set-sell-trigger/<string:userId>/<string:stockSymbol>/', methods=['POST'])
-def setSellTrigger(userId, stockSymbol):
+def apiSetSellTrigger(userId, stockSymbol):
     lineNum = int(request.form['lineNum'].decode('utf-8'))
     try:
         cash = float(request.form['cash'].decode('utf-8'))
@@ -190,7 +200,7 @@ def setSellTrigger(userId, stockSymbol):
 
 
 @app.route('/api/cancel-set-sell/<string:userId>/<string:stockSymbol>/', methods=['POST'])
-def cancelSetSell(userId, stockSymbol):
+def apiCancelSetSell(userId, stockSymbol):
     lineNum = int(request.form['lineNum'].decode('utf-8'))
     data = {"command": "CANCEL_SET_SELL", "userId": userId, "stockSymbol": stockSymbol, "lineNum": lineNum}
 
@@ -198,7 +208,7 @@ def cancelSetSell(userId, stockSymbol):
 
 
 @app.route('/api/dumplog/', methods=['POST'])
-def dumpLog():
+def apiDumpLog():
     lineNum = int(request.form['lineNum'].decode('utf-8'))
     fileName = request.form['fileName']
     # print "dumplog"
@@ -208,7 +218,7 @@ def dumpLog():
 
 
 @app.route('/api/display-summary/<string:userId>/', methods=['GET'])
-def displaySummary(userId):
+def apiDisplaySummary(userId):
     lineNum = int(request.form['lineNum'].decode('utf-8'))
     data = {"command": "DISPLAY_SUMMARY", "userId": userId, "lineNum": lineNum}
 
