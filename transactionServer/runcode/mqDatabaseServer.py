@@ -30,7 +30,6 @@ class rabbitConsumer():
         self.connection = RabbitMQReceiver(self.consume, queueName)
 
     def consume(self, ch, method, props, body):
-        print "body = ", body
         payload = json.loads(body)
         line = payload.get("lineNum")
         print "payload = ",payload
@@ -697,7 +696,6 @@ def handleTriggerSell(payload):
 
 
 def on_request(ch, method, props, payload):
-    payload = json.load(payload)
     print "payload: ", payload
 
     userId = payload['userId']
