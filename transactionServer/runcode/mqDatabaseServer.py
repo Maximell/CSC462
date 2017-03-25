@@ -497,7 +497,7 @@ def handleCommitBuy(payload):
     costPer = payload["costPer"]
 
     symbol = buy["symbol"]
-    moneyReserved = buy["number"]
+    moneyReserved = float(buy["number"])
 
     if databaseServer.isBuySellActive(buy):
         numberOfStocks = math.floor(moneyReserved / costPer)
@@ -568,9 +568,11 @@ def handleCommitSell(payload):
     costPer = payload["costPer"]
 
     symbol = sell["symbol"]
-    amount = sell["number"]
+    amount = float(sell["number"])
+
     print "not a key error"
     print userId, sell, costPer
+    print "type of costPer", type(costPer)
 
     if databaseServer.isBuySellActive(sell):
         print "not expired"
