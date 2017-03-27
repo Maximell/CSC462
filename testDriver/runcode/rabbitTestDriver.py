@@ -38,6 +38,8 @@ workerMap = [
     [RabbitMQClient("transactionIn193860618727760"), 0],
     [RabbitMQClient("transactionIn8796760983851"), 0]
 ]
+# last mac addr queue is 132 - Haven't changed the mac yet.
+
 # transactionClient.send(data, priority=1)
 
 # User to Worker Mapping.
@@ -117,6 +119,7 @@ def send(command, args, lineNum):
 
 def main():
     # read file and push into queues as you are reading
+    users = {}
     with open(sys.argv[1]) as f:
         for line in f:
             line = line.strip()
@@ -127,6 +130,14 @@ def main():
             commandAndArgs = splitLine[1].split(",")
             command = commandAndArgs[0]
             args = commandAndArgs[1:]
+            # record how many commands each user gets
+            if args[0] in users:
+                users[args[0]] += 1
+            else:
+                users[args[0]] = 0
+            #If Dumplog then send the dumplog to the user with the highest amount of commands
+            if command in ['DUMPLOG']:
+                args[0] = max(users , key=users.get)
 
             send(command, args, lineNumber)
 
