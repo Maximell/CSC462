@@ -431,7 +431,7 @@ def handleDebugMessage(payload):
     )
 
 def handleWriteLogs(payload):
-    return auditServer.writeLogs(payload["fileName"])
+    return auditServer.writeLogs("./testLOG")
 
 
 def on_request(ch, method, props, payload):
