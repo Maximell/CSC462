@@ -27,16 +27,17 @@ class RabbitMQClient():
 
 # Worker machines via queues + mac
 workerMap = [
-    [RabbitMQClient("transactionIn193596476298033"), 0],
-    [RabbitMQClient("transactionIn193596744799041"), 0],
-    [RabbitMQClient("transactionIn193601473895188"), 0],
-    [RabbitMQClient("transactionIn193601742334740"), 0],
-    [RabbitMQClient("transactionIn193809078333764"), 0],
-    [RabbitMQClient("transactionIn193821963432263"), 0],
-    [RabbitMQClient("transactionIn193826241687624"), 0],
-    [RabbitMQClient("transactionIn193830553497929"), 0],
-    [RabbitMQClient("transactionIn193860618727760"), 0],
-    [RabbitMQClient("transactionIn8796760983851"), 0]
+    #  QueueName , [NumOfUsers , Number of Commands]
+    [RabbitMQClient("transactionIn193596476298033"), [0 , 0]],
+    [RabbitMQClient("transactionIn193596744799041"), [0 , 0]],
+    [RabbitMQClient("transactionIn193601473895188"), [0 , 0]],
+    [RabbitMQClient("transactionIn193601742334740"), [0 , 0]],
+    [RabbitMQClient("transactionIn193809078333764"), [0 , 0]],
+    [RabbitMQClient("transactionIn193821963432263"), [0 , 0]],
+    [RabbitMQClient("transactionIn193826241687624"), [0 , 0]],
+    [RabbitMQClient("transactionIn193830553497929"), [0 , 0]],
+    [RabbitMQClient("transactionIn193860618727760"), [0 , 0]],
+    [RabbitMQClient("transactionIn8796760983851"), [0 , 0]]
 ]
 # last mac addr queue is 132 - Haven't changed the mac yet.
 
@@ -57,21 +58,41 @@ def send(command, args, lineNum):
     # get or put into userMap
     if user in userMap:
         client = userMap[user]
+        for x in workerMap:
+            # update the ammount in the current Worker
+            if x[0] == client:
+                x[1][1] += 1
+                break
+
         # print("In dict already")
     else:
-        min = workerMap[0][1]
+        minUser = 0
         index = 0
+        # find the worker with the fewest users
         for x in range(0, len(workerMap)):
             currentWorker = workerMap[x]
-            if currentWorker[1] <= min:
-                sendto = currentWorker
-                index = x
-                min = currentWorker[1]
+            currentAmount = currentWorker[1][1]
+
+            if currentWorker[1][0] <= minUser:
+                minUser = currentWorker[1][0]
+                minAmount = currentAmount
+        # find the worker with fewest users and commands.
+        for x in range(0 , len(workerMap)):
+            currentWorker = workerMap[x]
+            # if user amount is greater than minUser skip
+            if currentWorker[1][0] > minUser:
+                continue
+            else:
+                # SAme amount of user so check amount
+                if currentWorker[1][1] < minAmount:
+                    index = x
+                    minAmount = currentWorker[1][1]
+                    sendto = currentWorker
         if sendto != None:
             # print("adding User to map")
             userMap[user] = sendto[0]
             client = sendto[0]
-            workerMap[index][1] += 1
+            workerMap[index][1][1] += 1
         else:
             print("problem setting user map")
 
