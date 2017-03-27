@@ -479,7 +479,7 @@ def delegate(ch , method, prop, args):
                         args.get("cash")
                     )
                     # Log User Command Call of DUMPLOG
-                    auditClient.send(requestBody , 3)
+                    auditClient.send(requestBody)
 
             # Sanitizing for Negative values of cash
             if args.get("cash") != None and args.get("cash") > 0:
