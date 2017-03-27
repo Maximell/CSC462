@@ -397,18 +397,14 @@ def handleCommandCancelSetSell(args):
     return None
 
 def handleCommandDumplog(args):
-    # if seenDumpLOG:
-        requestBody = auditFunctions.createWriteLogs(
-            int(time.time() * 1000),
-            "transactionServer",
-            args["lineNum"],
-            args["userId"],
-            args["command"]
-        )
-        auditClient.send(requestBody, 3)
-    # else:
-#         send to the next transactionServer
-        seenDumpLOG = True
+    requestBody = auditFunctions.createWriteLogs(
+        int(time.time() * 1000),
+        "transactionServer",
+        args["lineNum"],
+        args["userId"],
+        args["command"]
+    )
+    auditClient.send(requestBody, 3)
 
 
 
