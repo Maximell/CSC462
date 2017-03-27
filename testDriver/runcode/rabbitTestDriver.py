@@ -68,14 +68,18 @@ def send(command, args, lineNum):
     else:
         minUser = 0
         index = 0
+        sendto = None
         # find the worker with the fewest users
         for x in range(0, len(workerMap)):
             currentWorker = workerMap[x]
             currentAmount = currentWorker[1][1]
 
             if currentWorker[1][0] <= minUser:
+                sendto = currentWorker
+                index = x
+                print "found fewest users"
                 minUser = currentWorker[1][0]
-                minAmount = currentAmount
+                minAmount = currentAmount[1][1]
         # find the worker with fewest users and commands.
         for x in range(0 , len(workerMap)):
             currentWorker = workerMap[x]
@@ -87,6 +91,7 @@ def send(command, args, lineNum):
                 if currentWorker[1][1] < minAmount:
                     index = x
                     minAmount = currentWorker[1][1]
+                    print "found fewest Commands"
                     sendto = currentWorker
         if sendto != None:
             # print("adding User to map")
@@ -152,13 +157,17 @@ def main():
             command = commandAndArgs[0]
             args = commandAndArgs[1:]
             # record how many commands each user gets
-            if args[0] in users:
-                users[args[0]] += 1
-            else:
-                users[args[0]] = 0
+
             #If Dumplog then send the dumplog to the user with the highest amount of commands
             if command in ['DUMPLOG']:
-                args[0] = max(users , key=users.get)
+                max = 0
+                for worker in workerMap:
+                    workerQueue = worker[0]
+                    if worker[1][1] > max:
+                        max = worker[1][1]
+                for user in userMap:
+                    if workerQueue == userMap[user]:
+                        args[0] = user
 
             send(command, args, lineNumber)
 
