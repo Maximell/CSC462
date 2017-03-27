@@ -15,8 +15,7 @@ class RabbitMQClient():
         args = {'x-max-priority': 3}
         self.channel.queue_declare(queue=self.queueName, arguments=args)
 
-    def send(self, requestBody):
-        properties = pika.BasicProperties(priority=1)
+    def send(self, requestBody , properties):
         self.channel.basic_publish(
             exchange='',
             routing_key=self.queueName,
@@ -51,6 +50,7 @@ def send(command, args, lineNum):
     print "args", args
     print "line", lineNum
     user = args[0]
+    properties = pika.BasicProperties(priority=1)
 
     # get or put into userMap
     if user in userMap:
@@ -92,10 +92,10 @@ def send(command, args, lineNum):
         }
     elif len(args) == 1 and command in ['DUMPLOG']:
         # TODO: remove the sleep, temp solution
-        time.sleep(10)
         args = {
             'userId': args[0]
         }
+        properties = pika.BasicProperties(priority=3)
     elif len(args) == 1:
         args = {
             'userId': args[0]
@@ -112,7 +112,7 @@ def send(command, args, lineNum):
 
     print "sending:", args
     # push into rabbit
-    client.send(args)
+    client.send(args , properties)
 
 
 def main():
