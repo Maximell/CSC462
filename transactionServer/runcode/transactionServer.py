@@ -404,7 +404,8 @@ def handleCommandDumplog(args):
         args["userId"],
         args["command"]
     )
-    auditClient.send(requestBody, 3)
+    return
+    # auditClient.send(requestBody, 3)
 
 
 

@@ -162,7 +162,6 @@ def main():
 
             #If Dumplog then send the dumplog to the user with the highest amount of commands
             if command in ['DUMPLOG']:
-                quit()
                 max = 0
                 for worker in workerMap:
                     workerQueue = worker[0]
