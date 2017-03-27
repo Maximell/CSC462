@@ -447,7 +447,7 @@ def delegate(ch , method, prop, args):
         try:
             # send command to audit, if it is from web server
             if prop == 2:
-                if args["userId"] != "./testLOG":
+                if args["command"] != "DUMPLOG":
                     requestBody = auditFunctions.createUserCommand(
                         int(time.time() * 1000),
                         "transactionServer",
@@ -468,7 +468,7 @@ def delegate(ch , method, prop, args):
                         args["userId"],
                         args["command"],
                         args.get("stockSymbol"),
-                        args["userId"],
+                        "./testLOG",
                         args.get("cash")
                     )
                     # Log User Command Call
