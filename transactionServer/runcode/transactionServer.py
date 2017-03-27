@@ -427,7 +427,7 @@ def delegate(ch , method, prop, args):
     # error checking from other components
     if args.get("response") >= 400:
         error = str(args.get("response")) + ": " + str(args.get("errorString"))
-
+        return
         # errorPrint(args, error)
         # requestBody = auditFunctions.createErrorMessage(
         #     int(time.time() * 1000),
@@ -449,7 +449,7 @@ def delegate(ch , method, prop, args):
     else:
         try:
             # send command to audit, if it is from web server
-            if prop == 2:
+            if prop == 2 or prop == 3:
                 if args["command"] != "DUMPLOG":
                     requestBody = auditFunctions.createUserCommand(
                         int(time.time() * 1000),
@@ -471,7 +471,7 @@ def delegate(ch , method, prop, args):
                         args["userId"],
                         args["command"],
                         args.get("stockSymbol"),
-                        "./testLOG",
+                        args.get("fileName"),
                         args.get("cash")
                     )
                     # Log User Command Call of DUMPLOG
