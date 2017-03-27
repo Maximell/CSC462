@@ -9,6 +9,20 @@ from mqAuditServer import auditFunctions
 from threading import Thread
 import Queue
 
+
+# allTrans = ["transactionIn193596476298033"
+#             ,"transactionIn193596744799041"
+#             ,"transactionIn193601473895188"
+#             ,"transactionIn193601742334740"
+#             ,"transactionIn193724819779889"
+#             ,"transactionIn193809078333764"
+#             ,"transactionIn193821963432263"
+#             ,"transactionIn193826241687624"
+#             ,"transactionIn193830553497929"
+#             ,"transactionIn193860618727760"
+#             ,"transactionIn8796760983851"]
+# seenDumpLOG = False
+
 class rabbitQueue:
     def __init__(self):
         self.queue = Queue.PriorityQueue()
@@ -393,16 +407,16 @@ def handleCommandCancelSetSell(args):
 
     return None
 
-
 def handleCommandDumplog(args):
-    requestBody = auditFunctions.createWriteLogs(
-        int(time.time() * 1000),
-        "transactionServer",
-        args["lineNum"],
-        args["userId"],
-        args["command"]
-    )
-    auditClient.send(requestBody, 3)
+        requestBody = auditFunctions.createWriteLogs(
+            int(time.time() * 1000),
+            "transactionServer",
+            args["lineNum"],
+            args["userId"],
+            args["command"]
+        )
+        auditClient.send(requestBody, 3)
+#         send to the next transactionServer
 
 
 def errorPrint(args, error):
@@ -434,7 +448,7 @@ def delegate(ch , method, prop, args):
             args["command"],
             error
         )
-        # auditClient.send(requestBody)
+        auditClient.send(requestBody)
 
         # returnClient = RabbitMQClient(queueName=RabbitMQClient.WEB + str(args['lineNum']))
         # print "sending error back to webserver on queue: ", RabbitMQClient.WEB + str(args['lineNum'])
@@ -459,21 +473,6 @@ def delegate(ch , method, prop, args):
                         args.get("cash")
                     )
                     auditClient.send(requestBody)
-
-                else:
-                    requestBody = auditFunctions.createUserCommand(
-                        int(time.time() * 1000),
-                        "transactionServer",
-                        args["lineNum"],
-                        args["userId"],
-                        args["command"],
-                        args.get("stockSymbol"),
-                        "./testLOG",
-                        args.get("cash")
-                    )
-                    # Log User Command Call
-                    auditClient.send(requestBody)
-
             # Sanitizing for Negative values of cash
             # if args.get("cash") != None and args.get("cash") > 0:
             #     returnClient = RabbitMQClient(queueName=RabbitMQClient.WEB + str(args['lineNum']))
@@ -513,7 +512,7 @@ def delegate(ch , method, prop, args):
                 args["command"],
                 str(error)
             )
-            # auditClient.send(requestBody)
+            auditClient.send(requestBody)
             # returnClient = RabbitMQClient(queueName=RabbitMQClient.WEB+str(args['lineNum']))
             # returnClient.send(
             #     create_response(500, args)
@@ -523,6 +522,7 @@ def delegate(ch , method, prop, args):
 
 if __name__ == '__main__':
     print "starting TransactionServer"
+
 
     localQuoteCache = Quotes()
 
