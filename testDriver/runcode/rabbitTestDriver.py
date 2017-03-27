@@ -66,7 +66,8 @@ def send(command, args, lineNum):
 
         # print("In dict already")
     else:
-        minUser = 0
+        # just need a number in the workerMap
+        minUser = workerMap[0][1][0]
         index = 0
         sendto = None
         # find the worker with the fewest users
