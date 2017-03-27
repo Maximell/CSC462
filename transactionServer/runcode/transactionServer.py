@@ -448,7 +448,7 @@ def delegate(ch , method, prop, args):
             args["command"],
             error
         )
-        auditClient.send(requestBody)
+        # auditClient.send(requestBody)
 
         # returnClient = RabbitMQClient(queueName=RabbitMQClient.WEB + str(args['lineNum']))
         # print "sending error back to webserver on queue: ", RabbitMQClient.WEB + str(args['lineNum'])
@@ -513,7 +513,7 @@ def delegate(ch , method, prop, args):
                 args["command"],
                 str(error)
             )
-            auditClient.send(requestBody)
+            # auditClient.send(requestBody)
             # returnClient = RabbitMQClient(queueName=RabbitMQClient.WEB+str(args['lineNum']))
             # returnClient.send(
             #     create_response(500, args)
