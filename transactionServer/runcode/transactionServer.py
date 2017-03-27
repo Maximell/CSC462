@@ -474,12 +474,13 @@ def delegate(ch , method, prop, args):
                     )
                     auditClient.send(requestBody)
             # Sanitizing for Negative values of cash
-            # if args.get("cash") != None and args.get("cash") > 0:
-            #     returnClient = RabbitMQClient(queueName=RabbitMQClient.WEB + str(args['lineNum']))
-            #     returnClient.send(
-            #         create_response(400, "invalid arguments" + str(args))
-            #     )
-            #     returnClient.close()
+            if args.get("cash") != None and args.get("cash") > 0:
+                return "invalid command"
+                # returnClient = RabbitMQClient(queueName=RabbitMQClient.WEB + str(args['lineNum']))
+                # returnClient.send(
+                #     create_response(400, "invalid arguments" + str(args))
+                # )
+                # returnClient.close()
 
             function = functionSwitch.get(args["command"])
             if function:
