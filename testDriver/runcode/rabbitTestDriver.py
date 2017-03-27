@@ -79,7 +79,7 @@ def send(command, args, lineNum):
                 index = x
                 print "found fewest users"
                 minUser = currentWorker[1][0]
-                minAmount = currentAmount[1][1]
+                minAmount = currentAmount
         # find the worker with fewest users and commands.
         for x in range(0 , len(workerMap)):
             currentWorker = workerMap[x]
