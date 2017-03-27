@@ -98,6 +98,7 @@ def send(command, args, lineNum):
             userMap[user] = sendto[0]
             client = sendto[0]
             workerMap[index][1][1] += 1
+            workerMap[index][1][0] += 1
         else:
             print("problem setting user map")
 
@@ -181,7 +182,6 @@ if __name__ == '__main__':
     else:
         main()
 
-        pprint(workerMap)
-
+        print(workerMap)
         print('completed')
 
