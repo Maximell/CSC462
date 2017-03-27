@@ -10,18 +10,7 @@ from threading import Thread
 import Queue
 
 
-# allTrans = ["transactionIn193596476298033"
-#             ,"transactionIn193596744799041"
-#             ,"transactionIn193601473895188"
-#             ,"transactionIn193601742334740"
-#             ,"transactionIn193724819779889"
-#             ,"transactionIn193809078333764"
-#             ,"transactionIn193821963432263"
-#             ,"transactionIn193826241687624"
-#             ,"transactionIn193830553497929"
-#             ,"transactionIn193860618727760"
-#             ,"transactionIn8796760983851"]
-# seenDumpLOG = False
+
 
 class rabbitQueue:
     def __init__(self):
@@ -408,6 +397,7 @@ def handleCommandCancelSetSell(args):
     return None
 
 def handleCommandDumplog(args):
+    # if seenDumpLOG:
         requestBody = auditFunctions.createWriteLogs(
             int(time.time() * 1000),
             "transactionServer",
@@ -416,7 +406,10 @@ def handleCommandDumplog(args):
             args["command"]
         )
         auditClient.send(requestBody, 3)
+    # else:
 #         send to the next transactionServer
+        seenDumpLOG = True
+
 
 
 def errorPrint(args, error):
@@ -473,14 +466,29 @@ def delegate(ch , method, prop, args):
                         args.get("cash")
                     )
                     auditClient.send(requestBody)
+
+                else:
+                    requestBody = auditFunctions.createUserCommand(
+                        int(time.time() * 1000),
+                        "transactionServer",
+                        args["lineNum"],
+                        args["userId"],
+                        args["command"],
+                        args.get("stockSymbol"),
+                        "./testLOG",
+                        args.get("cash")
+                    )
+                    # Log User Command Call of DUMPLOG
+                    auditClient.send(requestBody , 3)
+
             # Sanitizing for Negative values of cash
             if args.get("cash") != None and args.get("cash") > 0:
-                return "invalid command"
-                # returnClient = RabbitMQClient(queueName=RabbitMQClient.WEB + str(args['lineNum']))
-                # returnClient.send(
-                #     create_response(400, "invalid arguments" + str(args))
-                # )
-                # returnClient.close()
+                return
+            #     returnClient = RabbitMQClient(queueName=RabbitMQClient.WEB + str(args['lineNum']))
+            #     returnClient.send(
+            #         create_response(400, "invalid arguments" + str(args))
+            #     )
+            #     returnClient.close()
 
             function = functionSwitch.get(args["command"])
             if function:
@@ -504,16 +512,16 @@ def delegate(ch , method, prop, args):
             #     returnClient.close()
 
         except (RuntimeError, TypeError, ArithmeticError, KeyError) as error:
-            errorPrint(args, error)
-            requestBody = auditFunctions.createErrorMessage(
-                int(time.time() * 1000),
-                "transactionServer",
-                args["lineNum"],
-                args["userId"],
-                args["command"],
-                str(error)
-            )
             return
+            # errorPrint(args, error)
+            # requestBody = auditFunctions.createErrorMessage(
+            #     int(time.time() * 1000),
+            #     "transactionServer",
+            #     args["lineNum"],
+            #     args["userId"],
+            #     args["command"],
+            #     str(error)
+            # )
             # auditClient.send(requestBody)
             # returnClient = RabbitMQClient(queueName=RabbitMQClient.WEB+str(args['lineNum']))
             # returnClient.send(
