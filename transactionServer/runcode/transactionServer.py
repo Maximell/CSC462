@@ -439,15 +439,15 @@ def delegate(ch , method, prop, args):
     if args.get("response") >= 400:
         error = str(args.get("response")) + ": " + str(args.get("errorString"))
 
-        errorPrint(args, error)
-        requestBody = auditFunctions.createErrorMessage(
-            int(time.time() * 1000),
-            "transactionServer",
-            args["lineNum"],
-            args["userId"],
-            args["command"],
-            error
-        )
+        # errorPrint(args, error)
+        # requestBody = auditFunctions.createErrorMessage(
+        #     int(time.time() * 1000),
+        #     "transactionServer",
+        #     args["lineNum"],
+        #     args["userId"],
+        #     args["command"],
+        #     error
+        # )
         # auditClient.send(requestBody)
 
         # returnClient = RabbitMQClient(queueName=RabbitMQClient.WEB + str(args['lineNum']))
