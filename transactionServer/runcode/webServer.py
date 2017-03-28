@@ -4,18 +4,57 @@ import pika
 from flask import Flask, request, render_template
 from rabbitMQSetups import RabbitMQClient, RabbitMQReceiver
 import socket
+#import Queue
+#import threading
 
 
 app = Flask(__name__)
 
 
+'''class rabbitQueue:
+    def __init__(self):
+        self.queue = Queue.PriorityQueue()
+
+
+class consumer (Thread):
+    def __init__(self , queueName):
+        Thread.__init__(self)
+        self.daemon = True
+        self.queueName = queueName
+        self.start()
+        # self.join()
+
+    def run(self):
+        print "started"
+        rabbitConsumer(self.queueName)
+
+
+class rabbitConsumer():
+    def __init__(self, queueName):
+        self.connection = RabbitMQReceiver(self.consume, queueName)
+
+    def consume(self, ch, method, props, body):
+        payload = json.loads(body)
+        line = payload.get("lineNum")
+        if line is None:
+            line = payload.get("transactionNum")
+
+        if props.priority == 1:
+            # flipping priority b/c Priority works lowestest to highest
+            # But our system works the other way.
+
+            # We need to display lineNum infront of payload to so get() works properly
+            rabbit.queue.put((2, [line, payload]))
+        else:
+            rabbit.queue.put((1, [line, payload]))
+'''
 # args now has keys: userId , sym , lineNum , command , cash
 
 def sendToQueue(data):
     transactionClient.send(data, priority=1)
 
 
-def sendAndReceive(data, host='localhost', queueName=None):
+def sendAndReceive(data, host='142.104.91.142',port=44429, queueName=None):
     # if the queueName is None, set it to a default
     print "in sendAndReceive"
     if queueName is None:
@@ -25,11 +64,25 @@ def sendAndReceive(data, host='localhost', queueName=None):
             print error
     # send a request to the transactionServer
     sendToQueue(data)
+    '''rabbit = rabbitQueue()
+    consumeRabbit = consumer(RabbitMQReceiver.TRIGGERS)
+    print rabbit.queue
+    while (True):
+        if rabbit.queue.empty():
+            # print "empty"
+            continue
+        else:
+            msg = rabbit.queue.get()
+            payload = msg[1]
+            args = payload[1]
+            props = msg[0]
+            print "queue size: ", rabbit.queue.qsize()
+            on_request(None, None, props, args)'''
     # open a connection to rabbitMq
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host=host))
+    connection = pika.BlockingConnection(pika.ConnectionParameters(host=host, port=port))
     channel = connection.channel()
     # declare a queue
-    args = {'x-max-priority': 2}
+    args = {'x-max-priority': 3}
     channel.queue_declare(queue=queueName, arguments=args)
     print("waiting for transaction return on queue: ", queueName)
     # wait for a response from the transactionServer in that queue
@@ -234,4 +287,8 @@ def apiDisplaySummary(userId):
 
 if __name__ == '__main__':
     transactionClient = RabbitMQClient(RabbitMQClient.TRANSACTION)
+
+    #rabbit = rabbitQueue()
+    #consumeRabbit = consumer(RabbitMQReceiver.WEB)
+
     app.run(host="0.0.0.0",port=44424) 
