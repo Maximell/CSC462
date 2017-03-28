@@ -38,7 +38,7 @@ def sendAndReceive(data, host='localhost', queueName=None):
         try:
             print "doing a basic get on queue: ", queueName, " ", result
             time.sleep(0.01)
-            method, props, result = channel.basic_get(routing_key=queueName)
+            method, props, result = channel.basic_get(queue=queueName)
             print "after doing the basic_get", method, props, result
         except Exception as e:
             print e
