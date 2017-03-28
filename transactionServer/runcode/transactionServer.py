@@ -468,13 +468,12 @@ def delegate(ch , method, prop, args):
 
             # Sanitizing for Negative values of cash
             if args.get("cash") != None and args.get("cash") > 0:
+                returnClient = RabbitMQClient(queueName=RabbitMQClient.WEB + str(args['lineNum']))
+                returnClient.send(
+                    create_response(400, "invalid arguments" + str(args))
+                )
+                returnClient.close()
                 return
-            #     returnClient = RabbitMQClient(queueName=RabbitMQClient.WEB + str(args['lineNum']))
-            #     returnClient.send(
-            #         create_response(400, "invalid arguments" + str(args))
-            #     )
-            #     returnClient.close()
-
             function = functionSwitch.get(args["command"])
             if function:
                 # if a function is complete, it should return a response to send back to web server
@@ -498,7 +497,6 @@ def delegate(ch , method, prop, args):
             #     #     create_response(404, "function not found" + str(args))
             #     # )
             #     returnClient.close()
-
         except (RuntimeError, TypeError, ArithmeticError, KeyError) as error:
             print "before error print here"
             errorPrint(args, error)
