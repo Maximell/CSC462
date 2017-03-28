@@ -17,7 +17,7 @@ def sendToQueue(data):
 
 def sendAndReceive(data, host='localhost', queueName=None):
     # if the queueName is None, set it to a default
-
+    print "in sendAndReceive"
     if queueName is None:
         try:
             queueName = RabbitMQReceiver.WEB + str(data["lineNum"])
@@ -46,6 +46,7 @@ def sendAndReceive(data, host='localhost', queueName=None):
 # Add methods
 def doAdd(userId, cash, lineNum=0):
     data = {"command": "ADD", "userId": userId, "cash": cash, "lineNum": lineNum}
+    print "doing an Add with data: ", data
     return sendAndReceive(data)
 
 @app.route('/api/add/<string:userId>/', methods=['POST'])
@@ -64,8 +65,8 @@ def apiAdd(userId):
 @app.route('/add/<string:userId>/', methods=['POST'])
 def add(userId):
     cash = float(request.form['cash'].decode('utf-8'))
-    result = doAdd(userId, cash)
-    return render_template('static/result.html', result)
+    #result = doAdd(userId, cash)
+    return doAdd(userId, cash) #render_template('static/result.html', result)
 
 @app.route('/api/quote/<string:userId>/<string:stockSymbol>/', methods=['GET'])
 def apiQuote(userId, stockSymbol):
