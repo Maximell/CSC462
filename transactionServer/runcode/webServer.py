@@ -35,8 +35,9 @@ def sendAndReceive(data, host='localhost', queueName=None):
     # wait for a response from the transactionServer in that queue
     result = None
     while result is None:
+        print "doing a basic get on queue: ", queueName, " ", result
         time.sleep(0.01)
-        method, props, result = channel.basic_get(queue=queueName)
+        method, props, result = channel.basic_get(routing_key=queueName)
     print "from the trans server: ", result
     # close the channel
     channel.close()
