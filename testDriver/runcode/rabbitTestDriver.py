@@ -121,11 +121,11 @@ def send(command, args, lineNum):
             'stockSymbol': args[1]
         }
     elif len(args) == 1 and command in ['DUMPLOG']:
-        # args = {
-        #     'userId': args[0]
-        # }
-        # properties = pika.BasicProperties(priority=3)
-        return  # dont bother sending a dumplog
+        args = {
+            'userId': args[0]
+        }
+        properties = pika.BasicProperties(priority=3)
+        # return  # dont bother sending a dumplog
     elif len(args) == 1:
         args = {
             'userId': args[0]
