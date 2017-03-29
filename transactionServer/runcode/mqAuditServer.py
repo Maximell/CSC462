@@ -38,12 +38,12 @@ class rabbitConsumer():
             # But our system works the other way.
 
             # We need to display lineNum infront of payload to so get() works properly
-            rabbit.queue.put((2, [line , payload]))
+            rabbit.queue.put((2, [line , payload]) , block=True)
         elif props.priority == 2:
-            rabbit.queue.put((1, [line , payload]))
+            rabbit.queue.put((1, [line , payload]) , block=True)
         else:
             # This is for the dumplog
-            rabbit.queue.put((3, [line , payload]))
+            rabbit.queue.put((3, [line , payload]) , block=True)
 
 class auditFunctions:
     USER_COMMAND = 1
@@ -494,7 +494,7 @@ if __name__ == '__main__':
         # else service queue
         else:
             countDown = time.time()
-            msg = rabbit.queue.get()
+            msg = rabbit.queue.get(block=True)
             payload = msg[1]
             args = payload[1]
             props = msg[0]

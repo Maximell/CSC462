@@ -41,9 +41,9 @@ class rabbitConsumer():
             # But our system works the other way.
 
             # We need to display lineNum infront of payload to so get() works properly
-            rabbit.queue.put((2, [line, payload]))
+            rabbit.queue.put((2, [line, payload]), block=True)
         else:
-            rabbit.queue.put((1, [line, payload]))
+            rabbit.queue.put((1, [line, payload]), block=True)
 
 class databaseFunctions:
     ADD = 1
@@ -748,7 +748,7 @@ if __name__ == '__main__':
             # print "empty"
             continue
         else:
-            msg = rabbit.queue.get()
+            msg = rabbit.queue.get(block=True)
             payload = msg[1]
             args = payload[1]
             props = msg[0]

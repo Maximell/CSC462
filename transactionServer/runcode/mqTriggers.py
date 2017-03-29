@@ -45,9 +45,9 @@ class rabbitConsumer():
             # But our system works the other way.
 
             # We need to display lineNum infront of payload to so get() works properly
-            rabbit.queue.put((2, [line, payload]))
+            rabbit.queue.put((2, [line, payload]), block=True)
         else:
-            rabbit.queue.put((1, [line, payload]))
+            rabbit.queue.put((1, [line, payload]), block=True)
 
 class TriggerFunctions:
     BUY = 1
