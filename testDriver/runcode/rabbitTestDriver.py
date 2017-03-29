@@ -184,5 +184,6 @@ if __name__ == '__main__':
         main()
 
         pprint(workerMap)
+        pprint(userMap)
         print('completed')
 
