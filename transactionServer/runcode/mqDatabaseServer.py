@@ -676,8 +676,8 @@ def handleTriggerBuy(payload):
         user = databaseServer.releaseCash(userId, cashReleaseAmount)
         if user:
             databaseServer.addToPortfolio(userId, symbol, portfolioAmount)
-            return create_response(200, user)
-    return create_response(400, "not enough money reserved")
+
+    return DONT_RETURN_TO_TRANSACTION
 
 def handleTriggerSell(payload):
     symbol = payload["symbol"]
@@ -691,8 +691,8 @@ def handleTriggerSell(payload):
         user = databaseServer.releasePortfolioReserves(userId, symbol, portfolioReleaseAmount)
         if user:
             databaseServer.addCash(userId, portfolioCommitAmount * costPer)
-            return create_response(200, user)
-    return create_response(400, "not enough portfolio reserved")
+
+    return DONT_RETURN_TO_TRANSACTION
 
 
 def on_request(ch, method, props, payload):
@@ -712,10 +712,12 @@ def on_request(ch, method, props, payload):
     except:
         print "error in", payload["function"]
 
-    transactionClient.send(response)
+    if response != DONT_RETURN_TO_TRANSACTION:
+        transactionClient.send(response)
 
 
 if __name__ == '__main__':
+    DONT_RETURN_TO_TRANSACTION = "dontReturn"
     databaseServer = database()
 
     handleFunctionSwitch = {
