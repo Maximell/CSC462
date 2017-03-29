@@ -52,6 +52,7 @@ def doAdd(userId, cash, lineNum=0):
 
 @app.route('/api/add/<string:userId>/', methods=['POST'])
 def apiAdd(userId):
+    print "in apiAdd"
     lineNum = int(request.form['lineNum'].decode('utf-8'))
     try:
         cash = float(request.form['cash'].decode('utf-8'))
@@ -61,6 +62,7 @@ def apiAdd(userId):
 
 @app.route('/add/<string:userId>/', methods=['POST'])
 def add(userId):
+    print "in add"
     try:
         cash = float(request.form['cash'].decode('utf-8'))
     except:
