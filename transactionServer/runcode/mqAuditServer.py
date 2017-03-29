@@ -3,6 +3,7 @@ import json
 from rabbitMQSetups import RabbitMQReceiver
 from threading import Thread
 import Queue
+import time
 
 
 class rabbitQueue:
@@ -465,15 +466,39 @@ if __name__ == '__main__':
     rabbit = rabbitQueue()
     consumeRabbit = consumer(RabbitMQReceiver.AUDIT)
     print rabbit.queue
+
+    seenDumpLog = False
+    countDown = 0
+    DumpLog = None
+    DumpLogProps = None
+
     while (True):
+        # check if queue is empty
         if rabbit.queue.empty():
             # print "empty"
+            if seenDumpLog:
+                time.sleep(1)
+                countDown += 1
+                # send dumplog if you haven't seen anything for 30 sec
+                if countDown == 30:
+                    on_request(None, None, DumpLogProps, DumpLog)
+
             continue
+        # else service queue
         else:
+            countDown = 0
             msg = rabbit.queue.get()
             payload = msg[1]
             args = payload[1]
             props = msg[0]
             print "queue size: ", rabbit.queue.qsize()
+            if args.get("command") == "DUMPLOG":
+                print "seen Dumplog"
+                seenDumpLog = True
+                DumpLog = args
+                DumpLogProps = props
+                continue
+
             on_request(None, None, props, args)
 
+# auditServer.writeLogs("./testLOG")

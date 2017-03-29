@@ -404,8 +404,7 @@ def handleCommandDumplog(args):
         args["userId"],
         args["command"]
     )
-    return
-    # auditClient.send(requestBody, 3)
+    auditClient.send(requestBody, 3)
 
 
 
@@ -479,7 +478,7 @@ def delegate(ch , method, prop, args):
                     auditClient.send(requestBody)
 
             # Sanitizing for Negative values of cash
-            if args.get("cash") != None and args.get("cash") > 0:
+            if args.get("cash") != None and args.get("cash") < 0:
                 return
             #     returnClient = RabbitMQClient(queueName=RabbitMQClient.WEB + str(args['lineNum']))
             #     returnClient.send(
