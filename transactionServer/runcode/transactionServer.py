@@ -567,14 +567,14 @@ if __name__ == '__main__':
 
     # This is the new python in memory queue for the transation Server to eat from.
     rabbit = rabbitQueue()
-    consumeRabbit = rabbitConsumer(RabbitMQConsumer.TRANSACTION)
 
 
     print "made thread"
     while(True):
         if rabbit.queue.empty():
             print "reading in queue for 5 sec"
-            consumeRabbit.connection.run()
+            rabbitConsumer(RabbitMQConsumer.TRANSACTION).connection.run()
+
         else:
             # see how many users there are in rabbit.user
             # start daemon threads to service each user
