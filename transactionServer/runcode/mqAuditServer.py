@@ -360,7 +360,11 @@ class AuditServer:
                 if log.get('amount'):
                     file.write('\t\t<funds>' + str(log['amount']) + '</funds>\n')
             elif logType == 'errorMessage':
-                file.write('\t\t<errorMessage>' + str(log['errorMessage']) + '</errorMessage>\n')
+                file.write('\t\t<command>' + str(log['commandName']) + '</command>\n')
+                if log.get('userId'):
+                    file.write('\t\t<username>' + str(log['userId']) + '</username>\n')
+                if log.get('errorMessage'):
+                    file.write('\t\t<errorMessage>' + str(log['errorMessage']) + '</errorMessage>\n')
             elif logType == 'debugMessage':
                 file.write('\t\t<debugMessage>' + str(log['debugMessage']) + '</debugMessage>\n')
             file.write('\t</'+ logType +'>\n')
