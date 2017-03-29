@@ -487,6 +487,7 @@ if __name__ == '__main__':
                 if countDown + currentTime > 100:
                     print "Making Dumplog"
                     on_request(None, None, DumpLogProps, DumpLog)
+                    break
 
 
             continue
