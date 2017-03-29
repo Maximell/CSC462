@@ -612,8 +612,8 @@ if __name__ == '__main__':
 
 
     print "Created multiprocess PriorityQueue"
-    worker_process = Process(target=rabbitConsumer, args=(RabbitMQReceiver.TRANSACTION , P1Q_rabbit))
-    worker_process.start()
+    consumer_process = Process(target=rabbitConsumer, args=(RabbitMQReceiver.TRANSACTION , P1Q_rabbit , P2Q_rabbit , P3Q_rabbit))
+    consumer_process.start()
     print "Created multiprocess Consummer"
 
     while(True):
