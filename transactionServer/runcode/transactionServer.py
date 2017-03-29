@@ -586,6 +586,7 @@ if __name__ == '__main__':
 
     while(True):
         try:
+            print "trying to read Q2"
             msg = P2Q_rabbit.get()
             payload = msg[1]
             args = payload[1]
@@ -594,7 +595,8 @@ if __name__ == '__main__':
             delegate(None, None, props, args)
             continue
         except:
-           try:
+            try:
+                print "trying to read Q1"
                 msg = P1Q_rabbit.get()
                 payload = msg[1]
                 args = payload[1]
@@ -602,8 +604,9 @@ if __name__ == '__main__':
                 print "queue size: ", P1Q_rabbit.qsize()
                 delegate(None, None, props, args)
                 continue
-           except:
+            except:
                 try:
+                    print "trying to read Q3"
                     msg = P3Q_rabbit.get()
                     payload = msg[1]
                     args = payload[1]
