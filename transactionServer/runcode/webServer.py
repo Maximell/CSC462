@@ -46,6 +46,7 @@ def sendAndReceive(data, host='142.104.91.142',port=44429, queueName=None):
 
 # Add methods
 def doAdd(userId, cash, lineNum=0):
+    print "in doAdd"
     data = {"command": "ADD", "userId": userId, "cash": cash, "lineNum": lineNum}
     print "doing an Add with data: ", data
     return sendAndReceive(data)
@@ -67,9 +68,10 @@ def add(userId):
         cash = float(request.form['cash'].decode('utf-8'))
     except:
         return "Can't convert cash value to float" , request.form['cash'].decode('utf-8')
+    print "about to try an add"
     result = doAdd(userId, cash)
     print "result: ", result
-    template = render_template('result.html', result)
+    template = render_template('result.html')
     return template
 
 # Quote methods
