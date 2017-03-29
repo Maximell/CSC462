@@ -71,7 +71,7 @@ def add(userId):
     print "about to try an add"
     result = doAdd(userId, cash)
     print "result: ", result
-    template = render_template('result.html')
+    template = render_template('result.html', result=result)
     return template
 
 # Quote methods
