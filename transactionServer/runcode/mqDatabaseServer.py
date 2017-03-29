@@ -711,7 +711,7 @@ def on_request(ch, method, props, payload):
             response = payload
     except:
         print "error in", payload["function"]
-
+    response['command'] = payload['command']
     transactionClient.send(response)
 
 

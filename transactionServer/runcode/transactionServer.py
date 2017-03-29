@@ -38,7 +38,7 @@ class rabbitConsumer():
         line = payload.get("lineNum")
         if line is None:
             line = payload.get("transactionNum")
-
+        print "recieved ", payload , props.priority
         if props.priority == 1:
             # flipping priority b/c Priority works lowestest to highest
             # But our system works the other way.
