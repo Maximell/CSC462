@@ -73,4 +73,4 @@ class RabbitMQConsumer(RabbitMQBase):
 
 
     def run(self):
-        self.channel.process_data_events( queue=self.queueName, no_ack=True)
+        self.channel.process_data_events(time_limit=5)
