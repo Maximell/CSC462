@@ -27,8 +27,10 @@ from Queue import PriorityQueue
 
 
 class rabbitConsumer():
-    def __init__(self, queueName , sharedQueue):
-        self.rabbitQueue = sharedQueue
+    def __init__(self, queueName , Q1, Q2, Q3):
+        self.rabbitPQueue1 = Q1
+        self.rabbitPQueue2 = Q2
+        self.rabbitPQueue3 = Q3
         self.connection = RabbitMQReceiver(self.consume, queueName)
 
     def consume(self, ch, method, props, body):
@@ -44,11 +46,11 @@ class rabbitConsumer():
             # But our system works the other way.
 
             # We need to display lineNum infront of payload to so get() works properly
-            self.rabbitQueue.put((2, [line, payload]))
+            self.rabbitPQueue1.put((1, [line, payload]))
         elif props.priority == 2:
-            self.rabbitQueue.put((1, [line, payload]))
+            self.rabbitPQueue2.put((2, [line, payload]))
         else:
-            self.rabbitQueue.put((3, [line, payload]))
+            self.rabbitPQueue3.put((3, [line, payload]))
         #     self.rabbitQueue.put(payload)
         # elif props.priority == 2:
         #     self.rabbitQueue.put(payload)
@@ -410,8 +412,7 @@ def handleCommandDumplog(args):
         args["userId"],
         args["command"]
     )
-    return
-    # auditClient.send(requestBody, 3)
+    auditClient.send(requestBody, 3)
 
 
 
@@ -434,17 +435,17 @@ def delegate(ch , method, prop, args):
     # error checking from other components
     if args.get("response") >= 400:
         error = str(args.get("response")) + ": " + str(args.get("errorString"))
+        errorPrint(args, error)
+        requestBody = auditFunctions.createErrorMessage(
+            int(time.time() * 1000),
+            "transactionServer",
+            args["lineNum"],
+            args["userId"],
+            args["command"],
+            error
+        )
+        auditClient.send(requestBody)
         return
-        # errorPrint(args, error)
-        # requestBody = auditFunctions.createErrorMessage(
-        #     int(time.time() * 1000),
-        #     "transactionServer",
-        #     args["lineNum"],
-        #     args["userId"],
-        #     args["command"],
-        #     error
-        # )
-        # auditClient.send(requestBody)
 
         # returnClient = RabbitMQClient(queueName=RabbitMQClient.WEB + str(args['lineNum']))
         # print "sending error back to webserver on queue: ", RabbitMQClient.WEB + str(args['lineNum'])
@@ -456,7 +457,7 @@ def delegate(ch , method, prop, args):
     else:
         try:
             # send command to audit, if it is from web server
-            if prop == 2 or prop == 3:
+            if prop == 1 or prop == 3:
                 if args["command"] != "DUMPLOG":
                     requestBody = auditFunctions.createUserCommand(
                         int(time.time() * 1000),
@@ -616,12 +617,33 @@ if __name__ == '__main__':
 
     while(True):
         try:
+            msg = P2Q_rabbit.get()
+            payload = msg[1]
+            args = payload[1]
+            props = msg[0]
+            print "queue size: ", P1Q_rabbit.qsize()
+            delegate(None, None, props, args)
+            continue
+        except:
+            pass
+        try:
             msg = P1Q_rabbit.get()
             payload = msg[1]
             args = payload[1]
             props = msg[0]
             print "queue size: ", P1Q_rabbit.qsize()
             delegate(None, None, props, args)
+            continue
+        except:
+            pass
+        try:
+            msg = P3Q_rabbit.get()
+            payload = msg[1]
+            args = payload[1]
+            props = msg[0]
+            print "queue size: ", P1Q_rabbit.qsize()
+            delegate(None, None, props, args)
+            continue
         except:
             pass
 #         queue is empty
