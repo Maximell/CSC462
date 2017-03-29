@@ -427,7 +427,8 @@ def delegate(ch , method, prop, args):
     # error checking from other components
     if args.get("response") >= 400:
         error = str(args.get("response")) + ": " + str(args.get("errorString"))
-
+        print "got error:", error
+        print "args: ", args
         # errorPrint(args, error)
         requestBody = auditFunctions.createErrorMessage(
             int(time.time() * 1000),

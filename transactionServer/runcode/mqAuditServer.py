@@ -420,9 +420,12 @@ def handleSystemEvent(payload):
     )
 
 def handleErrorMessage(payload):
-    auditServer.logErrorMessage(payload.get("timeStamp"), payload.get("server"), payload.get("transactionNum"),
-                                payload.get("userId"), payload.get("command"), payload.get("errorMessage"))
-    return "audit logging error message not implemented"
+    return  auditServer.logErrorMessage(payload.get("timeStamp"),
+                                payload.get("server"),
+                                payload.get("transactionNum"),
+                                payload.get("userId"),
+                                payload.get("commandName"),
+                                payload.get("errorMessage"))
 
 def handleDebugMessage(payload):
     return auditServer.logUserCommand(
