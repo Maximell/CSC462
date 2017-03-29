@@ -44,11 +44,16 @@ class rabbitConsumer():
             # But our system works the other way.
 
             # We need to display lineNum infront of payload to so get() works properly
-            self.rabbitQueue.queue.put((2, [line, payload]))
+        #     self.rabbitQueue.queue.put((2, [line, payload]))
+        # elif props.priority == 2:
+        #     self.rabbitQueue.queue.put((1, [line, payload]))
+        # else:
+        #     self.rabbitQueue.queue.put((3, [line, payload]))
+            self.rabbitQueue.queue.put(payload)
         elif props.priority == 2:
-            self.rabbitQueue.queue.put((1, [line, payload]))
+            self.rabbitQueue.queue.put(payload)
         else:
-            self.rabbitQueue.queue.put((3, [line, payload]))
+            self.rabbitQueue.queue.put(payload)
         print "put in queue"
 
 
