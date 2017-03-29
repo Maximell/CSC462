@@ -49,11 +49,11 @@ class rabbitConsumer():
         #     self.rabbitQueue.queue.put((1, [line, payload]))
         # else:
         #     self.rabbitQueue.queue.put((3, [line, payload]))
-            self.rabbitQueue.queue.put(payload)
+            self.rabbitQueue.put(payload)
         elif props.priority == 2:
-            self.rabbitQueue.queue.put(payload)
+            self.rabbitQueue.put(payload)
         else:
-            self.rabbitQueue.queue.put(payload)
+            self.rabbitQueue.put(payload)
         print "put in queue"
 
 
@@ -606,8 +606,11 @@ if __name__ == '__main__':
     # rabbit = rabbitQueue()
     print "registered PQ"
     PQ_rabbit = multiprocessing.Queue()
+    PQ_rabbit = multiprocessing.Queue()
+    PQ_rabbit = multiprocessing.Queue()
+
     print "Created multiprocess PriorityQueue"
-    worker_process = Process(target=rabbitConsumer, args=(RabbitMQReceiver.TRANSACTION,PQ_rabbit))
+    worker_process = Process(target=rabbitConsumer, args=(RabbitMQReceiver.TRANSACTION , PQ_rabbit))
     worker_process.start()
     print "Created multiprocess Consummer"
 
