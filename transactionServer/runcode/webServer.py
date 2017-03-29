@@ -46,14 +46,11 @@ def sendAndReceive(data, host='142.104.91.142',port=44429, queueName=None):
 
 # Add methods
 def doAdd(userId, cash, lineNum=0):
-    print "in doAdd"
     data = {"command": "ADD", "userId": userId, "cash": cash, "lineNum": lineNum}
-    print "doing an Add with data: ", data
     return sendAndReceive(data)
 
 @app.route('/api/add/<string:userId>/', methods=['POST'])
 def apiAdd(userId):
-    print "in apiAdd"
     lineNum = int(request.form['lineNum'].decode('utf-8'))
     try:
         cash = float(request.form['cash'].decode('utf-8'))
@@ -63,16 +60,12 @@ def apiAdd(userId):
 
 @app.route('/add/<string:userId>/', methods=['POST'])
 def add(userId):
-    print "in add"
     try:
         cash = float(request.form['cash'].decode('utf-8'))
     except:
         return "Can't convert cash value to float" , request.form['cash'].decode('utf-8')
-    print "about to try an add"
     result = doAdd(userId, cash)
-    print "result: ", result
-    template = render_template('result.html', result=result)
-    return template
+    return render_template('result.html', result=result)
 
 # Quote methods
 def doQuote(userId, stockSumbol, lineNum=0):
@@ -88,8 +81,7 @@ def apiQuote(userId, stockSymbol):
 @app.route('/quote/<string:userId>/<string:stockSymbol>/', methods=['GET'])
 def quote(userId, stockSymbol):
     result = doQuote(userId, stockSymbol)
-    print result
-    return result #render_template('templates/result.html', doQuote(userId, stockSymbol))
+    return  render_template('result.html', result=result)
 
 # Buy methods
 def doBuy(userId, stockSymbol, cash, lineNum=0):
@@ -103,7 +95,7 @@ def apiBuy(userId, stockSymbol):
         cash = float(request.form['cash'].decode('utf-8'))
     except:
         return "Can't convert cash value to float" , request.form['cash'].decode('utf-8')
-    return doBuy(userId, stockSymbol, lineNum)
+    return doBuy(userId, stockSymbol, cash, lineNum)
 
 @app.route('/buy/<string:userId>/<string:stockSymbol>/', methods=['POST'])
 def buy(userId, stockSymbol):
@@ -111,7 +103,8 @@ def buy(userId, stockSymbol):
         cash = float(request.form['cash'].decode('utf-8'))
     except:
         return "Can't convert cash value to float" , request.form['cash'].decode('utf-8')
-    return render_template('templates/result.html', doBuy(userId, stockSymbol))
+    result = doBuy(userId, stockSymbol, cash)
+    return render_template('result.html', result=result)
 
 # Commit Buy methods
 def doCommitBuy(userId, lineNum=0):
@@ -125,7 +118,8 @@ def apiCommitBuy(userId):
 
 @app.route('/commit-buy/<string:userId>/', methods=['POST'])
 def commitBuy(userId):
-    return render_template('templates/results.html', doCommitBuy(userId))
+    result = doCommitBuy(userId)
+    return render_template('results.html', result=result)
 
 # Cancel Buy methods
 def doCancelBuy(userId, lineNum=0):
@@ -139,7 +133,8 @@ def apiCancelBuy(userId):
 
 @app.route('/cancel-buy/<string:userId>/', methods=['POST'])
 def cancelBuy(userId):
-    return render_template('templates/results.html', doCancelBuy(userId))
+    result = doCancelBuy(userId)
+    return render_template('results.html', result=result)
 
 # Sell methods
 def doSell(userId, stockSymbol, cash, lineNum=0):
@@ -155,6 +150,15 @@ def apiSell(userId, stockSymbol):
         return "Can't convert cash value to float" , request.form['cash'].decode('utf-8')
     return doSell(userId, stockSymbol, cash, lineNum)
 
+@app.route('/sell/<string:userId>/<string:stockSymbol>/', methods=['POST'])
+def sell(userId, stockSymbol):
+    try:
+        cash = float(request.form['cash'].decode('utf-8'))
+    except:
+        return "Can't convert cash value to float" , request.form['cash'].decode('utf-8')
+    result = doSell(userId, stockSymbol, cash)
+    return render_template('results.html', result=result)
+
 # Commit Sell methods
 def doCommitSell(userId, lineNum=0):
     data = {"command": "COMMIT_SELL", "userId": userId, "lineNum": lineNum}
@@ -167,7 +171,8 @@ def apiCommitSell(userId):
 
 @app.route('/commit-sell/<string:userId>/', methods=['POST'])
 def commitSell(userId):
-    return render_template('templates/results.html', doCommitSell(userId))
+    result = doCommitSell(userId)
+    return render_template('results.html', result=result)
 
 # Cancel Sell methods
 def doCancelSell(userId, lineNum=0):
@@ -181,7 +186,8 @@ def apiCancelSell(userId):
 
 @app.route('/cancel-sell/<string:userId>/', methods=['POST'])
 def cancelSell(userId):
-    return render_template('templates/results.html', doCommitSell(userId, lineNum))
+    result = doCommitSell(userId)
+    return render_template('results.html', result=result)
 
 # Set Buy Amount methods
 def doSetBuyAmount(userId, stockSymbol, cash, lineNum=0):
@@ -203,7 +209,8 @@ def setBuyAmount(userId, stockSymbol):
         cash = float(request.form['cash'].decode('utf-8'))
     except:
         return "Can't convert cash value to float" , request.form['cash'].decode('utf-8')
-    return render_template('templates/results.html', doSetBuyAmount(userId, stockSymbol, cash))
+    result = doSetBuyAmount(userId, stockSymbol, cash)
+    return render_template('results.html', result=result)
 
 # Cancel Set Buy methods
 def doCancelSetBuy(userId, stockSymbol, lineNum=0):
@@ -217,7 +224,8 @@ def apiCancelSetBuy(userId, stockSymbol):
 
 @app.route('/cancel-set-buy/<string:userId>/<string:stockSymbol>/', methods=['POST'])
 def cancelSetBuy(userId, stockSymbol):
-    return render_template('templates/results.html', doCancelSetBuy(userId, stockSymbol))
+    result = doCancelSetBuy(userId, stockSymbol)
+    return render_template('results.html', result=result)
 
 # Set Buy Trigger methods
 def doSetBuyTrigger(userId, stockSymbol, cash, lineNum=0):
@@ -235,12 +243,12 @@ def apiSetBuyTrigger(userId, stockSymbol):
 
 @app.route('/set-buy-trigger/<string:userId>/<string:stockSymbol>/', methods=['POST'])
 def setBuyTrigger(userId, stockSymbol):
-    lineNum = int(request.form['lineNum'].decode('utf-8'))
     try:
         cash = float(request.form['cash'].decode('utf-8'))
     except:
         return "Can't convert cash value to float" , request.form['cash'].decode('utf-8')
-    return doSetBuyTrigger(userId, stockSymbol, cash, lineNum)
+    result = doSetBuyTrigger(userId, stockSymbol, cash)
+    return render_template('results.html', result=result)
 
 # Set Sell Amount methods
 def doSetSellAmount(userId, stockSymbol, cash, lineNum=0):
@@ -262,7 +270,8 @@ def setSellAmount(userId, stockSymbol):
         cash = float(request.form['cash'].decode('utf-8'))
     except:
         return "Can't convert cash value to float" , request.form['cash'].decode('utf-8')
-    return render_template('templates/results.html', doSetSellAmount(userId, stockSymbol, cash))
+    result = doSetSellAmount(userId, stockSymbol, cash)
+    return render_template('results.html', result=result)
 
 # Set Sell Trigger methods
 def doSetSellTrigger(userId, stockSymbol, cash, lineNum=0):
@@ -284,7 +293,8 @@ def setSellTrigger(userId, stockSymbol):
         cash = float(request.form['cash'].decode('utf-8'))
     except:
         return "Can't convert cash Vvlue to float" , request.form['cash'].decode('utf-8')
-    return doSetSellTrigger(userId, stockSymbol, cash)
+    result = doSetSellTrigger(userId, stockSymbol, cash)
+    return render_template('results.html', result=result)
 
 # Cancel Set Sell methods
 def doCancelSetSell(userId, stockSymbol, lineNum=0):
@@ -298,7 +308,8 @@ def apiCancelSetSell(userId, stockSymbol):
 
 @app.route('/cancel-set-sell/<string:userId>/<string:stockSymbol>/', methods=['POST'])
 def cancelSetSell(userId, stockSymbol):
-    return render_template('templates/results.html', doCancelSetSell(userId, stockSymbol))
+    result = doCancelSetSell(userId, stockSymbol)
+    return render_template('results.html', result=result)
 
 # Dumplog methods
 def doDumplog(userId, lineNum=0):
@@ -323,7 +334,8 @@ def apiDisplaySummary(userId):
 
 @app.route('/display-summary/<string:userId>/', methods=['GET'])
 def displaySummary(userId):
-    return render_template('templates/results.html', doDisplaySummary(userId))
+    result = doDisplaySummary(userId)
+    return render_template('results.html', result=result)
 
 if __name__ == '__main__':
     transactionClient = RabbitMQClient(RabbitMQClient.TRANSACTION)
