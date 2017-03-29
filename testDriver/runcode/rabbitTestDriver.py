@@ -124,7 +124,7 @@ def send(command, args, lineNum):
         args = {
             'userId': args[0]
         }
-        properties = pika.BasicProperties(priority=1)
+        properties = pika.BasicProperties(priority=3)
         # return  # dont bother sending a dumplog
     elif len(args) == 1:
         args = {

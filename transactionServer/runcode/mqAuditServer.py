@@ -473,7 +473,7 @@ if __name__ == '__main__':
     print rabbit.queue
 
     seenDumpLog = False
-    countDown = 0
+    countDown = None
     DumpLog = None
     DumpLogProps = None
 
@@ -482,10 +482,9 @@ if __name__ == '__main__':
         if rabbit.queue.empty():
             # print "empty"
             if seenDumpLog:
-                time.sleep(1)
-                countDown += 1
+                currentTime = time.time()
                 # send dumplog if you haven't seen anything for 30 sec
-                if countDown == 60:
+                if countDown + currentTime > 100:
                     print "Making Dumplog"
                     on_request(None, None, DumpLogProps, DumpLog)
 
@@ -493,7 +492,7 @@ if __name__ == '__main__':
             continue
         # else service queue
         else:
-            countDown = 0
+            countDown = time.time()
             msg = rabbit.queue.get()
             payload = msg[1]
             args = payload[1]
@@ -502,6 +501,7 @@ if __name__ == '__main__':
             if args.get("command") == "DUMPLOG":
                 print "seen Dumplog"
                 seenDumpLog = True
+                countDown = time.time()
                 DumpLog = args
                 DumpLogProps = props
 
