@@ -73,4 +73,7 @@ class RabbitMQConsumer(RabbitMQBase):
 
 
     def run(self):
+        print "processesing data"
         self.channel.process_data_events(time_limit=5)
+        print "data sent to queue"
+
