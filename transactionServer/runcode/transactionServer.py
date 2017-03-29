@@ -605,22 +605,22 @@ if __name__ == '__main__':
     print "trying to start PQ"
     # rabbit = rabbitQueue()
     print "registered PQ"
-    PQ_rabbit = multiprocessing.Queue()
-    PQ_rabbit = multiprocessing.Queue()
-    PQ_rabbit = multiprocessing.Queue()
+    P1Q_rabbit = multiprocessing.Queue()
+    P2Q_rabbit = multiprocessing.Queue()
+    P3Q_rabbit = multiprocessing.Queue()
 
     print "Created multiprocess PriorityQueue"
-    worker_process = Process(target=rabbitConsumer, args=(RabbitMQReceiver.TRANSACTION , PQ_rabbit))
+    worker_process = Process(target=rabbitConsumer, args=(RabbitMQReceiver.TRANSACTION , P1Q_rabbit))
     worker_process.start()
     print "Created multiprocess Consummer"
 
     while(True):
         try:
-            msg = PQ_rabbit.queue.get()
+            msg = P1Q_rabbit.get()
             payload = msg[1]
             args = payload[1]
             props = msg[0]
-            print "queue size: ", PQ_rabbit.queue.qsize()
+            print "queue size: ", P1Q_rabbit.qsize()
             delegate(None, None, props, args)
         except:
             pass
