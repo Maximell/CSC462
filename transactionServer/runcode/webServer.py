@@ -3,9 +3,6 @@ import json
 import pika
 from flask import Flask, request, render_template
 from rabbitMQSetups import RabbitMQClient, RabbitMQReceiver
-import socket
-#import Queue
-#import threading
 
 
 app = Flask(__name__)
@@ -63,15 +60,15 @@ def apiAdd(userId):
         cash = float(request.form['cash'].decode('utf-8'))
     except:
         return "Can't convert cash value to float" , request.form['cash'].decode('utf-8')
-    data = {"command": "ADD", "userId": userId, "cash": cash, "lineNum": lineNum}
-
     return doAdd(userId, cash, lineNum)
 
 @app.route('/add/<string:userId>/', methods=['POST'])
 def add(userId):
-    cash = float(request.form['cash'].decode('utf-8'))
-    result = doAdd(userId, cash)
-    return render_template('static/result.html', result)
+    try:
+        cash = float(request.form['cash'].decode('utf-8'))
+    except:
+        return "Can't convert cash value to float" , request.form['cash'].decode('utf-8')
+    return render_template('static/result.html', doAdd(userId, cash))
 
 # Quote methods
 def doQuote(userId, stockSumbol, lineNum=0):
