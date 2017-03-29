@@ -69,7 +69,7 @@ def add(userId):
 
 # Quote methods
 def doQuote(userId, stockSumbol, lineNum=0):
-    data = {"command": "QUOTE", "userId": userId, "lineNum": lineNum}
+    data = {"command": "QUOTE", "userId": userId, "stockSymbol": stockSumbol, "lineNum": lineNum}
     print "doing a quote with data: ", data
     return sendAndReceive(data)
 
