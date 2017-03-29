@@ -484,7 +484,7 @@ if __name__ == '__main__':
             if seenDumpLog:
                 currentTime = time.time()
                 # send dumplog if you haven't seen anything for 30 sec
-                if countDown + currentTime > 100:
+                if  currentTime - countDown > 100:
                     print "Making Dumplog"
                     on_request(None, None, DumpLogProps, DumpLog)
                     break
