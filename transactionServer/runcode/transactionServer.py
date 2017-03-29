@@ -22,6 +22,7 @@ class rabbitConsumer():
         self.rabbitPQueue3 = Q3
         print "initialize queues"
         self.connection = RabbitMQReceiver(self.consume, queueName)
+        print "connectionb done"
 
     def consume(self, ch, method, props, body):
         payload = json.loads(body)

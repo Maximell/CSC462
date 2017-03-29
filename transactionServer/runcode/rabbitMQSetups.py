@@ -62,3 +62,4 @@ class RabbitMQReceiver(RabbitMQBase):
         channel.basic_consume(callback, queue=queueName, no_ack=True)
 
         channel.start_consuming()
+
