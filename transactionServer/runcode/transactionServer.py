@@ -21,6 +21,7 @@ class consumer (Thread):
         Thread.__init__(self)
         self.daemon = True
         self.queueName = queueName
+        self.lock = False
         self.start()
         # self.join()
 
@@ -44,11 +45,11 @@ class rabbitConsumer():
             # But our system works the other way.
 
             # We need to display lineNum infront of payload to so get() works properly
-            rabbit.queue.put((2, [line, payload]))
+            rabbit.queue.put((2, [line, payload]) , block=True)
         elif props.priority == 2:
-            rabbit.queue.put((1, [line, payload]))
+            rabbit.queue.put((1, [line, payload]) , block=True)
         else:
-            rabbit.queue.put((3, [line, payload]))
+            rabbit.queue.put((3, [line, payload]) , block=True)
 
 
 # quote shape: symbol: {value: string, retrieved: epoch time, user: string, cryptoKey: string}
@@ -566,7 +567,7 @@ if __name__ == '__main__':
             # print "empty"
             continue
         else:
-            msg = rabbit.queue.get()
+            msg = rabbit.queue.get(block=True)
             payload = msg[1]
             args = payload[1]
             props = msg[0]
