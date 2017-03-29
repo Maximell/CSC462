@@ -7,26 +7,23 @@ from mqQuoteServer import createQuoteRequest
 from mqTriggers import TriggerFunctions
 from mqAuditServer import auditFunctions
 from threading import Thread
-import Queue
+import multiprocessing
+from multiprocessing import Process
+from multiprocessing.managers import SyncManager
+from Queue import PriorityQueue
 
 
-
-
-class rabbitQueue:
-    def __init__(self):
-        self.queue = Queue.PriorityQueue()
-
-class consumer (Thread):
-    def __init__(self , queueName):
-        Thread.__init__(self)
-        self.daemon = True
-        self.queueName = queueName
-        self.start()
-        # self.join()
-
-    def run(self):
-        print "started"
-        rabbitConsumer(self.queueName)
+# class consumer:
+#     def __init__(self , queueName):
+#         Thread.__init__(self)
+#         self.daemon = True
+#         self.queueName = queueName
+#         self.start()
+#         # self.join()
+#
+#     def run(self):
+#         print "started"
+#         rabbitConsumer(self.queueName)
 
 
 class rabbitConsumer():
@@ -525,7 +522,19 @@ def delegate(ch , method, prop, args):
             #     create_response(500, args)
             # )
             # returnClient.close()
+            #
 
+
+class RegisterQueue(SyncManager):
+    def __init__(self):
+        RegisterQueue.register(("PriorityQueue", PriorityQueue))
+
+
+
+def rabbitQueue():
+    rabbit = RegisterQueue()
+    rabbit.start()
+    return rabbit
 
 if __name__ == '__main__':
     print "starting TransactionServer"
@@ -551,6 +560,29 @@ if __name__ == '__main__':
         "DUMPLOG": handleCommandDumplog
     }
 
+    #
+    # class MyManager(SyncManager):
+    #     pass
+    # MyManager.register("PriorityQueue", PriorityQueue)  # Register a shared PriorityQueue
+    # def Manager():
+    #     m = MyManager()
+    #     m.start()
+    #     return m
+    #
+    # def worker(queue):
+    #     print(queue)
+    #     for i in range(100):
+    #         queue.put(i)
+    #     print "worker", queue.qsize()
+    #
+    #
+    # m = Manager()
+    # pr_queue = m.PriorityQueue()  # This is process-safe
+    # worker_process = Process(target = worker, args = (pr_queue,))
+    # worker_process.start()
+    #
+    # time.sleep(5)    # nope, race condition, you shall not pass (probably)
+    # print "main", pr_queue.qsize()
 
 
     quoteClient = RabbitMQClient(RabbitMQClient.QUOTE)
@@ -559,18 +591,25 @@ if __name__ == '__main__':
     triggerClient = RabbitMQClient(RabbitMQClient.TRIGGERS)
 
     # This is the new python in memory queue for the transation Server to eat from.
+
+    # Adding in multiProcessing
+    print "trying to start PQ"
     rabbit = rabbitQueue()
-    consumeRabbit = consumer(RabbitMQReceiver.TRANSACTION)
-    print "made thread"
+    PQ_rabbit = rabbit.PriorityQueue()
+    print "Created multiprocess PriorityQueue"
+    worker_process = Process(target=rabbitConsumer(RabbitMQReceiver.TRANSACTION), args=(PQ_rabbit))
+    worker_process.start()
+    print "Created multiprocess Consummer"
+
     while(True):
-        if rabbit.queue.empty():
-            # print "empty"
-            continue
-        else:
-            msg = rabbit.queue.get()
+        try:
+            msg = PQ_rabbit.queue.get()
             payload = msg[1]
             args = payload[1]
             props = msg[0]
-            print "queue size: ", rabbit.queue.qsize()
+            print "queue size: ", PQ_rabbit.queue.qsize()
             delegate(None, None, props, args)
+        except:
+            pass
+#         queue is empty
 
