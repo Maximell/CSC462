@@ -435,7 +435,7 @@ def delegate(ch , method, prop, args):
             args["lineNum"],
             args["userId"],
             args["command"],
-            error
+            str(error)
         )
         auditClient.send(requestBody)
 
@@ -508,17 +508,16 @@ def delegate(ch , method, prop, args):
             #     returnClient.close()
 
         except (RuntimeError, TypeError, ArithmeticError, KeyError) as error:
-            return
-            # errorPrint(args, error)
-            # requestBody = auditFunctions.createErrorMessage(
-            #     int(time.time() * 1000),
-            #     "transactionServer",
-            #     args["lineNum"],
-            #     args["userId"],
-            #     args["command"],
-            #     str(error)
-            # )
-            # auditClient.send(requestBody)
+            errorPrint(args, error)
+            requestBody = auditFunctions.createErrorMessage(
+                int(time.time() * 1000),
+                "transactionServer",
+                args["lineNum"],
+                args["userId"],
+                args["command"],
+                str(error)
+            )
+            auditClient.send(requestBody)
             # returnClient = RabbitMQClient(queueName=RabbitMQClient.WEB+str(args['lineNum']))
             # returnClient.send(
             #     create_response(500, args)
