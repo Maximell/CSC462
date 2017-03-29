@@ -1,7 +1,7 @@
 import math
 import time
 import json
-from rabbitMQSetups import RabbitMQClient, RabbitMQReceiver
+from rabbitMQSetups import RabbitMQClient, RabbitMQReceiver, RabbitMQConsumer
 from mqDatabaseServer import databaseFunctions
 from mqQuoteServer import createQuoteRequest
 from mqTriggers import TriggerFunctions
@@ -15,13 +15,14 @@ import Queue
 class rabbitQueue:
     def __init__(self):
         self.queue = Queue.PriorityQueue()
+        self.userList = []
 
 class consumer (Thread):
-    def __init__(self , queueName):
+    def __init__(self , userId):
         Thread.__init__(self)
         self.daemon = True
-        self.queueName = queueName
-        self.lock = False
+        self.userId = userId
+        self.finished = False
         self.start()
         # self.join()
 
@@ -37,6 +38,12 @@ class rabbitConsumer():
     def consume(self, ch, method, props, body):
         payload = json.loads(body)
         line = payload.get("lineNum")
+        user = payload.get("userId")
+
+        # keep track of how many users we have seen.
+        if user not in rabbit.userList:
+            rabbit.userList.append(user)
+
         if line is None:
             line = payload.get("transactionNum")
         print "recieved ", payload , props.priority
@@ -560,17 +567,27 @@ if __name__ == '__main__':
 
     # This is the new python in memory queue for the transation Server to eat from.
     rabbit = rabbitQueue()
-    consumeRabbit = consumer(RabbitMQReceiver.TRANSACTION)
+    consumeRabbit = rabbitConsumer(RabbitMQConsumer.TRANSACTION)
+
+
     print "made thread"
     while(True):
         if rabbit.queue.empty():
-            # print "empty"
-            continue
+            consumeRabbit.run()
         else:
+            # see how many users there are in rabbit.user
+            # start daemon threads to service each user
+            # route the gets to each thread via a list/dict based on users
+
+            # do this till the queue is empty and the threads finish
+            # clear the user
+            # while rabbit.queue.empty() == False and allFlags:
+
             msg = rabbit.queue.get()
             payload = msg[1]
             args = payload[1]
             props = msg[0]
             print "queue size: ", rabbit.queue.qsize()
             delegate(None, None, props, args)
+
 

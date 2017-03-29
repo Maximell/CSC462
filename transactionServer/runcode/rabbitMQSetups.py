@@ -62,3 +62,15 @@ class RabbitMQReceiver(RabbitMQBase):
         channel.basic_consume(callback, queue=queueName, no_ack=True)
 
         channel.start_consuming()
+
+class RabbitMQConsumer(RabbitMQBase):
+    def __init__(self, callback, queueName):
+        connection = pika.BlockingConnection(pika.ConnectionParameters('142.104.91.142',44429))
+        self.queueName = queueName
+        self.channel = connection.channel()
+        args = {'x-max-priority': 3}
+        self.channel.queue_declare(queue=queueName, arguments=args)
+
+
+    def run(self):
+        self.channel.process_data_events( queue=self.queueName, no_ack=True)
