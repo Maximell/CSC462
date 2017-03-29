@@ -33,7 +33,7 @@ class consumer (Thread):
 
 class rabbitConsumer():
     def __init__(self, queueName):
-        self.connection = RabbitMQReceiver(self.consume, queueName)
+        self.connection = RabbitMQConsumer(self.consume, queueName)
 
     def consume(self, ch, method, props, body):
         payload = json.loads(body)

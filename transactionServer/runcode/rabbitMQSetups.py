@@ -69,7 +69,7 @@ class RabbitMQConsumer(RabbitMQBase):
         self.queueName = queueName
         self.channel = connection.channel()
         args = {'x-max-priority': 3}
-        self.channel.queue_declare(queue=queueName, arguments=args)
+        self.channel.queue_declare(callback , queue=queueName, arguments=args)
 
 
     def run(self):
