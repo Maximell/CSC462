@@ -163,16 +163,18 @@ def main():
             #If Dumplog then send the dumplog to the user with the highest amount of commands
             if command in ['DUMPLOG']:
                 print "sending DUMPLOG"
-                max = 0
-                for worker in workerMap:
-                    workerQueue = worker[0]
-
-                    if worker[1][1] > max:
-                        max = worker[1][1]
-                for user in userMap:
-                    if workerQueue == userMap[user]:
-                        print "user", user
-                        args[0] = user
+                # max = 0
+                # for worker in workerMap:
+                #     workerQueue = worker[0]
+                #
+                #     if worker[1][1] > max:
+                #         print max
+                #         max = worker[1][1]
+                #
+                # for user in userMap:
+                #     if workerQueue == userMap[user]:
+                #         print "user", user
+                #         args[0] = user
 
             send(command, args, lineNumber)
 
