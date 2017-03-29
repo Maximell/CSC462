@@ -13,24 +13,14 @@ from multiprocessing.managers import SyncManager
 from Queue import PriorityQueue
 
 
-# class consumer:
-#     def __init__(self , queueName):
-#         Thread.__init__(self)
-#         self.daemon = True
-#         self.queueName = queueName
-#         self.start()
-#         # self.join()
-#
-#     def run(self):
-#         print "started"
-#         rabbitConsumer(self.queueName)
 
 
 class rabbitConsumer():
-    def __init__(self, queueName , Q1, Q2, Q3):
+    def __init__(self, queueName,Q1, Q2, Q3):
         self.rabbitPQueue1 = Q1
         self.rabbitPQueue2 = Q2
         self.rabbitPQueue3 = Q3
+        print "initialize queues"
         self.connection = RabbitMQReceiver(self.consume, queueName)
 
     def consume(self, ch, method, props, body):
@@ -56,7 +46,7 @@ class rabbitConsumer():
         #     self.rabbitQueue.put(payload)
         # else:
         #     self.rabbitQueue.put(payload)
-        # print "put in queue"
+        print "put in queue"
 
 
 # quote shape: symbol: {value: string, retrieved: epoch time, user: string, cryptoKey: string}
@@ -535,16 +525,16 @@ def delegate(ch , method, prop, args):
             #
 
 
-class RegisterQueue(SyncManager):
-    def __init__(self):
-        RegisterQueue.register(("PriorityQueue", PriorityQueue))
+# class RegisterQueue(SyncManager):
+#     def __init__(self):
+#         RegisterQueue.register(("PriorityQueue", PriorityQueue))
 
 
-
-def rabbitQueue():
-    rabbit = RegisterQueue()
-    rabbit.start()
-    return rabbit
+#
+# def rabbitQueue():
+#     rabbit = RegisterQueue()
+#     rabbit.start()
+#     return rabbit
 
 if __name__ == '__main__':
     print "starting TransactionServer"
@@ -570,29 +560,6 @@ if __name__ == '__main__':
         "DUMPLOG": handleCommandDumplog
     }
 
-    #
-    # class MyManager(SyncManager):
-    #     pass
-    # MyManager.register("PriorityQueue", PriorityQueue)  # Register a shared PriorityQueue
-    # def Manager():
-    #     m = MyManager()
-    #     m.start()
-    #     return m
-    #
-    # def worker(queue):
-    #     print(queue)
-    #     for i in range(100):
-    #         queue.put(i)
-    #     print "worker", queue.qsize()
-    #
-    #
-    # m = Manager()
-    # pr_queue = m.PriorityQueue()  # This is process-safe
-    # worker_process = Process(target = worker, args = (pr_queue,))
-    # worker_process.start()
-    #
-    # time.sleep(5)    # nope, race condition, you shall not pass (probably)
-    # print "main", pr_queue.qsize()
 
 
     quoteClient = RabbitMQClient(RabbitMQClient.QUOTE)
@@ -611,7 +578,7 @@ if __name__ == '__main__':
     P3Q_rabbit = multiprocessing.Queue()
 
 
-    print "Created multiprocess PriorityQueue"
+    print "Created multiprocess PriorityQueues"
     consumer_process = Process(target=rabbitConsumer, args=(RabbitMQReceiver.TRANSACTION , P1Q_rabbit , P2Q_rabbit , P3Q_rabbit))
     consumer_process.start()
     print "Created multiprocess Consummer"
