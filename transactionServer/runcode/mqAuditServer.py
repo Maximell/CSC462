@@ -480,7 +480,7 @@ if __name__ == '__main__':
                 time.sleep(1)
                 countDown += 1
                 # send dumplog if you haven't seen anything for 30 sec
-                if countDown == 30:
+                if countDown == 60:
                     on_request(None, None, DumpLogProps, DumpLog)
 
             continue
