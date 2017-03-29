@@ -65,7 +65,10 @@ def add(userId):
         cash = float(request.form['cash'].decode('utf-8'))
     except:
         return "Can't convert cash value to float" , request.form['cash'].decode('utf-8')
-    return render_template('result.html', doAdd(userId, cash))
+    result = doAdd(userId, cash)
+    print "result: ", result
+    template = render_template('result.html', result)
+    return template
 
 # Quote methods
 def doQuote(userId, stockSumbol, lineNum=0):
