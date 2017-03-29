@@ -573,7 +573,8 @@ if __name__ == '__main__':
     print "made thread"
     while(True):
         if rabbit.queue.empty():
-            consumeRabbit.run()
+            print "reading in queue for 5 sec"
+            consumeRabbit.connection.run()
         else:
             # see how many users there are in rabbit.user
             # start daemon threads to service each user
