@@ -27,7 +27,8 @@ from Queue import PriorityQueue
 
 
 class rabbitConsumer():
-    def __init__(self, queueName):
+    def __init__(self, queueName , sharedQueue):
+        self.rabbitQueue = sharedQueue
         self.connection = RabbitMQReceiver(self.consume, queueName)
 
     def consume(self, ch, method, props, body):
@@ -41,11 +42,11 @@ class rabbitConsumer():
             # But our system works the other way.
 
             # We need to display lineNum infront of payload to so get() works properly
-            rabbit.queue.put((2, [line, payload]))
+            self.rabbitQueue.queue.put((2, [line, payload]))
         elif props.priority == 2:
-            rabbit.queue.put((1, [line, payload]))
+            self.rabbitQueue.queue.put((1, [line, payload]))
         else:
-            rabbit.queue.put((3, [line, payload]))
+            self.rabbitQueue.queue.put((3, [line, payload]))
 
 
 # quote shape: symbol: {value: string, retrieved: epoch time, user: string, cryptoKey: string}
@@ -598,7 +599,7 @@ if __name__ == '__main__':
     print "registered PQ"
     PQ_rabbit = multiprocessing.Queue()
     print "Created multiprocess PriorityQueue"
-    worker_process = Process(target=rabbitConsumer(RabbitMQReceiver.TRANSACTION), args=(PQ_rabbit))
+    worker_process = Process(target=rabbitConsumer, args=(RabbitMQReceiver.TRANSACTION,PQ_rabbit))
     worker_process.start()
     print "Created multiprocess Consummer"
 
