@@ -494,7 +494,7 @@ if __name__ == '__main__':
         # else service queue
         else:
             countDown = time.time()
-            msg = rabbit.queue.get(block=True)
+            msg = rabbit.queue.get()
             payload = msg[1]
             args = payload[1]
             props = msg[0]
