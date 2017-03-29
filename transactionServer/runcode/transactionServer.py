@@ -594,8 +594,9 @@ if __name__ == '__main__':
 
     # Adding in multiProcessing
     print "trying to start PQ"
-    rabbit = rabbitQueue()
-    PQ_rabbit = rabbit.PriorityQueue()
+    # rabbit = rabbitQueue()
+    print "registered PQ"
+    PQ_rabbit = multiprocessing.Queue()
     print "Created multiprocess PriorityQueue"
     worker_process = Process(target=rabbitConsumer(RabbitMQReceiver.TRANSACTION), args=(PQ_rabbit))
     worker_process.start()
