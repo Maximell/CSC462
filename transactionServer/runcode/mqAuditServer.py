@@ -497,8 +497,8 @@ if __name__ == '__main__':
                 seenDumpLog = True
                 DumpLog = args
                 DumpLogProps = props
-                continue
 
-            on_request(None, None, props, args)
+            else:
+                on_request(None, None, props, args)
 
 # auditServer.writeLogs("./testLOG")
