@@ -28,6 +28,7 @@ class rabbitConsumer():
     def consume(self, ch, method, props, body):
         payload = json.loads(body)
         line = payload.get("lineNum")
+        print "got payload", payload
         if line is None:
             line = payload.get("transactionNum")
 
