@@ -121,11 +121,11 @@ def send(command, args, lineNum):
             'stockSymbol': args[1]
         }
     elif len(args) == 1 and command in ['DUMPLOG']:
-        # args = {
-        #     'userId': args[0]
-        # }
-        # properties = pika.BasicProperties(priority=3)
-        return  # dont bother sending a dumplog
+        args = {
+            'userId': "./testLOG"
+        }
+        properties = pika.BasicProperties(priority=3)
+        # return  # dont bother sending a dumplog
     elif len(args) == 1:
         args = {
             'userId': args[0]
@@ -163,10 +163,11 @@ def main():
             #If Dumplog then send the dumplog to the user with the highest amount of commands
             if command in ['DUMPLOG']:
                 max = 0
+                workerQueue = workerMap[0][0]
                 for worker in workerMap:
-                    workerQueue = worker[0]
                     if worker[1][1] > max:
                         max = worker[1][1]
+                        workerQueue = worker[0]
                 for user in userMap:
                     if workerQueue == userMap[user]:
                         args[0] = user
