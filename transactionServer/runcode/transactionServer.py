@@ -33,10 +33,12 @@ class rabbitConsumer():
 
     def consume(self, ch, method, props, body):
         payload = json.loads(body)
+        print "Reciveed :", payload
+
         line = payload.get("lineNum")
         if line is None:
             line = payload.get("transactionNum")
-
+        print "trying to put in QUEUE"
         if props.priority == 1:
             # flipping priority b/c Priority works lowestest to highest
             # But our system works the other way.
@@ -47,6 +49,7 @@ class rabbitConsumer():
             self.rabbitQueue.queue.put((1, [line, payload]))
         else:
             self.rabbitQueue.queue.put((3, [line, payload]))
+        print "put in queue"
 
 
 # quote shape: symbol: {value: string, retrieved: epoch time, user: string, cryptoKey: string}
