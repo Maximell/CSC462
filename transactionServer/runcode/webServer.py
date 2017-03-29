@@ -80,7 +80,7 @@ def apiQuote(userId, stockSymbol):
 
 @app.route('/quote/<string:userId>/<string:stockSymbol>/', methods=['GET'])
 def quote(userId, stockSymbol):
-    return render_template('templates/result.html', doQuote(userId, stockSymbol))
+    return doQuote(userId, stockSymbol)#render_template('templates/result.html', doQuote(userId, stockSymbol))
 
 # Buy methods
 def doBuy(userId, stockSymbol, cash, lineNum=0):
