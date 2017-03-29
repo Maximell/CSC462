@@ -610,6 +610,7 @@ if __name__ == '__main__':
     P2Q_rabbit = multiprocessing.Queue()
     P3Q_rabbit = multiprocessing.Queue()
 
+
     print "Created multiprocess PriorityQueue"
     worker_process = Process(target=rabbitConsumer, args=(RabbitMQReceiver.TRANSACTION , P1Q_rabbit))
     worker_process.start()
