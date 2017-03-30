@@ -32,7 +32,17 @@ class RabbitMQClient():
 # This is for the aysnc rabbitMQ
 class RabbitMQAyscClient(RabbitMQBase):
     def __init__(self, queueName , requestQueue ):
-        self.queueName = queueName
+        self.queueNames = 	[["transactionIn193596476298033",], #B01331331331
+                            ["transactionIn193596744799041",], #B01341341341
+                            ["transactionIn193601473895188",], #B0145B145B14
+                            ["transactionIn193601742334740",], #B0146B146B14
+                            ["transactionIn193809078333764",], #B044B144B144
+                            ["transactionIn193821963432263",], #B047B147B147
+                            ["transactionIn193826241687624",], # B048B048B048
+                            ["transactionIn193830553497929",], #B049B149B149
+                            ["transactionIn193860618727760",], #B050B150B150
+                            ["transactionIn8796760983851"   ]] #B132
+
         self.param = pika.ConnectionParameters('142.104.91.142',44429)
         self.connection = pika.SelectConnection(self.param,self.on_connection_open,stop_ioloop_on_close=False)
         self.channel = None
@@ -132,8 +142,9 @@ class RabbitMQAyscClient(RabbitMQBase):
 
     def setup_exchange(self, exchange_name):
         print "setup exchange"
-        self.channel.exchange_declare(self.on_exchange_declareok,
-                                       self.queueName,)
+        for queue in self.queueNames:
+            self.channel.exchange_declare(self.on_exchange_declareok,
+                                       queue,)
 
     def on_exchange_declareok(self, unused_frame):
 
@@ -144,16 +155,19 @@ class RabbitMQAyscClient(RabbitMQBase):
         """
         print "exchange all good"
         # LOGGER.info('Exchange declared')
-        self.setup_queue(self.queueName)
+        for queue in self.queueNames:
+            self.setup_queue(queue)
 
     def setup_queue(self, queueName):
         args = {'x-max-priority': 3, 'x-message-ttl': 600000}
         print "setting up queue"
-        self.channel.queue_declare(self.on_queue_declareok, queueName , arguments=args)
+        for queue in self.queueNames:
+            self.channel.queue_declare(self.on_queue_declareok, queue , arguments=args)
 
     def on_queue_declareok(self, method_frame):
         print "queue all good"
-        self.channel.queue_bind(self.on_bindok, self.queueName,
+        for queue in self.queueNames:
+            self.channel.queue_bind(self.on_bindok, queue,
                                  self.EXCHANGE, )
 
     def on_bindok(self, unused_frame):
@@ -196,21 +210,21 @@ class RabbitMQAyscClient(RabbitMQBase):
             try:
                 payload  = self.requestQueue.get(False)
                 if payload:
-                    self.queueName = payload[0]
+                    worderId = payload[0]
                     requestBody = payload[1]
                     priority = payload[2]
 
-                    print "sending", requestBody, "to", self.queueName, "with priority", priority
+                    print "sending", requestBody, "to", worderId, "with priority", priority
 
                     self.channel.basic_publish(
                         exchange=self.EXCHANGE,
-                        routing_key=self.queueName,
+                        routing_key=worderId,
                         properties=priority,
                         body=json.dumps(requestBody),
 
                     )
-                    print "schedule next msg"
-                    self.schedule_next_message()
+                print "schedule next msg"
+                self.schedule_next_message()
             except:
                 pass
                 # notEmpty = False
