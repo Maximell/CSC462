@@ -29,8 +29,8 @@ class RabbitMQClient():
         )
 
 class RabbitMQAyscClient():
-    def __init__(self, requestQueue  ):
-        self.queueName = None
+    def __init__(self, queueName, requestQueue  ):
+        self.queueName = queueName
         self.param = pika.ConnectionParameters('142.104.91.142',44429)
         self.connection = pika.SelectConnection(self.param,self.on_connection_open,stop_ioloop_on_close=False)
         self.channel = None
@@ -38,7 +38,7 @@ class RabbitMQAyscClient():
         self.stopping = False
         self.PUBLISH_INTERVAL = 1
         self.requestQueue = requestQueue
-        self.EXCHANGE = None
+        self.EXCHANGE = queueName
         print "set up Publisher"
 
         self.connection.ioloop.start()
