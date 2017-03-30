@@ -398,6 +398,7 @@ def handleCommandDumplog(args):
         args["command"]
     )
     auditClient.send(requestBody, 3)
+    return "DUMPLOG SENT TO AUDIT"
 
 
 
