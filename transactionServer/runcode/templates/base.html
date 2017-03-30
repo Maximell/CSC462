@@ -3,7 +3,7 @@
 <head>
     {% block head %}
         {% block styles %}
-            <link rel="stylesheet" href="css/flat-ui.css">
+            <link rel="stylesheet" href="{{ url_for('static',filename='css/flat-ui.css') }}">
         {% endblock %}
         <title>
             {% block title %}Seng462 Project{% endblock %}
