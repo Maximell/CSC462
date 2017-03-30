@@ -197,11 +197,12 @@ def on_request(ch, method, props, payload):
     payload["cryptoKey"] = quote["cryptoKey"]
     payload["quoteRetrieved"] = quote["retrieved"]
 
-    print "sending back from cache:", payload
+    # print "sending back from cache:", payload
     transactionServerID = payload["trans"]
     # Need to figure out which transaction server to send back to.
     # transactionClient = RabbitMQClient(transactionServerID)
     # transactionClient.send(payload)
+    print "adding payload to Queue",payload
     requestQueue.put((payload , transactionServerID))
 
 

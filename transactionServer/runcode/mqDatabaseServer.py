@@ -691,6 +691,7 @@ def on_request(ch, method, props, payload):
 
     response['command'] = payload['command']
     # transactionClient.send(response)
+    print "adding response to queue", response
     requestQueue.put(response)
 
 

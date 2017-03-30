@@ -29,7 +29,7 @@ class RabbitMQClient(RabbitMQBase):
         self.channel.queue_declare(queue=self.queueName, arguments=args)
 
     def send(self, requestBody , priority=2):
-        print "sending", requestBody, "to", self.queueName, "with priority", priority
+        # print "sending", requestBody, "to", self.queueName, "with priority", priority
         proporties = pika.BasicProperties(
             priority=priority
         )
