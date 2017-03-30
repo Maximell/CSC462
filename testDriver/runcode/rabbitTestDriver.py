@@ -29,7 +29,7 @@ class RabbitMQClient():
         )
 
 class RabbitMQAyscClient():
-    def __init__(self, queueName, requestQueue  ):
+    def __init__(self, requestQueue, queueName=None ):
         self.queueName = queueName
         self.param = pika.ConnectionParameters('142.104.91.142',44429)
         self.connection = pika.SelectConnection(self.param,self.on_connection_open,stop_ioloop_on_close=False)
@@ -398,7 +398,7 @@ if __name__ == '__main__':
         requestQueue = multiprocessing.Queue()
         # just need a random queue to start.
         producer_process = process(target=RabbitMQAyscClient,
-                                   args=("transactionIn193596476298033",  requestQueue))
+                                   args=(  requestQueue))
         producer_process.start()
         print "created publisher"
 
