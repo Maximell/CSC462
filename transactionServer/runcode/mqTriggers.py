@@ -10,42 +10,39 @@ from mqQuoteServer import createQuoteRequest
 import Queue
 
 
-
-class rabbitQueue:
-    def __init__(self):
-        self.queue = Queue.PriorityQueue()
-
-class consumer (Thread):
-    def __init__(self , queueName):
-        Thread.__init__(self)
-        self.daemon = True
-        self.queueName = queueName
-        self.start()
-        # self.join()
-
-    def run(self):
-        print "started"
-        rabbitConsumer(self.queueName)
+import multiprocessing
+from multiprocessing import Process
 
 
 class rabbitConsumer():
-    def __init__(self, queueName):
+    def __init__(self, queueName,Q1, Q2, Q3):
+        self.rabbitPQueue1 = Q1
+        self.rabbitPQueue2 = Q2
+        self.rabbitPQueue3 = Q3
+        print "initialize queues"
         self.connection = RabbitMQReceiver(self.consume, queueName)
+        print "connectionb done"
 
     def consume(self, ch, method, props, body):
         payload = json.loads(body)
+        print "Reciveed :", payload
+
         line = payload.get("lineNum")
         if line is None:
             line = payload.get("transactionNum")
-
+        print "trying to put in QUEUE"
         if props.priority == 1:
             # flipping priority b/c Priority works lowestest to highest
             # But our system works the other way.
 
             # We need to display lineNum infront of payload to so get() works properly
-            rabbit.queue.put((2, [line, payload]))
+            self.rabbitPQueue1.put((1, [line, payload]))
+        elif props.priority == 2:
+            self.rabbitPQueue2.put((2, [line, payload]))
         else:
-            rabbit.queue.put((1, [line, payload]))
+            self.rabbitPQueue3.put((3, [line, payload]))
+        print "put in queue"
+
 
 class TriggerFunctions:
     BUY = 1
@@ -512,19 +509,50 @@ if __name__ == '__main__':
 
 
     print("awaiting trigger requests")
-    rabbit = rabbitQueue()
-    consumeRabbit = consumer(RabbitMQReceiver.TRIGGERS)
-    print rabbit.queue
+
+
+    P1Q_rabbit = multiprocessing.Queue()
+    P2Q_rabbit = multiprocessing.Queue()
+    P3Q_rabbit = multiprocessing.Queue()
+
+    print "Created multiprocess PriorityQueues"
+    consumer_process = Process(target=rabbitConsumer,
+                               args=(RabbitMQReceiver.TRIGGERS, P1Q_rabbit, P2Q_rabbit, P3Q_rabbit))
+    consumer_process.start()
+    print "Created multiprocess Consummer"
+
     while (True):
-        if rabbit.queue.empty():
-            # print "empty"
+        try:
+            msg = P2Q_rabbit.get(False)
+            if msg:
+                payload = msg[1]
+                args = payload[1]
+                props = msg[0]
+                print "queue size: ", P2Q_rabbit.qsize()
+                on_request(None, None, props, args)
             continue
-        else:
-            msg = rabbit.queue.get()
-            payload = msg[1]
-            args = payload[1]
-            props = msg[0]
-            print "queue size: ", rabbit.queue.qsize()
-            on_request(None, None, props, args)
+        except:
+            pass
+            try:
+                msg = P1Q_rabbit.get(False)
+                if msg:
+                    payload = msg[1]
+                    args = payload[1]
+                    props = msg[0]
+                    print "queue size: ", P1Q_rabbit.qsize()
+                    on_request(None, None, props, args)
+                continue
+            except:
+                try:
+                    msg = P3Q_rabbit.get(False)
+                    if msg:
+                        payload = msg[1]
+                        args = payload[1]
+                        props = msg[0]
+                        print "queue size: ", P3Q_rabbit.qsize()
+                        on_request(None, None, props, args)
+                    continue
+                except:
+                    pass
 
 
