@@ -13,29 +13,22 @@ class rabbitConsumer():
         self.rabbitPQueue1 = Q1
         self.rabbitPQueue2 = Q2
         self.rabbitPQueue3 = Q3
-        print "initialize queues"
         self.connection = RabbitMQReceiver(self.consume, queueName)
-        print "connectionb done"
 
     def consume(self, ch, method, props, body):
         payload = json.loads(body)
         print "Reciveed :", payload
 
-        line = payload.get("lineNum")
-        if line is None:
-            line = payload.get("transactionNum")
-        print "trying to put in QUEUE"
         if props.priority == 1:
             # flipping priority b/c Priority works lowestest to highest
             # But our system works the other way.
 
             # We need to display lineNum infront of payload to so get() works properly
-            self.rabbitPQueue1.put((1, [line, payload]))
+            self.rabbitPQueue1.put(1,  payload)
         elif props.priority == 2:
-            self.rabbitPQueue2.put((2, [line, payload]))
+            self.rabbitPQueue2.put(2 ,  payload)
         else:
-            self.rabbitPQueue3.put((3, [line, payload]))
-        print "put in queue"
+            self.rabbitPQueue3.put(3, payload )
 
 class auditFunctions:
     USER_COMMAND = 1
@@ -481,7 +474,6 @@ if __name__ == '__main__':
             msg = P2Q_rabbit.get(False)
             if msg:
                 payload = msg[1]
-                args = payload[1]
                 props = msg[0]
                 print "queue size: ", P2Q_rabbit.qsize()
                 if args.get("command") == "DUMPLOG":
@@ -492,55 +484,53 @@ if __name__ == '__main__':
                     DumpLogProps = props
                     break
 
-                on_request(None, None, props, args)
+                on_request(None, None, props, payload)
                 countDown = time.time()
-            continue
+                continue
         except:
             pass
-            try:
-                msg = P1Q_rabbit.get(False)
-                if msg:
-                    payload = msg[1]
-                    args = payload[1]
-                    props = msg[0]
-                    print "queue size: ", P1Q_rabbit.qsize()
-                    if args.get("command") == "DUMPLOG":
-                        print "seen Dumplog"
-                        seenDumpLog = True
-                        countDown = time.time()
-                        DumpLog = args
-                        DumpLogProps = props
-                        break
-
-                    on_request(None, None, props, args)
+        try:
+            msg = P1Q_rabbit.get(False)
+            if msg:
+                payload = msg[1]
+                args = payload[1]
+                props = msg[0]
+                print "queue size: ", P1Q_rabbit.qsize()
+                if args.get("command") == "DUMPLOG":
+                    print "seen Dumplog"
+                    seenDumpLog = True
                     countDown = time.time()
+                    DumpLog = args
+                    DumpLogProps = props
+                    break
+
+                on_request(None, None, props, payload)
+                countDown = time.time()
                 continue
-            except:
-                try:
-                    # if you have seen the dumplog and it has been 100 sec without seeing anything else
-                    if seenDumpLog:
-                        currentTime = time.time()
-                        # send dumplog if you haven't seen anything for 30 sec
-                        if currentTime - countDown > 30:
-                            print "Making Dumplog"
-                            on_request(None, None, DumpLogProps, DumpLog)
-                            DumplogNotMade = False
-                            break
+        except:
+            pass
+        try:
+            # if you have seen the dumplog and it has been 100 sec without seeing anything else
+            if seenDumpLog:
+                currentTime = time.time()
+                # send dumplog if you haven't seen anything for 30 sec
+                if currentTime - countDown > 60:
+                    print "Making Dumplog"
+                    on_request(None, None, DumpLogProps, DumpLog)
+                    DumplogNotMade = False
+                    break
 
-
-                    msg = P3Q_rabbit.get(False)
-                    if msg:
-                        payload = msg[1]
-                        args = payload[1]
-                        props = msg[0]
-                        seenDumpLog = True
-                        countDown = time.time()
-                        DumpLog = args
-                        DumpLogProps = props
-
-                    continue
-                except:
-                    pass
+            msg = P3Q_rabbit.get(False)
+            if msg:
+                payload = msg[1]
+                props = msg[0]
+                seenDumpLog = True
+                countDown = time.time()
+                DumpLog = payload
+                DumpLogProps = props
+                continue
+        except:
+            pass
                     #         queue is empty
 
     #

@@ -13,10 +13,8 @@ from multiprocessing import Process
 
 
 class rabbitConsumer():
-    def __init__(self, queueName,Q1, Q2, Q3):
-        self.rabbitPQueue1 = Q1
+    def __init__(self, queueName,Q2):
         self.rabbitPQueue2 = Q2
-        self.rabbitPQueue3 = Q3
         print "initialize queues"
         self.connection = RabbitMQReceiver(self.consume, queueName)
         print "connectionb done"
@@ -24,22 +22,7 @@ class rabbitConsumer():
     def consume(self, ch, method, props, body):
         payload = json.loads(body)
         print "Reciveed :", payload
-
-        line = payload.get("lineNum")
-        if line is None:
-            line = payload.get("transactionNum")
-        print "trying to put in QUEUE"
-        if props.priority == 1:
-            # flipping priority b/c Priority works lowestest to highest
-            # But our system works the other way.
-
-            # We need to display lineNum infront of payload to so get() works properly
-            self.rabbitPQueue1.put((1, [line, payload]))
-        elif props.priority == 2:
-            self.rabbitPQueue2.put((2, [line, payload]))
-        else:
-            self.rabbitPQueue3.put((3, [line, payload]))
-        print "put in queue"
+        self.rabbitPQueue2.put(2, payload)
 
 class databaseFunctions:
     ADD = 1
@@ -737,13 +720,11 @@ if __name__ == '__main__':
 
     print("awaiting database requests")
     # Object to listen for the Database
-    P1Q_rabbit = multiprocessing.Queue()
     P2Q_rabbit = multiprocessing.Queue()
-    P3Q_rabbit = multiprocessing.Queue()
 
     print "Created multiprocess PriorityQueues"
     consumer_process = Process(target=rabbitConsumer,
-                               args=(RabbitMQReceiver.DATABASE, P1Q_rabbit, P2Q_rabbit, P3Q_rabbit))
+                               args=(RabbitMQReceiver.DATABASE,  P2Q_rabbit))
     consumer_process.start()
     print "Created multiprocess Consummer"
 
@@ -752,31 +733,9 @@ if __name__ == '__main__':
             msg = P2Q_rabbit.get(False)
             if msg:
                 payload = msg[1]
-                args = payload[1]
                 props = msg[0]
                 print "queue size: ", P2Q_rabbit.qsize()
-                on_request(None, None, props, args)
-            continue
+                on_request(None, None, props, payload)
+                continue
         except:
             pass
-            try:
-                msg = P1Q_rabbit.get(False)
-                if msg:
-                    payload = msg[1]
-                    args = payload[1]
-                    props = msg[0]
-                    print "queue size: ", P1Q_rabbit.qsize()
-                    on_request(None, None, props, args)
-                continue
-            except:
-                try:
-                    msg = P3Q_rabbit.get(False)
-                    if msg:
-                        payload = msg[1]
-                        args = payload[1]
-                        props = msg[0]
-                        print "queue size: ", P3Q_rabbit.qsize()
-                        on_request(None, None, props, args)
-                    continue
-                except:
-                    pass

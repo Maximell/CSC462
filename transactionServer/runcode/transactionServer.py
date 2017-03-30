@@ -608,7 +608,6 @@ if __name__ == '__main__':
                 props = msg[0]
                 print "queue size: ", P3Q_rabbit.qsize()
                 delegate(None, None, props, payload)
-                continue
         except:
             pass
             #         queue is empty
