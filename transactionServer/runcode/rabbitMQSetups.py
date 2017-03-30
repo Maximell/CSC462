@@ -28,7 +28,7 @@ class RabbitMQClient(RabbitMQBase):
         #
         # self.channel.queue_declare(self.send,queue=self.queueName, arguments=args)
 
-        self.connection = pika.SelectConnection(parameters=self.param,on_open_callback=self.send)
+        self.connection = pika.SelectConnection(parameters=self.param,on_open_callback=self.on_open)
         try:
             self.connection.ioloop.start()
         except:
