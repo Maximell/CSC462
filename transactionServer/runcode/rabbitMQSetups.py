@@ -159,8 +159,9 @@ class RabbitMQAyscClient(RabbitMQBase):
         self.setup_queue(self.queueName)
 
     def setup_queue(self, queueName):
+        args = {'x-max-priority': 3, 'x-message-ttl': 600000}
         print "setting up queue"
-        self.channel.queue_declare(self.on_queue_declareok, queueName)
+        self.channel.queue_declare(self.on_queue_declareok, queueName , arguments=args)
 
     def on_queue_declareok(self, method_frame):
         print "queue all good"
