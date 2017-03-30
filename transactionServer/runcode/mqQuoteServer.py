@@ -24,7 +24,7 @@ class rabbitConsumer():
     def consume(self, ch, method, props, body):
         payload = json.loads(body)
         print "Reciveed :", payload
-        self.rabbitPQueue2.put(2, payload)
+        self.rabbitPQueue2.put((2, payload))
 
 
 def createQuoteRequest(userId, stockSymbol, lineNum, args):
