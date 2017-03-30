@@ -43,7 +43,7 @@ class RabbitMQClient(RabbitMQBase):
 
 # This is for the aysnc rabbitMQ
 class RabbitMQAyscClient(RabbitMQBase):
-    def __init__(self, queueName , requestQueue  ):
+    def __init__(self, queueName , requestQueue ):
         self.queueName = queueName
         self.param = pika.ConnectionParameters('142.104.91.142',44429)
         self.connection = pika.SelectConnection(self.param,self.on_connection_open,stop_ioloop_on_close=False)

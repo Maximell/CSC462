@@ -40,6 +40,10 @@ class RabbitMQAyscClient(RabbitMQBase):
         self.PUBLISH_INTERVAL = 1
         self.requestQueue = requestQueue
         self.EXCHANGE = queueName
+        self._deliveries = []
+        self._acked = 0
+        self._nacked = 0
+        self._message_number = 0
         print "set up Publisher"
 
         self.connection.ioloop.start()
@@ -399,9 +403,8 @@ if __name__ == '__main__':
         DUMPFLAG = False
         print "create publisher"
         requestQueue = multiprocessing.Queue()
-        # just need a random queue to start.
         producer_process = Process(target=RabbitMQAyscClient,
-                                   args=( RabbitMQAyscClient.TRANSACTION , requestQueue))
+                                   args=(RabbitMQAyscClient.TRANSACTION, requestQueue))
         producer_process.start()
         print "created publisher"
 
