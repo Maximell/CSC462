@@ -30,7 +30,7 @@ class RabbitMQClient():
         self.channel = self.connection.channel(self.send)
 
         args = {'x-max-priority': 3 , 'x-message-ttl': 600000 }
-        self.channel.queue_declare(queue=self.queueName, arguments=args)
+        self.channel.queue_declare(self.send,queue=self.queueName, arguments=args)
 
     def send(self, requestBody , properties):
         self.channel.basic_publish(
