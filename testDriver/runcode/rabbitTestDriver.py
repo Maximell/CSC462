@@ -6,7 +6,8 @@ import pika
 import multiprocessing
 from multiprocessing import process
 from multiprocessing import Queue
-
+class RabbitMQBase:
+    TRANSACTION = 'transactionIn193596476298033'
 
 # tried to import -> code completion worked, running it didnt, why is python like this
 # from transactionServer.runCode.rabbitMQSetups import RabbitMQClient
@@ -28,7 +29,7 @@ class RabbitMQClient():
 
         )
 
-class RabbitMQAyscClient():
+class RabbitMQAyscClient(RabbitMQBase):
     def __init__(self, requestQueue, queueName=None ):
         self.queueName = queueName
         self.param = pika.ConnectionParameters('142.104.91.142',44429)
@@ -398,7 +399,7 @@ if __name__ == '__main__':
         requestQueue = multiprocessing.Queue()
         # just need a random queue to start.
         producer_process = process(target=RabbitMQAyscClient,
-                                   args=(  requestQueue))
+                                   args=(requestQueue, RabbitMQAyscClient.TRANSACTION))
         producer_process.start()
         print "created publisher"
 
