@@ -55,6 +55,7 @@ class RabbitMQAyscClient(RabbitMQBase):
         self.EXCHANGE = queueName
         print "set up Publisher"
 
+        self.connection.ioloop.start()
 
     def on_connection_open(self , blank_connection):
         print "on open connection"
