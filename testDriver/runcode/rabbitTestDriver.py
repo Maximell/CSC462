@@ -297,7 +297,7 @@ def send(command, args, lineNum):
             if currentWorker[1][0] <= minUser:
                 sendto = currentWorker
                 index = x
-                print "found fewest users"
+                # print "found fewest users"
                 minUser = currentWorker[1][0]
                 minAmount = currentAmount
         # find the worker with fewest users and commands.
@@ -311,7 +311,7 @@ def send(command, args, lineNum):
                 if currentWorker[1][1] < minAmount:
                     index = x
                     minAmount = currentWorker[1][1]
-                    print "found fewest Commands"
+                    # print "found fewest Commands"
                     sendto = currentWorker
         if sendto != None:
             # print("adding User to map")
@@ -362,9 +362,10 @@ def send(command, args, lineNum):
 
     # print "sending:", args
     # push into rabbit
-    requestQueue.put((client ,args , properties ) )
+    requestQueue.put((client ,args , properties ))
     if DUMPFLAG:
         # time.sleep()
+        print requestQueue.queue
         quit()
 
 
