@@ -230,6 +230,7 @@ class RabbitMQAyscClient(RabbitMQBase):
                     print "schedule next msg"
                     self.schedule_next_message()
             except:
+                pass
                 # notEmpty = False
                 # print "failed in send"
 
