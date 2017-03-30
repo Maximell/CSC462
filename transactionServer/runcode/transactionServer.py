@@ -1,7 +1,7 @@
 import math
 import time
 import json
-from rabbitMQSetups import RabbitMQClient, RabbitMQReceiver
+from rabbitMQSetups import RabbitMQClient, RabbitMQReceiver, RabbitMQAyscClient , RabbitMQAyscReciever
 from mqDatabaseServer import databaseFunctions
 from mqQuoteServer import createQuoteRequest
 from mqTriggers import TriggerFunctions
@@ -10,26 +10,26 @@ from threading import Thread
 import multiprocessing
 from multiprocessing import Process
 
-
-class rabbitConsumer():
-    def __init__(self, queueName,Q1, Q2, Q3):
-        self.rabbitPQueue1 = Q1
-        self.rabbitPQueue2 = Q2
-        self.rabbitPQueue3 = Q3
-        self.connection = RabbitMQReceiver(self.consume, queueName)
-
-    def consume(self, ch, method, props, body):
-        payload = json.loads(body)
-        print "Received :", payload
-        print "priority = ",props.priority
-
-
-        if props.priority == 1:
-            self.rabbitPQueue1.put((1,  payload))
-        elif props.priority == 2:
-            self.rabbitPQueue2.put((2, payload))
-        else:
-            self.rabbitPQueue3.put((3,  payload))
+#
+# class rabbitConsumer():
+#     def __init__(self, queueName,Q1, Q2, Q3):
+#         self.rabbitPQueue1 = Q1
+#         self.rabbitPQueue2 = Q2
+#         self.rabbitPQueue3 = Q3
+#         self.connection = RabbitMQReceiver(self.consume, queueName)
+#
+#     def consume(self, ch, method, props, body):
+#         payload = json.loads(body)
+#         print "Received :", payload
+#         print "priority = ",props.priority
+#
+#
+#         if props.priority == 1:
+#             self.rabbitPQueue1.put((1,  payload))
+#         elif props.priority == 2:
+#             self.rabbitPQueue2.put((2, payload))
+#         else:
+#             self.rabbitPQueue3.put((3,  payload))
 
 
 
@@ -550,13 +550,14 @@ if __name__ == '__main__':
     print "trying to start PQ"
     # rabbit = rabbitQueue()
     print "registered PQ"
+
     P1Q_rabbit = multiprocessing.Queue()
     P2Q_rabbit = multiprocessing.Queue()
     P3Q_rabbit = multiprocessing.Queue()
 
 
     print "Created multiprocess PriorityQueues"
-    consumer_process = Process(target=rabbitConsumer, args=(RabbitMQReceiver.TRANSACTION , P1Q_rabbit , P2Q_rabbit , P3Q_rabbit))
+    consumer_process = Process(target=RabbitMQAyscReciever, args=(RabbitMQReceiver.TRANSACTION , P1Q_rabbit , P2Q_rabbit , P3Q_rabbit))
     consumer_process.start()
     print "Created multiprocess Consummer"
 
