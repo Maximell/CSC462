@@ -24,11 +24,11 @@ class rabbitConsumer():
         payload = json.loads(body)
         print "Reciveed :", payload
 
-        line = payload.get("lineNum")
-        if line is None:
-            line = payload.get("transactionNum")
+        # line = payload.get("lineNum")
+        # if line is None:
+        #     line = payload.get("transactionNum")
         print "trying to put in QUEUE"
-        self.rabbitPQueue2.put((1, [line, payload]))
+        self.rabbitPQueue2.put((1, payload))
         # if props.priority == 1:
         #     # flipping priority b/c Priority works lowestest to highest
         #     # But our system works the other way.
@@ -586,10 +586,9 @@ if __name__ == '__main__':
             msg = P2Q_rabbit.get(False)
             if msg:
                 payload = msg[1]
-                args = payload[1]
                 props = msg[0]
                 print "queue size: ", P2Q_rabbit.qsize()
-                delegate(None, None, props, args)
+                delegate(None, None, props, payload)
             continue
         except:
             pass
@@ -597,20 +596,18 @@ if __name__ == '__main__':
                 msg = P1Q_rabbit.get(False)
                 if msg:
                     payload = msg[1]
-                    args = payload[1]
                     props = msg[0]
                     print "queue size: ", P1Q_rabbit.qsize()
-                    delegate(None, None, props, args)
+                    delegate(None, None, props, payload)
                 continue
             except:
                 try:
                     msg = P3Q_rabbit.get(False)
                     if msg:
                         payload = msg[1]
-                        args = payload[1]
                         props = msg[0]
                         print "queue size: ", P3Q_rabbit.qsize()
-                        delegate(None, None, props, args)
+                        delegate(None, None, props, payload)
                     continue
                 except:
                     pass
