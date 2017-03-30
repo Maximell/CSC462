@@ -20,6 +20,11 @@ echo getting latest code
 git pull
 echo killing current python processes
 killall python
+pssh -i -h workersHostFile.txt killall python
+pssh -i -H root@142.104.91.130:44421 killall python
+pssh -i -H root@142.104.91.131:44421 killall python
+pssh -i -H root@142.104.91.143:44421 killall python
+
 echo killing RMQmanager
 docker kill RMQmanager
 echo starting RMQmanager
@@ -65,12 +70,6 @@ pssh -i -H root@142.104.91.130:44421 -x "cd $gitpath;" git pull
 pssh -i -H root@142.104.91.131:44421 -x "cd $gitpath;" git pull
 pssh -i -H root@142.104.91.143:44421 -x "cd $gitpath;" git pull
 
-
-echo killing all python
-pssh -i -h workersHostFile.txt killall python
-pssh -i -H root@142.104.91.130:44421 killall python
-pssh -i -H root@142.104.91.131:44421 killall python
-pssh -i -H root@142.104.91.143:44421 killall python
 
 
 echo configuring iptables
