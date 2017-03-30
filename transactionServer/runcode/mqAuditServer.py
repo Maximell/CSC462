@@ -476,11 +476,11 @@ if __name__ == '__main__':
                 payload = msg[1]
                 props = msg[0]
                 print "queue size: ", P2Q_rabbit.qsize()
-                if args.get("command") == "DUMPLOG":
+                if payload.get("command") == "DUMPLOG":
                     print "seen Dumplog"
                     seenDumpLog = True
                     countDown = time.time()
-                    DumpLog = args
+                    DumpLog = payload
                     DumpLogProps = props
                     break
 
@@ -493,14 +493,13 @@ if __name__ == '__main__':
             msg = P1Q_rabbit.get(False)
             if msg:
                 payload = msg[1]
-                args = payload[1]
                 props = msg[0]
                 print "queue size: ", P1Q_rabbit.qsize()
-                if args.get("command") == "DUMPLOG":
+                if payload.get("command") == "DUMPLOG":
                     print "seen Dumplog"
                     seenDumpLog = True
                     countDown = time.time()
-                    DumpLog = args
+                    DumpLog = payload
                     DumpLogProps = props
                     break
 
