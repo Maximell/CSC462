@@ -26,7 +26,7 @@ class RabbitMQClient(RabbitMQBase):
         self.connection = pika.BlockingConnection(pika.ConnectionParameters('142.104.91.142',44429))
         self.channel = self.connection.channel()
 
-        args = {'x-max-priority': 3}
+        args = {'x-max-priority': 3 , 'x-message-ttl': int(60000)}
         self.channel.queue_declare(queue=self.queueName, arguments=args)
 
     # webserver should be using priority=1 when sending
