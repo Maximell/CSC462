@@ -215,6 +215,7 @@ if __name__ == '__main__':
     requestQueue = multiprocessing.Queue()
     producer_process = Process(target=RabbitMQAyscClient,
                                args=(RabbitMQAyscClient.TRANSACTION, requestQueue))
+    producer_process.start()
     print "created publisher"
 
     # for triggers next
