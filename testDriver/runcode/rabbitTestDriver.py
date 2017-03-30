@@ -30,23 +30,28 @@ class RabbitMQClient():
         )
 
 class RabbitMQAyscClient(RabbitMQBase):
+    print "starting Client"
     def __init__(self, queueName, requestQueue ):
-        self.queueName = queueName
-        self.param = pika.ConnectionParameters('142.104.91.142',44429)
-        self.connection = pika.SelectConnection(self.param,self.on_connection_open,stop_ioloop_on_close=False)
-        self.channel = None
-        self.closing = False
-        self.stopping = False
-        self.PUBLISH_INTERVAL = 1
-        self.requestQueue = requestQueue
-        self.EXCHANGE = queueName
-        self._deliveries = []
-        self._acked = 0
-        self._nacked = 0
-        self._message_number = 0
-        print "set up Publisher"
+        print "starting init"
+        try:
+            self.queueName = queueName
+            self.param = pika.ConnectionParameters('142.104.91.142',44429)
+            self.connection = pika.SelectConnection(self.param,self.on_connection_open,stop_ioloop_on_close=False)
+            self.channel = None
+            self.closing = False
+            self.stopping = False
+            self.PUBLISH_INTERVAL = 1
+            self.requestQueue = requestQueue
+            self.EXCHANGE = queueName
+            self._deliveries = []
+            self._acked = 0
+            self._nacked = 0
+            self._message_number = 0
+            print "set up Publisher"
 
-        self.connection.ioloop.start()
+            self.connection.ioloop.start()
+        except TypeError or KeyError or AttributeError as error:
+            print "error", error
 
     def on_connection_open(self , blank_connection):
         print "on open connection"
