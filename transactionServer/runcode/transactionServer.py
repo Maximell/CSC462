@@ -39,7 +39,6 @@ class rabbitConsumer():
             self.rabbitPQueue2.put((2, payload))
         else:
             self.rabbitPQueue3.put((3,  payload))
-            self.rabbitQueue.put(payload)
 
         print "put in queue"
 
