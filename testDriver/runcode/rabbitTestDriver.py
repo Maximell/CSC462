@@ -257,6 +257,7 @@ userMap = {}
 
 
 def send(command, args, lineNum):
+    DUMPFLAG = False
     print "--------------------"
     print "command", command
     print "args", args
@@ -354,6 +355,7 @@ def send(command, args, lineNum):
     # push into rabbit
     requestQueue.put((client ,args , properties ) )
     if DUMPFLAG:
+        # time.sleep()
         quit()
 
 
