@@ -6,7 +6,7 @@ from random import randint
 import pika
 from threading import Thread
 import threading
-from rabbitMQSetups import RabbitMQClient, RabbitMQReceiver
+from rabbitMQSetups import RabbitMQClient, RabbitMQReceiver, RabbitMQAyscClient
 from mqAuditServer import auditFunctions
 import Queue
 
@@ -200,13 +200,26 @@ def on_request(ch, method, props, payload):
     print "sending back from cache:", payload
     transactionServerID = payload["trans"]
     # Need to figure out which transaction server to send back to.
-    transactionClient = RabbitMQClient(transactionServerID)
-    transactionClient.send(payload)
+    # transactionClient = RabbitMQClient(transactionServerID)
+    # transactionClient.send(payload)
+    requestQueue.put((payload , transactionServerID))
+
 
 if __name__ == '__main__':
     print "starting QuoteServer"
     quoteServer = Quotes()
     poolHandler()
+
+    print "create publisher"
+    requestQueue = multiprocessing.Queue()
+    producer_process = Process(target=RabbitMQAyscClient,
+                               args=(RabbitMQAyscClient.TRANSACTION, requestQueue))
+    print "created publisher"
+
+    # for triggers next
+    # requestQueue = multiprocessing.Queue()
+    # producer_process = Process(target=RabbitMQAyscClient,
+    #                            args=(RabbitMQAyscClient.TRIGGERS, requestQueue))
 
     auditClient = RabbitMQClient(RabbitMQClient.AUDIT)
 

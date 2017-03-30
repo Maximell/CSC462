@@ -715,10 +715,12 @@ if __name__ == '__main__':
         databaseFunctions.SELL_TRIGGER: handleTriggerSell,
     }
     # Object to send back to Transaction client
+    print "create publisher"
     requestQueue = multiprocessing.Queue()
     producer_process = Process(target=RabbitMQAyscClient,
                                args=(RabbitMQAyscClient.TRANSACTION , requestQueue))
     # transactionClient = RabbitMQClient(RabbitMQClient.TRANSACTION)
+    print "created publisher"
 
     print("awaiting database requests")
     # Object to listen for the Database
