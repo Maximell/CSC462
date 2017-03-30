@@ -27,7 +27,7 @@ class RabbitMQClient(RabbitMQBase):
         self.channel = self.connection.channel(self.send)
 
         args = {'x-max-priority': 3 , 'x-message-ttl': 600000}
-        self.channel.queue_declare(queue=self.queueName, arguments=args)
+        self.channel.queue_declare(self.send,queue=self.queueName, arguments=args)
 
     # webserver should be using priority=1 when sending
     def send(self, requestBody, priority=2):
