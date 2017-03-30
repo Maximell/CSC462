@@ -28,11 +28,15 @@ class RabbitMQClient(RabbitMQBase):
         args = {'x-max-priority': 3 , 'x-message-ttl': 600000 }
         self.channel.queue_declare(queue=self.queueName, arguments=args)
 
-    def send(self, requestBody ):
+    def send(self, requestBody , priority=2):
+        print "sending", requestBody, "to", self.queueName, "with priority", priority
+        proporties = pika.BasicProperties(
+            priority=priority
+        )
         self.channel.basic_publish(
             exchange='',
             routing_key=self.queueName,
-            properties=2,
+            properties=proporties,
             body=json.dumps(requestBody),
 
         )
