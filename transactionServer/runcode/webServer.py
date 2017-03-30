@@ -43,6 +43,10 @@ def sendAndReceive(data, host='142.104.91.142',port=44429, queueName=None):
     channel.close()
     return result
 
+# Home
+@app.route('/', methods=['GET'])
+def index():
+    return render_template('index.html')
 
 # Add methods
 def doAdd(userId, cash, lineNum=0):
