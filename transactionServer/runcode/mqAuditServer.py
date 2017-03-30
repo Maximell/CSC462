@@ -5,6 +5,7 @@ from threading import Thread
 import Queue
 import multiprocessing
 from multiprocessing import Process
+import time
 
 
 class rabbitConsumer():
@@ -470,6 +471,11 @@ if __name__ == '__main__':
                                args=(RabbitMQReceiver.AUDIT, P1Q_rabbit, P2Q_rabbit, P3Q_rabbit))
     consumer_process.start()
     print "Created multiprocess Consummer"
+    seenDumpLog = False
+    countDown = None
+    DumpLog = None
+    DumpLogProps = None
+
 
     while (True):
         try:
@@ -480,6 +486,7 @@ if __name__ == '__main__':
                 props = msg[0]
                 print "queue size: ", P2Q_rabbit.qsize()
                 on_request(None, None, props, args)
+                countDown = time.time()
             continue
         except:
             pass
@@ -491,16 +498,23 @@ if __name__ == '__main__':
                     props = msg[0]
                     print "queue size: ", P1Q_rabbit.qsize()
                     on_request(None, None, props, args)
+                    countDown = time.time()
                 continue
             except:
                 try:
+                    # if you have seen the dumplog and it has been 100 sec without seeing anything else
+                    if seenDumpLog:
+                        currentTime = time.time()
+                        # send dumplog if you haven't seen anything for 30 sec
+                        if currentTime - countDown > 100:
+                            print "Making Dumplog"
+                            on_request(None, None, DumpLogProps, DumpLog)
+                            break
+
+
                     msg = P3Q_rabbit.get(False)
                     if msg:
-                        payload = msg[1]
-                        args = payload[1]
-                        props = msg[0]
-                        print "queue size: ", P3Q_rabbit.qsize()
-                        on_request(None, None, props, args)
+                        seenDumpLog = True
                     continue
                 except:
                     pass
