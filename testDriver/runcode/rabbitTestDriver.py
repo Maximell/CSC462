@@ -32,16 +32,16 @@ class RabbitMQClient():
 # This is for the aysnc rabbitMQ
 class RabbitMQAyscClient(RabbitMQBase):
     def __init__(self, queueName , requestQueue ):
-        self.queueNames = 	[["transactionIn193596476298033",], #B01331331331
-                            ["transactionIn193596744799041",], #B01341341341
-                            ["transactionIn193601473895188",], #B0145B145B14
-                            ["transactionIn193601742334740",], #B0146B146B14
-                            ["transactionIn193809078333764",], #B044B144B144
-                            ["transactionIn193821963432263",], #B047B147B147
-                            ["transactionIn193826241687624",], # B048B048B048
-                            ["transactionIn193830553497929",], #B049B149B149
-                            ["transactionIn193860618727760",], #B050B150B150
-                            ["transactionIn8796760983851"   ]] #B132
+        self.queueNames = 	["transactionIn193596476298033", #B01331331331
+                                "transactionIn193596744799041", #B01341341341
+                                "transactionIn193601473895188", #B0145B145B14
+                               "transactionIn193601742334740", #B0146B146B14
+                                "transactionIn193809078333764", #B044B144B144
+                                "transactionIn193821963432263", #B047B147B147
+                                "transactionIn193826241687624", # B048B048B048
+                                "transactionIn193830553497929", #B049B149B149
+                                "transactionIn193860618727760", #B050B150B150
+                                "transactionIn8796760983851" ]
 
         self.param = pika.ConnectionParameters('142.104.91.142',44429)
         self.connection = pika.SelectConnection(self.param,self.on_connection_open,stop_ioloop_on_close=False)
