@@ -511,13 +511,11 @@ if __name__ == '__main__':
     print("awaiting trigger requests")
 
 
-    P1Q_rabbit = multiprocessing.Queue()
     P2Q_rabbit = multiprocessing.Queue()
-    P3Q_rabbit = multiprocessing.Queue()
 
     print "Created multiprocess PriorityQueues"
     consumer_process = Process(target=rabbitConsumer,
-                               args=(RabbitMQReceiver.TRIGGERS, P1Q_rabbit, P2Q_rabbit, P3Q_rabbit))
+                               args=(RabbitMQReceiver.TRIGGERS, P2Q_rabbit))
     consumer_process.start()
     print "Created multiprocess Consummer"
 
@@ -526,33 +524,12 @@ if __name__ == '__main__':
             msg = P2Q_rabbit.get(False)
             if msg:
                 payload = msg[1]
-                args = payload[1]
                 props = msg[0]
                 print "queue size: ", P2Q_rabbit.qsize()
-                on_request(None, None, props, args)
-            continue
+                on_request(None, None, props, payload)
+                continue
         except:
             pass
-            try:
-                msg = P1Q_rabbit.get(False)
-                if msg:
-                    payload = msg[1]
-                    args = payload[1]
-                    props = msg[0]
-                    print "queue size: ", P1Q_rabbit.qsize()
-                    on_request(None, None, props, args)
-                continue
-            except:
-                try:
-                    msg = P3Q_rabbit.get(False)
-                    if msg:
-                        payload = msg[1]
-                        args = payload[1]
-                        props = msg[0]
-                        print "queue size: ", P3Q_rabbit.qsize()
-                        on_request(None, None, props, args)
-                    continue
-                except:
-                    pass
+
 
 
