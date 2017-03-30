@@ -40,7 +40,7 @@ class RabbitMQClient():
             body=json.dumps(requestBody),
 
         )
-        self.connection.close()
+        self.channel.close()
 
 
 # Worker machines via queues + mac

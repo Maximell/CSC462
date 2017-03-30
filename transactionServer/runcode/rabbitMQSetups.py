@@ -43,7 +43,8 @@ class RabbitMQClient(RabbitMQBase):
             body=json.dumps(requestBody),
 
         )
-        self.connection.close()
+        self.channel.close()
+
 
 
     def close(self):
