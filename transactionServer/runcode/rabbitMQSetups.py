@@ -390,7 +390,7 @@ class RabbitMQAyscReciever(RabbitMQBase):
         # self.enable_delivery_confirmations()
         self.add_on_cancel_callback()
         self.consumer_tag = self.channel.basic_consume(self.on_message,
-                                                         self.queueName)
+                                                         self.queueName , no_ack=True)
     def add_on_cancel_callback(self):
         """Add a callback that will be invoked if RabbitMQ cancels the consumer
         for some reason. If RabbitMQ does cancel the consumer,
