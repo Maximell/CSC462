@@ -4,7 +4,7 @@ from pprint import pprint
 import json
 import pika
 import multiprocessing
-from multiprocessing import process
+from multiprocessing import Process
 from multiprocessing import Queue
 class RabbitMQBase:
     TRANSACTION = 'transactionIn193596476298033'
@@ -30,7 +30,7 @@ class RabbitMQClient():
         )
 
 class RabbitMQAyscClient(RabbitMQBase):
-    def __init__(self, requestQueue, queueName=None ):
+    def __init__(self, queueName, requestQueue ):
         self.queueName = queueName
         self.param = pika.ConnectionParameters('142.104.91.142',44429)
         self.connection = pika.SelectConnection(self.param,self.on_connection_open,stop_ioloop_on_close=False)
@@ -398,8 +398,8 @@ if __name__ == '__main__':
         print "create publisher"
         requestQueue = multiprocessing.Queue()
         # just need a random queue to start.
-        producer_process = process(target=RabbitMQAyscClient,
-                                   args=(requestQueue, RabbitMQAyscClient.TRANSACTION))
+        producer_process = Process(target=RabbitMQAyscClient,
+                                   args=( RabbitMQAyscClient.TRANSACTION , requestQueue))
         producer_process.start()
         print "created publisher"
 
