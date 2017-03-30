@@ -196,19 +196,16 @@ class RabbitMQAyscClient(RabbitMQBase):
             try:
                 payload  = self.requestQueue.get(False)
                 if payload:
-                    requestBody = payload[0]
-                    self.queueName = payload[1]
+                    self.queueName = payload[0]
+                    requestBody = payload[1]
                     priority = payload[2]
 
                     print "sending", requestBody, "to", self.queueName, "with priority", priority
-                    properties = pika.BasicProperties(
-                        content_type='application/json',
-                        priority=priority,
-                    )
+
                     self.channel.basic_publish(
                         exchange=self.EXCHANGE,
                         routing_key=self.queueName,
-                        properties=properties,
+                        properties=priority,
                         body=json.dumps(requestBody),
 
                     )
