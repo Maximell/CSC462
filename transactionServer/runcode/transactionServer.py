@@ -587,27 +587,28 @@ if __name__ == '__main__':
                 props = msg[0]
                 print "queue size: ", P2Q_rabbit.qsize()
                 delegate(None, None, props, payload)
-            continue
+                continue
         except:
             pass
-            try:
-                msg = P1Q_rabbit.get(False)
-                if msg:
-                    payload = msg[1]
-                    props = msg[0]
-                    print "queue size: ", P1Q_rabbit.qsize()
-                    delegate(None, None, props, payload)
+        try:
+            msg = P1Q_rabbit.get(False)
+            if msg:
+                payload = msg[1]
+                props = msg[0]
+                print "queue size: ", P1Q_rabbit.qsize()
+                delegate(None, None, props, payload)
                 continue
-            except:
-                try:
-                    msg = P3Q_rabbit.get(False)
-                    if msg:
-                        payload = msg[1]
-                        props = msg[0]
-                        print "queue size: ", P3Q_rabbit.qsize()
-                        delegate(None, None, props, payload)
-                    continue
-                except:
-                    pass
-    #         queue is empty
+        except:
+            pass
+        try:
+            msg = P3Q_rabbit.get(False)
+            if msg:
+                payload = msg[1]
+                props = msg[0]
+                print "queue size: ", P3Q_rabbit.qsize()
+                delegate(None, None, props, payload)
+                continue
+        except:
+            pass
+            #         queue is empty
 
