@@ -183,7 +183,6 @@ if __name__ == '__main__':
         print(sys.argv)
     else:
         main()
-
         pprint(workerMap)
         pprint(userMap.items())
         print('completed')
