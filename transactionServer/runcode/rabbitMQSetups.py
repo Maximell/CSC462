@@ -27,16 +27,16 @@ class RabbitMQClient(RabbitMQBase):
         # self.channel = self.connection.channel(self.send)
         #
         # self.channel.queue_declare(self.send,queue=self.queueName, arguments=args)
-
-        self.connection = pika.SelectConnection(parameters=self.param,on_open_callback=self.on_open)
+        self.connection = pika.SelectConnection(parameters=self.param)
+        self.channel = self.connection.channel(self.send)
         try:
             self.connection.ioloop.start()
         except:
             self.connection.close()
             self.connection.ioloop.start()
-
-    def on_open(self):
-        self.channel = self.connection.channel(self.send)
+    #
+    # def on_open(self):
+    #     self.channel = self.connection.channel(self.send)
     # webserver should be using priority=1 when sending
     def send(self, requestBody, priority=2):
 
