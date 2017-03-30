@@ -488,6 +488,7 @@ def delegate(ch , method, prop, args):
                 # if it is not complete (needs to go to another service) it should return None
                 response = function(args)
                 print "response from call:", response
+                return
                 # if response is not None:
                 #     print "return response to webserver: ", response
                 #     returnClient = RabbitMQClient(queueName=RabbitMQClient.WEB+str(response["lineNum"]))

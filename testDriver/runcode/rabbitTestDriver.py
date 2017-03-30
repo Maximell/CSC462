@@ -28,16 +28,16 @@ class RabbitMQClient():
 # Worker machines via queues + mac
 workerMap = [
     #  QueueName , [NumOfUsers , Number of Commands]
-    [RabbitMQClient("transactionIn193596476298033"), [0 , 0]],
-    [RabbitMQClient("transactionIn193596744799041"), [0 , 0]],
-    [RabbitMQClient("transactionIn193601473895188"), [0 , 0]],
-    [RabbitMQClient("transactionIn193601742334740"), [0 , 0]],
-    [RabbitMQClient("transactionIn193809078333764"), [0 , 0]],
-    [RabbitMQClient("transactionIn193821963432263"), [0 , 0]],
-    [RabbitMQClient("transactionIn193826241687624"), [0 , 0]],
-    [RabbitMQClient("transactionIn193830553497929"), [0 , 0]],
-    [RabbitMQClient("transactionIn193860618727760"), [0 , 0]],
-    [RabbitMQClient("transactionIn8796760983851"), [0 , 0]]
+    [RabbitMQClient("transactionIn193596476298033"), [0 , 0]], #B01331331331
+    [RabbitMQClient("transactionIn193596744799041"), [0 , 0]], #B01341341341
+    [RabbitMQClient("transactionIn193601473895188"), [0 , 0]], #B0145B145B14
+    [RabbitMQClient("transactionIn193601742334740"), [0 , 0]], #B0146B146B14
+    [RabbitMQClient("transactionIn193809078333764"), [0 , 0]], #B044B144B144
+    [RabbitMQClient("transactionIn193821963432263"), [0 , 0]], #B047B147B147
+    [RabbitMQClient("transactionIn193826241687624"), [0 , 0]], # B048B048B048
+    [RabbitMQClient("transactionIn193830553497929"), [0 , 0]], #B049B149B149
+    [RabbitMQClient("transactionIn193860618727760"), [0 , 0]], #B050B150B150
+    [RabbitMQClient("transactionIn8796760983851"), [0 , 0]] #B132
 ]
 # last mac addr queue is 132 - Haven't changed the mac yet.
 
