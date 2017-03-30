@@ -31,7 +31,7 @@ class RabbitMQClient():
         #
         # self.channel.queue_declare(self.send,queue=self.queueName, arguments=args)
 
-        self.connection = pika.SelectConnection(parameters=self.param,on_open_callback=self.send)
+        self.connection = pika.SelectConnection(parameters=self.param,on_open_callback=self.on_open)
         try:
             self.connection.ioloop.start()
         except:
@@ -40,6 +40,7 @@ class RabbitMQClient():
 
     def on_open(self):
         self.channel = self.connection.channel(self.send)
+
     def send(self, requestBody , properties):
         self.channel.basic_publish(
             exchange='',
