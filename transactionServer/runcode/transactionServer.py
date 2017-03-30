@@ -557,7 +557,7 @@ if __name__ == '__main__':
 
 
     print "Created multiprocess PriorityQueues"
-    consumer_process = Process(target=RabbitMQAyscReciever, args=(RabbitMQReceiver.TRANSACTION , P1Q_rabbit , P2Q_rabbit , P3Q_rabbit))
+    consumer_process = Process(target=RabbitMQAyscReciever, args=(RabbitMQAyscReciever.TRANSACTION , P1Q_rabbit , P2Q_rabbit , P3Q_rabbit))
     consumer_process.start()
     print "Created multiprocess Consummer"
 
