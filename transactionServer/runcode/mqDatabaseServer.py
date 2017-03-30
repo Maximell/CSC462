@@ -6,21 +6,21 @@ import math
 import ast
 from threading import Thread
 import Queue
-from rabbitMQSetups import RabbitMQClient, RabbitMQReceiver, RabbitMQAyscClient
+from rabbitMQSetups import RabbitMQClient, RabbitMQReceiver, RabbitMQAyscClient, RabbitMQAyscReciever
 
 import multiprocessing
 from multiprocessing import Process
 
 
-class rabbitConsumer():
-    def __init__(self, queueName,Q2):
-        self.rabbitPQueue2 = Q2
-        self.connection = RabbitMQReceiver(self.consume, queueName)
-
-    def consume(self, ch, method, props, body):
-        payload = json.loads(body)
-        print "Reciveed :", payload
-        self.rabbitPQueue2.put((2, payload))
+# class rabbitConsumer():
+#     def __init__(self, queueName,Q2):
+#         self.rabbitPQueue2 = Q2
+#         self.connection = RabbitMQReceiver(self.consume, queueName)
+#
+#     def consume(self, ch, method, props, body):
+#         payload = json.loads(body)
+#         print "Reciveed :", payload
+#         self.rabbitPQueue2.put((2, payload))
 
 class databaseFunctions:
     ADD = 1
@@ -724,13 +724,13 @@ if __name__ == '__main__':
     # transactionClient = RabbitMQClient(RabbitMQClient.TRANSACTION)
     print "created publisher"
 
-    print("awaiting database requests")
-    # Object to listen for the Database
+    P1Q_rabbit = multiprocessing.Queue()
     P2Q_rabbit = multiprocessing.Queue()
+    P3Q_rabbit = multiprocessing.Queue()
 
     print "Created multiprocess PriorityQueues"
-    consumer_process = Process(target=rabbitConsumer,
-                               args=(RabbitMQReceiver.DATABASE, P2Q_rabbit))
+    consumer_process = Process(target=RabbitMQAyscReciever,
+                               args=(RabbitMQAyscReciever.AUDIT, P1Q_rabbit, P2Q_rabbit, P3Q_rabbit))
     consumer_process.start()
     print "Created multiprocess Consummer"
 
