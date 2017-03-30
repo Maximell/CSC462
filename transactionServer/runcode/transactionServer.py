@@ -20,7 +20,7 @@ class rabbitConsumer():
 
     def consume(self, ch, method, props, body):
         payload = json.loads(body)
-        print "Reciveed :", payload
+        print "Received :", payload
 
 
         if props.priority == 1:
