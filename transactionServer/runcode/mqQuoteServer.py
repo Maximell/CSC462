@@ -200,9 +200,9 @@ def on_request(ch, method, props, payload):
     print "sending back from cache:", payload
     transactionServerID = payload["trans"]
     # Need to figure out which transaction server to send back to.
-    transactionClient = RabbitMQClient(transactionServerID)
+    # transactionClient = RabbitMQClient(transactionServerID)
     # transactionClient.send(payload)
-    requestQueue.put(payload)
+    requestQueue.put((payload , transactionServerID))
 
 
 if __name__ == '__main__':
@@ -210,14 +210,17 @@ if __name__ == '__main__':
     quoteServer = Quotes()
     poolHandler()
 
+    print "create publisher"
     requestQueue = multiprocessing.Queue()
     producer_process = Process(target=RabbitMQAyscClient,
                                args=(RabbitMQAyscClient.TRANSACTION, requestQueue))
+    print "created publisher"
 
     # for triggers next
     # requestQueue = multiprocessing.Queue()
     # producer_process = Process(target=RabbitMQAyscClient,
-    #                            args=(RabbitMQAyscClient.TRANSACTION, requestQueue))
+    #                            args=(RabbitMQAyscClient.TRIGGERS, requestQueue))
+
     auditClient = RabbitMQClient(RabbitMQClient.AUDIT)
 
     P2Q_rabbit = multiprocessing.Queue()

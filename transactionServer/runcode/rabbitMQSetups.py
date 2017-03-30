@@ -28,11 +28,11 @@ class RabbitMQClient(RabbitMQBase):
         args = {'x-max-priority': 3 , 'x-message-ttl': 600000 }
         self.channel.queue_declare(queue=self.queueName, arguments=args)
 
-    def send(self, requestBody , properties):
+    def send(self, requestBody ):
         self.channel.basic_publish(
             exchange='',
             routing_key=self.queueName,
-            properties=properties,
+            properties=2,
             body=json.dumps(requestBody),
 
         )
@@ -200,7 +200,11 @@ class RabbitMQAyscClient(RabbitMQBase):
         try:
             payload  = self.requestQueue.get(False)
             if payload:
-                requestBody = payload
+                if len(payload) == 2:
+                    requestBody = payload[0]
+                    self.queueName = payload[1]
+                else:
+                    requestBody = payload
                 priority = 2
 
                 print "sending", requestBody, "to", self.queueName, "with priority", priority
