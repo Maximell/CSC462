@@ -28,16 +28,17 @@ class rabbitConsumer():
         if line is None:
             line = payload.get("transactionNum")
         print "trying to put in QUEUE"
-        if props.priority == 1:
-            # flipping priority b/c Priority works lowestest to highest
-            # But our system works the other way.
-
-            # We need to display lineNum infront of payload to so get() works properly
-            self.rabbitPQueue1.put((1, [line, payload]))
-        elif props.priority == 2:
-            self.rabbitPQueue2.put((2, [line, payload]))
-        else:
-            self.rabbitPQueue3.put((3, [line, payload]))
+        self.rabbitPQueue2.put((1, [line, payload]))
+        # if props.priority == 1:
+        #     # flipping priority b/c Priority works lowestest to highest
+        #     # But our system works the other way.
+        #
+        #     # We need to display lineNum infront of payload to so get() works properly
+        #     self.rabbitPQueue1.put((1, [line, payload]))
+        # elif props.priority == 2:
+        #     self.rabbitPQueue2.put((2, [line, payload]))
+        # else:
+        #     self.rabbitPQueue3.put((3, [line, payload]))
         #     self.rabbitQueue.put(payload)
         # elif props.priority == 2:
         #     self.rabbitQueue.put(payload)
