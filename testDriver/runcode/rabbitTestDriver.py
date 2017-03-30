@@ -32,13 +32,13 @@ class RabbitMQClient():
 # This is for the aysnc rabbitMQ
 class RabbitMQAyscClient(RabbitMQBase):
     def __init__(self, queueName , requestQueue ):
-        self.queueNames = 	["transactionIn193596476298033", #B01331331331
+        self.queueNames = 	  ["transactionIn193596476298033", #B01331331331
                                 "transactionIn193596744799041", #B01341341341
                                 "transactionIn193601473895188", #B0145B145B14
-                               "transactionIn193601742334740", #B0146B146B14
+                                "transactionIn193601742334740", #B0146B146B14
                                 "transactionIn193809078333764", #B044B144B144
                                 "transactionIn193821963432263", #B047B147B147
-                                "transactionIn193826241687624", # B048B048B048
+                                "transactionIn193826241687624", #B048B048B048
                                 "transactionIn193830553497929", #B049B149B149
                                 "transactionIn193860618727760", #B050B150B150
                                 "transactionIn8796760983851" ]
@@ -205,10 +205,10 @@ class RabbitMQAyscClient(RabbitMQBase):
 
     def send(self):
         print "try sending"
-        notEmpty = True
-        while(notEmpty):
+        noDump = True
+        while(noDump):
             try:
-                payload  = self.requestQueue.get(False)
+                payload  = self.requestQueue.get()
                 if payload:
                     worderId = payload[0]
                     requestBody = payload[1]
@@ -223,12 +223,19 @@ class RabbitMQAyscClient(RabbitMQBase):
                         body=json.dumps(requestBody),
 
                     )
+                    if requestBody["command"] == "DUMPLOG":
+                        noDump = False
+                        break
                 print "schedule next msg"
                 self.schedule_next_message()
             except:
                 pass
                 # notEmpty = False
                 # print "failed in send"
+
+        # exit after dumplog has been sent
+        print "sentDumplog"
+        quit()
 
 
     def close(self):
