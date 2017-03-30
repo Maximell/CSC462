@@ -29,29 +29,21 @@ class RabbitMQClient():
 
         )
 
+# This is for the aysnc rabbitMQ
 class RabbitMQAyscClient(RabbitMQBase):
-    print "starting Client"
-    def __init__(self, queueName, requestQueue ):
-        print "starting init"
-        try:
-            self.queueName = queueName
-            self.param = pika.ConnectionParameters('142.104.91.142',44429)
-            self.connection = pika.SelectConnection(self.param,self.on_connection_open,stop_ioloop_on_close=False)
-            self.channel = None
-            self.closing = False
-            self.stopping = False
-            self.PUBLISH_INTERVAL = 1
-            self.requestQueue = requestQueue
-            self.EXCHANGE = queueName
-            self._deliveries = []
-            self._acked = 0
-            self._nacked = 0
-            self._message_number = 0
-            print "set up Publisher"
+    def __init__(self, queueName , requestQueue ):
+        self.queueName = queueName
+        self.param = pika.ConnectionParameters('142.104.91.142',44429)
+        self.connection = pika.SelectConnection(self.param,self.on_connection_open,stop_ioloop_on_close=False)
+        self.channel = None
+        self.closing = False
+        self.stopping = False
+        self.PUBLISH_INTERVAL = 1
+        self.requestQueue = requestQueue
+        self.EXCHANGE = queueName
+        print "set up Publisher"
 
-            self.connection.ioloop.start()
-        except TypeError or KeyError or AttributeError as error:
-            print "error", error
+        self.connection.ioloop.start()
 
     def on_connection_open(self , blank_connection):
         print "on open connection"
@@ -206,7 +198,7 @@ class RabbitMQAyscClient(RabbitMQBase):
                 if payload:
                     requestBody = payload[0]
                     self.queueName = payload[1]
-                    priority = payload[3]
+                    priority = payload[2]
 
                     print "sending", requestBody, "to", self.queueName, "with priority", priority
                     properties = pika.BasicProperties(
@@ -227,10 +219,9 @@ class RabbitMQAyscClient(RabbitMQBase):
                 # notEmpty = False
                 # print "failed in send"
 
+
     def close(self):
         self.connection.close()
-
-
 # Worker machines via queues + mac
 # workerMap = [
 #     #  QueueName , [NumOfUsers , Number of Commands]
@@ -361,11 +352,11 @@ def send(command, args, lineNum):
             args["cash"] = -1
 
     # print "sending:", args
-    # push into rabbit
+    # push into rabbitK
     requestQueue.put((client ,args , properties ))
     if DUMPFLAG:
         # time.sleep()
-        print requestQueue.queue
+        print requestQueue.qsize()
         quit()
 
 
