@@ -27,7 +27,7 @@ class RabbitMQClient():
     def __init__(self, queueName):
         self.queueName = queueName
         self.connection = pika.SelectConnection(pika.ConnectionParameters('142.104.91.142', 44429) )
-        self.channel = self.connection.channel()
+        self.channel = self.connection.channel(self.send)
 
         args = {'x-max-priority': 3 , 'x-message-ttl': 600000 }
         self.channel.queue_declare(queue=self.queueName, arguments=args)
