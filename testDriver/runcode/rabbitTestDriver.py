@@ -258,10 +258,10 @@ userMap = {}
 
 def send(command, args, lineNum):
     DUMPFLAG = False
-    print "--------------------"
-    print "command", command
-    print "args", args
-    print "line", lineNum
+    # print "--------------------"
+    # print "command", command
+    # print "args", args
+    # print "line", lineNum
     user = args[0]
     properties = pika.BasicProperties(priority=1)
 
@@ -351,7 +351,7 @@ def send(command, args, lineNum):
         except:
             args["cash"] = -1
 
-    print "sending:", args
+    # print "sending:", args
     # push into rabbit
     requestQueue.put((client ,args , properties ) )
     if DUMPFLAG:
