@@ -203,32 +203,35 @@ class RabbitMQAyscClient(RabbitMQBase):
 
     def send(self):
         print "try sending"
-        try:
-            payload  = self.requestQueue.get(False)
-            if payload:
-                if len(payload) == 2:
-                    requestBody = payload[0]
-                    self.queueName = payload[1]
-                else:
-                    requestBody = payload
-                priority = 2
+        notEmpty = True
+        while(notEmpty):
+            try:
+                payload  = self.requestQueue.get(False)
+                if payload:
+                    if len(payload) == 2:
+                        requestBody = payload[0]
+                        self.queueName = payload[1]
+                    else:
+                        requestBody = payload
+                    priority = 2
 
-                print "sending", requestBody, "to", self.queueName, "with priority", priority
-                properties = pika.BasicProperties(
-                    content_type='application/json',
-                    priority=priority,
-                )
-                self.channel.basic_publish(
-                    exchange=self.EXCHANGE,
-                    routing_key=self.queueName,
-                    properties=properties,
-                    body=json.dumps(requestBody),
+                    print "sending", requestBody, "to", self.queueName, "with priority", priority
+                    properties = pika.BasicProperties(
+                        content_type='application/json',
+                        priority=priority,
+                    )
+                    self.channel.basic_publish(
+                        exchange=self.EXCHANGE,
+                        routing_key=self.queueName,
+                        properties=properties,
+                        body=json.dumps(requestBody),
 
-                )
-                print "schedule next msg"
-                self.schedule_next_message()
-        except:
-            print "failed in send"
+                    )
+                    print "schedule next msg"
+                    self.schedule_next_message()
+            except:
+                notEmpty = False
+                print "failed in send"
 
 
     def close(self):
