@@ -475,9 +475,9 @@ if __name__ == '__main__':
     countDown = None
     DumpLog = None
     DumpLogProps = None
+    DumplogNotMade = True
 
-
-    while (True):
+    while (DumplogNotMade):
         try:
             msg = P2Q_rabbit.get(False)
             if msg:
@@ -509,12 +509,20 @@ if __name__ == '__main__':
                         if currentTime - countDown > 100:
                             print "Making Dumplog"
                             on_request(None, None, DumpLogProps, DumpLog)
+                            DumplogNotMade = False
                             break
 
 
                     msg = P3Q_rabbit.get(False)
                     if msg:
+                        payload = msg[1]
+                        args = payload[1]
+                        props = msg[0]
                         seenDumpLog = True
+                        countDown = time.time()
+                        DumpLog = args
+                        DumpLogProps = props
+
                     continue
                 except:
                     pass
