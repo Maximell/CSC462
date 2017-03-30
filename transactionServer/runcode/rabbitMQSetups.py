@@ -59,7 +59,7 @@ class RabbitMQReceiver(RabbitMQBase):
         args = {'x-max-priority': 3  , 'x-message-ttl': 600000}
         channel.queue_declare(queue=queueName, arguments=args)
 
-        channel.basic_consume(callback, queue=queueName, no_ack=True)
+        channel.basic_consume(callback, queue=queueName, no_ack=True , exclusive=True)
 
         channel.start_consuming()
 
