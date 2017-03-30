@@ -25,9 +25,9 @@ class rabbitConsumer():
 
         if props.priority == 1:
             self.rabbitPQueue1.put((1,  payload))
-        elif props.priority == 2:
-            self.rabbitPQueue2.put((2, payload))
-        else:
+        # elif props.priority == 2:
+        #     self.rabbitPQueue2.put((2, payload))
+        elif props.priority == 3:
             self.rabbitPQueue3.put((3,  payload))
 
 
