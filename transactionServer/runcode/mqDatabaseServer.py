@@ -6,7 +6,7 @@ import math
 import ast
 from threading import Thread
 import Queue
-from rabbitMQSetups import RabbitMQClient, RabbitMQReceiver
+from rabbitMQSetups import RabbitMQClient, RabbitMQReceiver, RabbitMQAyscClient
 
 import multiprocessing
 from multiprocessing import Process
@@ -690,7 +690,8 @@ def on_request(ch, method, props, payload):
         print "error in", payload["function"]
 
     response['command'] = payload['command']
-    transactionClient.send(response)
+    # transactionClient.send(response)
+    requestQueue.put(response)
 
 
 if __name__ == '__main__':
@@ -714,7 +715,10 @@ if __name__ == '__main__':
         databaseFunctions.SELL_TRIGGER: handleTriggerSell,
     }
     # Object to send back to Transaction client
-    transactionClient = RabbitMQClient(RabbitMQClient.TRANSACTION)
+    requestQueue = multiprocessing.Queue()
+    producer_process = Process(target=RabbitMQAyscClient,
+                               args=(RabbitMQAyscClient.TRANSACTION , requestQueue))
+    # transactionClient = RabbitMQClient(RabbitMQClient.TRANSACTION)
 
     print("awaiting database requests")
     # Object to listen for the Database
