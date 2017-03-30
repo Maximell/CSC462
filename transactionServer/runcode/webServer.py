@@ -3,6 +3,8 @@ import json
 import pika
 from flask import Flask, request
 from rabbitMQSetups import RabbitMQClient, RabbitMQReceiver
+import socket
+
 
 app = Flask(__name__)
 
@@ -44,7 +46,12 @@ def sendAndReceive(data, host='localhost', queueName=None):
 @app.route('/add/<string:userId>/', methods=['POST'])
 def add(userId):
     lineNum = int(request.form['lineNum'].decode('utf-8'))
-    cash = float(request.form['cash'].decode('utf-8'))
+    try:
+        cash = float(request.form['cash'].decode('utf-8'))
+    except:
+        data = {"command": "ADD", "userId": userId, "cash": -1, "lineNum": None}
+        sendtoQueue(data)
+        return "Can't convert Value to float" , request.form['cash'].decode('utf-8')
     data = {"command": "ADD", "userId": userId, "cash": cash, "lineNum": lineNum}
 
     return sendAndReceive(data)
@@ -61,7 +68,12 @@ def quote(userId, stockSymbol):
 @app.route('/buy/<string:userId>/<string:stockSymbol>/', methods=['POST'])
 def buy(userId, stockSymbol):
     lineNum = int(request.form['lineNum'].decode('utf-8'))
-    cash = float(request.form['cash'].decode('utf-8'))
+    try:
+        cash = float(request.form['cash'].decode('utf-8'))
+    except:
+        data = {"command": "ADD", "userId": userId, "cash": -1, "lineNum": None}
+        sendtoQueue(data)
+        return "Can't convert Value to float" , request.form['cash'].decode('utf-8')
     data = {"command": "BUY", "userId": userId, "stockSymbol": stockSymbol, "cash": cash, "lineNum": lineNum}
 
     return sendAndReceive(data)
@@ -86,7 +98,12 @@ def cancelBuy(userId):
 @app.route('/sell/<string:userId>/<string:stockSymbol>/', methods=['POST'])
 def sell(userId, stockSymbol):
     lineNum = int(request.form['lineNum'].decode('utf-8'))
-    cash = float(request.form['cash'].decode('utf-8'))
+    try:
+        cash = float(request.form['cash'].decode('utf-8'))
+    except:
+        data = {"command": "ADD", "userId": userId, "cash": -1, "lineNum": None}
+        sendtoQueue(data)
+        return "Can't convert Value to float" , request.form['cash'].decode('utf-8')
     data = {"command": "SELL", "userId": userId, "stockSymbol": stockSymbol, "cash": cash, "lineNum": lineNum}
 
     return sendAndReceive(data)
@@ -111,7 +128,12 @@ def cancelSell(userId):
 @app.route('/set-buy-amount/<string:userId>/<string:stockSymbol>/', methods=['POST'])
 def setBuyAmount(userId, stockSymbol):
     lineNum = int(request.form['lineNum'].decode('utf-8'))
-    cash = float(request.form['cash'].decode('utf-8'))
+    try:
+        cash = float(request.form['cash'].decode('utf-8'))
+    except:
+        data = {"command": "ADD", "userId": userId, "cash": -1, "lineNum": None}
+        sendtoQueue(data)
+        return "Can't convert Value to float" , request.form['cash'].decode('utf-8')
     data = {"command": "SET_BUY_AMOUNT", "userId": userId, "stockSymbol": stockSymbol, "cash": cash, "lineNum": lineNum}
 
     return sendAndReceive(data)
@@ -128,7 +150,12 @@ def cancelSetBuy(userId, stockSymbol):
 @app.route('/set-buy-trigger/<string:userId>/<string:stockSymbol>/', methods=['POST'])
 def setBuyTrigger(userId, stockSymbol):
     lineNum = int(request.form['lineNum'].decode('utf-8'))
-    cash = float(request.form['cash'].decode('utf-8'))
+    try:
+        cash = float(request.form['cash'].decode('utf-8'))
+    except:
+        data = {"command": "ADD", "userId": userId, "cash": -1, "lineNum": None}
+        sendtoQueue(data)
+        return "Can't convert Value to float" , request.form['cash'].decode('utf-8')
     data = {"command": "SET_BUY_TRIGGER", "userId": userId, "stockSymbol": stockSymbol, "cash": cash, "lineNum": lineNum}
 
     return sendAndReceive(data)
@@ -137,7 +164,12 @@ def setBuyTrigger(userId, stockSymbol):
 @app.route('/set-sell-amount/<string:userId>/<string:stockSymbol>/', methods=['POST'])
 def setSellAmount(userId, stockSymbol):
     lineNum = int(request.form['lineNum'].decode('utf-8'))
-    cash = float(request.form['cash'].decode('utf-8'))
+    try:
+        cash = float(request.form['cash'].decode('utf-8'))
+    except:
+        data = {"command": "ADD", "userId": userId, "cash": -1, "lineNum": None}
+        sendtoQueue(data)
+        return "Can't convert Value to float" , request.form['cash'].decode('utf-8')
     data = {"command": "SET_SELL_AMOUNT", "userId": userId, "stockSymbol": stockSymbol, "cash": cash, "lineNum": lineNum}
 
     return sendAndReceive(data)
@@ -146,7 +178,12 @@ def setSellAmount(userId, stockSymbol):
 @app.route('/set-sell-trigger/<string:userId>/<string:stockSymbol>/', methods=['POST'])
 def setSellTrigger(userId, stockSymbol):
     lineNum = int(request.form['lineNum'].decode('utf-8'))
-    cash = float(request.form['cash'].decode('utf-8'))
+    try:
+        cash = float(request.form['cash'].decode('utf-8'))
+    except:
+        data = {"command": "ADD", "userId": userId, "cash": -1, "lineNum": None}
+        sendtoQueue(data)
+        return "Can't convert Value to float" , request.form['cash'].decode('utf-8')
     data = {"command": "SET_SELL_TRIGGER", "userId": userId, "stockSymbol": stockSymbol, "cash": cash, "lineNum": lineNum}
 
     return sendAndReceive(data)
@@ -180,4 +217,4 @@ def displaySummary(userId):
 
 if __name__ == '__main__':
     transactionClient = RabbitMQClient(RabbitMQClient.TRANSACTION)
-    app.run()
+    app.run(host="0.0.0.0",port=44424) 

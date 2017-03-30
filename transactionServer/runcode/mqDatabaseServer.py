@@ -4,7 +4,23 @@ import time
 import json
 import math
 import ast
-from rabbitMQSetups import RabbitMQClient, RabbitMQReceiver
+from threading import Thread
+import Queue
+from rabbitMQSetups import RabbitMQClient, RabbitMQReceiver, RabbitMQAyscClient, RabbitMQAyscReciever
+
+import multiprocessing
+from multiprocessing import Process
+
+
+# class rabbitConsumer():
+#     def __init__(self, queueName,Q2):
+#         self.rabbitPQueue2 = Q2
+#         self.connection = RabbitMQReceiver(self.consume, queueName)
+#
+#     def consume(self, ch, method, props, body):
+#         payload = json.loads(body)
+#         print "Reciveed :", payload
+#         self.rabbitPQueue2.put((2, payload))
 
 class databaseFunctions:
     ADD = 1
@@ -315,6 +331,7 @@ class database:
 
     # returns boolean
     def isBuySellActive(self, buyOrSellObject):
+        print "is BUYSELL active" , (int(buyOrSellObject.get('timestamp', 0)) + self.transactionExpire) > int(time.time())
         return (int(buyOrSellObject.get('timestamp', 0)) + self.transactionExpire) > int(time.time())
 
     # returns remaining amount
@@ -456,7 +473,7 @@ def handleCommitBuy(payload):
     costPer = payload["costPer"]
 
     symbol = buy["symbol"]
-    moneyReserved = buy["number"]
+    moneyReserved = float(buy["number"])
 
     if databaseServer.isBuySellActive(buy):
         numberOfStocks = math.floor(moneyReserved / costPer)
@@ -527,18 +544,26 @@ def handleCommitSell(payload):
     costPer = payload["costPer"]
 
     symbol = sell["symbol"]
-    amount = sell["number"]
+    amount = float(sell["number"])
+
+    print "not a key error"
+    print userId, sell, costPer
+    print "type of costPer", type(costPer)
 
     if databaseServer.isBuySellActive(sell):
+        print "not expired"
         numberOfStocks = math.floor(amount / costPer)
-
+        print "NOS = ", numberOfStocks
         databaseServer.removeFromPortfolio(userId, symbol, numberOfStocks)
+        print "removeFROMportfolio"
         user = databaseServer.addCash(userId, numberOfStocks * costPer)
+        print "addCASH"
         payload["response"] = 200
         payload["updatedUser"] = user
     else:
         payload["response"] = 400
         payload["errorString"] = "no active sell"
+    print "new payload =", payload
     return payload
 
 def handleCancelSell(payload):
@@ -647,23 +672,27 @@ def handleTriggerSell(payload):
     return create_response(400, "not enough portfolio reserved")
 
 
-def on_request(ch, method, props, body):
-    payload = json.loads(body)
+def on_request(ch, method, props, payload):
     print "payload: ", payload
 
     userId = payload['userId']
     if databaseServer.getUser(userId) is None:
         databaseServer.addUser(userId)
+    try:
+        function = handleFunctionSwitch.get(payload["function"])
+        if function:
+            response = function(payload)
+        else:
+            payload['response'] = 404
+            payload['errorString'] = "function not found"
+            response = payload
+    except:
+        print "error in", payload["function"]
 
-    function = handleFunctionSwitch.get(payload["function"])
-    if function:
-        response = function(payload)
-    else:
-        payload['response'] = 404
-        payload['errorString'] = "function not found"
-        response = payload
-
-    transactionClient.send(response)
+    response['command'] = payload['command']
+    # transactionClient.send(response)
+    print "adding response to queue", response
+    requestQueue.put(response)
 
 
 if __name__ == '__main__':
@@ -686,8 +715,33 @@ if __name__ == '__main__':
         databaseFunctions.BUY_TRIGGER: handleTriggerBuy,
         databaseFunctions.SELL_TRIGGER: handleTriggerSell,
     }
+    # Object to send back to Transaction client
+    print "create publisher"
+    requestQueue = multiprocessing.Queue()
+    producer_process = Process(target=RabbitMQAyscClient,
+                               args=(RabbitMQAyscClient.TRANSACTION , requestQueue))
+    producer_process.start()
+    # transactionClient = RabbitMQClient(RabbitMQClient.TRANSACTION)
+    print "created publisher"
 
-    transactionClient = RabbitMQClient(RabbitMQClient.TRANSACTION)
+    P1Q_rabbit = multiprocessing.Queue()
+    P2Q_rabbit = multiprocessing.Queue()
+    P3Q_rabbit = multiprocessing.Queue()
 
-    print("awaiting database requests")
-    RabbitMQReceiver(on_request, RabbitMQReceiver.DATABASE)
+    print "Created multiprocess PriorityQueues"
+    consumer_process = Process(target=RabbitMQAyscReciever,
+                               args=(RabbitMQAyscReciever.DATABASE, P1Q_rabbit, P2Q_rabbit, P3Q_rabbit))
+    consumer_process.start()
+    print "Created multiprocess Consummer"
+
+    while (True):
+        try:
+            msg = P2Q_rabbit.get(False)
+            if msg:
+                payload = msg[1]
+                props = msg[0]
+                print "queue size: ", P2Q_rabbit.qsize()
+                on_request(None, None, props, payload)
+                continue
+        except:
+            pass

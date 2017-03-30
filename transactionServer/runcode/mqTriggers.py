@@ -9,81 +9,24 @@ from threading import Thread
 from rabbitMQSetups import RabbitMQClient, RabbitMQReceiver
 from mqDatabaseServer import databaseFunctions
 from mqQuoteServer import createQuoteRequest
-
-class DatabaseRpcClient(object):
-    def __init__(self):
-        self.response = None
-        self.corr_id = None
-
-        self.connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
-
-        self.channel = self.connection.channel()
-
-        result = self.channel.queue_declare(exclusive=True)
-        self.callback_queue = result.method.queue
-
-        self.channel.basic_consume(self.on_response, no_ack=True, queue=self.callback_queue)
-
-    def on_response(self, ch, method, props, body):
-        # make sure its the right package
-        if self.corr_id == props.correlation_id:
-            # self.response is essential the return of this function, because call() waits on it to be not None
-            self.response = json.loads(body)
-
-    def call(self, requestBody):
-        self.response = None
-        self.corr_id = str(uuid.uuid4())
-        print "sending Database request Id:", self.corr_id
-        self.channel.basic_publish(
-            exchange='',
-            routing_key=RabbitMQClient.DATABASE,
-            properties=pika.BasicProperties(
-                reply_to=self.callback_queue,
-                correlation_id=self.corr_id
-            ),
-            body=json.dumps(requestBody)
-        )
-        while self.response is None:
-            self.connection.process_data_events()
-        return self.response
+import Queue
 
 
-class QuoteRpcClient(object):
-    def __init__(self):
-        self.response = None
-        self.corr_id = None
+import multiprocessing
+from multiprocessing import Process
 
-        self.connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
 
-        self.channel = self.connection.channel()
+class rabbitConsumer():
+    def __init__(self, queueName,Q2):
+        self.rabbitPQueue2 = Q2
+        print "initialize queues"
+        self.connection = RabbitMQReceiver(self.consume, queueName)
+        print "connectionb done"
 
-        result = self.channel.queue_declare(exclusive=True)
-        self.callback_queue = result.method.queue
-
-        self.channel.basic_consume(self.on_response, no_ack=True, queue=self.callback_queue)
-
-    def on_response(self, ch, method, props, body):
-        # make sure its the right package
-        if self.corr_id == props.correlation_id:
-            # self.response is essential the return of this function, because call() waits on it to be not None
-            self.response = json.loads(body)
-
-    def call(self, requestBody):
-        self.response = None
-        self.corr_id = str(uuid.uuid4())
-        print "sending quote request Id:", self.corr_id
-        self.channel.basic_publish(
-            exchange='',
-            routing_key=RabbitMQClient.QUOTE,
-            properties=pika.BasicProperties(
-                reply_to=self.callback_queue,
-                correlation_id=self.corr_id
-            ),
-            body=json.dumps(requestBody)
-        )
-        while self.response is None:
-            self.connection.process_data_events()
-        return self.response
+    def consume(self, ch, method, props, body):
+        payload = json.loads(body)
+        print "Reciveed :", payload
+        self.rabbitPQueue2.put((2, payload))
 
 
 class TriggerFunctions:
@@ -437,8 +380,7 @@ def handleGetSell(payload):
     return payload
 
 
-def on_request(ch, method, props, body):
-    payload = json.loads(body)
+def on_request(ch, method, props, payload):
     print "payload: ", payload
 
     function = handleFunctionSwitch.get(payload["function"])
@@ -469,9 +411,6 @@ if __name__ == '__main__':
         TriggerFunctions.GET_SELL: handleGetSell
     }
 
-    quote_rpc = QuoteRpcClient()
-    db_rpc = DatabaseRpcClient()
-
     # self.start() currently commented out in both threads
     buyThread = BuyTriggerThread()
     sellThread = SellTriggerThread()
@@ -479,6 +418,27 @@ if __name__ == '__main__':
     transactionClient = RabbitMQClient(RabbitMQClient.TRANSACTION)
 
     print("awaiting trigger requests")
-    RabbitMQReceiver(on_request, RabbitMQReceiver.TRIGGERS)
+
+
+    P2Q_rabbit = multiprocessing.Queue()
+
+    print "Created multiprocess PriorityQueues"
+    consumer_process = Process(target=rabbitConsumer,
+                               args=(RabbitMQReceiver.TRIGGERS, P2Q_rabbit))
+    consumer_process.start()
+    print "Created multiprocess Consummer"
+
+    while (True):
+        try:
+            msg = P2Q_rabbit.get(False)
+            if msg:
+                payload = msg[1]
+                props = msg[0]
+                print "queue size: ", P2Q_rabbit.qsize()
+                # on_request(None, None, props, payload)
+                continue
+        except:
+            pass
+
 
 

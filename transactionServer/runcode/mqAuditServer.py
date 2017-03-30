@@ -1,6 +1,27 @@
 #!/usr/bin/env python
 import json
-from rabbitMQSetups import RabbitMQReceiver
+from rabbitMQSetups import RabbitMQReceiver , RabbitMQAyscReciever
+from threading import Thread
+import Queue
+import multiprocessing
+from multiprocessing import Process
+import time
+
+#
+# class rabbitConsumer():
+#     def __init__(self, queueName, Q2, Q3):
+#         self.rabbitPQueue2 = Q2
+#         self.rabbitPQueue3 = Q3
+#         self.connection = RabbitMQReceiver(self.consume, queueName)
+#
+#     def consume(self, ch, method, props, body):
+#         payload = json.loads(body)
+#         print "Reciveed :", payload
+#
+#         if props.priority == 2:
+#             self.rabbitPQueue2.put((2, payload))
+#         else:
+#             self.rabbitPQueue3.put((3, payload ))
 
 class auditFunctions:
     USER_COMMAND = 1
@@ -290,7 +311,8 @@ class AuditServer:
             file.write('\t\t<timestamp>' + str(log['timeStamp']) + '</timestamp>\n')
             file.write('\t\t<server>' + str(log['server']) + '</server>\n')
             file.write('\t\t<transactionNum>' + str(log['transactionNum']) + '</transactionNum>\n')
-            file.write('\t\t<username>' + str(log['userId']) + '</username>\n')
+            if log['userId'] != "./testLOG":
+                file.write('\t\t<username>' + str(log['userId']) + '</username>\n')
             if logType == 'userCommand':
                 file.write('\t\t<command>' + str(log['commandName']) + '</command>\n')
                 if log.get('stockSymbol'):
@@ -315,7 +337,9 @@ class AuditServer:
                     file.write('\t\t<filename>' + str(log['fileName']) + '</filename>\n')
                 if log.get('amount'):
                     file.write('\t\t<funds>' + str(log['amount']) + '</funds>\n')
-            elif logType == 'errorMessage':
+            elif logType == 'errorEvent':
+                file.write('\t\t<command>' + str(log['commandName']) + '</command>\n')
+            if log.get("errorMessage"):
                 file.write('\t\t<errorMessage>' + str(log['errorMessage']) + '</errorMessage>\n')
             elif logType == 'debugMessage':
                 file.write('\t\t<debugMessage>' + str(log['debugMessage']) + '</debugMessage>\n')
@@ -374,8 +398,12 @@ def handleSystemEvent(payload):
     )
 
 def handleErrorMessage(payload):
-    auditServer.logErrorMessage(payload.get("timeStamp"), payload.get("server"), payload.get("transactionNum"),
-                                payload.get("userId"), payload.get("command"), payload.get("errorMessage"))
+    auditServer.logErrorMessage(payload.get("timeStamp"),
+                                payload.get("server"),
+                                payload.get("transactionNum"),
+                                payload.get("userId"),
+                                payload.get("commandName"),
+                                payload.get("errorMessage"))
     return "audit logging error message not implemented"
 
 def handleDebugMessage(payload):
@@ -389,12 +417,11 @@ def handleDebugMessage(payload):
     )
 
 def handleWriteLogs(payload):
-    return auditServer.writeLogs(payload["userId"])
+    return auditServer.writeLogs("./testLOG")
 
 
-def on_request(ch, method, props, body):
-    payload = json.loads(body)
-    print "received payload", payload
+def on_request(ch, method, props, payload):
+    print "Dealing with:", payload
 
     function = payload["function"]
     print "function: ", function
@@ -406,7 +433,9 @@ def on_request(ch, method, props, body):
 
 if __name__ == '__main__':
     print "starting AuditServer"
+
     auditServer = AuditServer()
+
 
     handleFunctionSwitch = {
         auditFunctions.USER_COMMAND: handleUserCommand,
@@ -418,4 +447,60 @@ if __name__ == '__main__':
         auditFunctions.WRITE_LOGS: handleWriteLogs
     }
 
-    RabbitMQReceiver(on_request, RabbitMQReceiver.AUDIT)
+    P1Q_rabbit = multiprocessing.Queue()
+    P2Q_rabbit = multiprocessing.Queue()
+    P3Q_rabbit = multiprocessing.Queue()
+
+    print "Created multiprocess PriorityQueues"
+    consumer_process = Process(target=RabbitMQAyscReciever,
+                               args=(RabbitMQAyscReciever.AUDIT, P1Q_rabbit, P2Q_rabbit, P3Q_rabbit))
+    consumer_process.start()
+    print "Created multiprocess Consummer"
+    seenDumpLog = False
+    countDown = None
+    DumpLog = None
+    DumpLogProps = None
+    DumplogNotMade = True
+
+    while (DumplogNotMade):
+        try:
+            msg = P2Q_rabbit.get(False)
+            if msg:
+                payload = msg[1]
+                props = msg[0]
+                print "queue size: ", P2Q_rabbit.qsize()
+                if payload.get("command") == "DUMPLOG":
+                    print "seen Dumplog"
+                    seenDumpLog = True
+                    countDown = time.time()
+                    DumpLog = payload
+                    DumpLogProps = props
+                    break
+
+                on_request(None, None, props, payload)
+                countDown = time.time()
+                continue
+        except:
+            pass
+        try:
+            # if you have seen the dumplog and it has been 100 sec without seeing anything else
+            if seenDumpLog:
+                currentTime = time.time()
+                # send dumplog if you haven't seen anything for 30 sec
+                if currentTime - countDown > 60:
+                    print "Making Dumplog"
+                    on_request(None, None, DumpLogProps, DumpLog)
+                    DumplogNotMade = False
+                    break
+
+            msg = P3Q_rabbit.get(False)
+            if msg:
+                payload = msg[1]
+                props = msg[0]
+                seenDumpLog = True
+                countDown = time.time()
+                DumpLog = payload
+                DumpLogProps = props
+                continue
+        except:
+            pass

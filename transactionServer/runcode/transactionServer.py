@@ -1,14 +1,65 @@
 import math
 import time
-import uuid
-import pika
 import json
-import ast
-from rabbitMQSetups import RabbitMQClient, RabbitMQReceiver
+from rabbitMQSetups import RabbitMQClient, RabbitMQReceiver, RabbitMQAyscClient , RabbitMQAyscReciever
 from mqDatabaseServer import databaseFunctions
 from mqQuoteServer import createQuoteRequest
 from mqTriggers import TriggerFunctions
 from mqAuditServer import auditFunctions
+from threading import Thread
+import multiprocessing
+from multiprocessing import Process
+
+#
+# class rabbitConsumer():
+#     def __init__(self, queueName,Q1, Q2, Q3):
+#         self.rabbitPQueue1 = Q1
+#         self.rabbitPQueue2 = Q2
+#         self.rabbitPQueue3 = Q3
+#         self.connection = RabbitMQReceiver(self.consume, queueName)
+#
+#     def consume(self, ch, method, props, body):
+#         payload = json.loads(body)
+#         print "Received :", payload
+#         print "priority = ",props.priority
+#
+#
+#         if props.priority == 1:
+#             self.rabbitPQueue1.put((1,  payload))
+#         elif props.priority == 2:
+#             self.rabbitPQueue2.put((2, payload))
+#         else:
+#             self.rabbitPQueue3.put((3,  payload))
+
+
+
+# quote shape: symbol: {value: string, retrieved: epoch time, user: string, cryptoKey: string}
+class Quotes():
+    def __init__(self, cacheExpire=60):
+        self.cacheExpire = cacheExpire
+        self.quoteCache = {}
+
+    def getQuote(self, symbol):
+        cache = self.quoteCache.get(symbol)
+        if cache:
+            if self._cacheIsActive(cache):
+                return cache
+        return None
+
+    def cacheQuote(self, symbol, retrieved, value):
+        self.quoteCache[symbol] = {"retrieved": retrieved, "value": value}
+
+    def useCache(self, quote, symbol, retrieved):
+        if quote is not None:
+            self.cacheQuote(symbol, retrieved, quote)
+        else:
+            localQuote = self.getQuote(symbol)
+            if localQuote is not None:
+                quote = localQuote["value"]
+        return quote
+
+    def _cacheIsActive(self, quote):
+        return (int(quote.get('retrieved', 0)) + self.cacheExpire) > int(time.time())
 
 
 # From webServer: {"transactionNum": lineNum, "command": "QUOTE", "userId": userId, "stockSymbol": stockSymbol}
@@ -18,13 +69,17 @@ def handleCommandQuote(args):
     userId = args["userId"]
     lineNum = args["lineNum"]
 
-    quote = args.get("quote")
-    cryptoKey = args.get("cryptoKey")
+    quote = localQuoteCache.useCache(
+        args.get("quote"),
+        symbol,
+        args.get("quoteRetrieved")
+    )
 
-    if (quote is not None) and cryptoKey:
+    if quote is not None:
         print "Quote return: ", args
         return args
     else:
+        args["trans"] = RabbitMQClient.TRANSACTION
         quoteClient.send(
             createQuoteRequest(userId, symbol, lineNum, args)
         )
@@ -73,8 +128,14 @@ def handleCommandCommitBuy(args):
     transactionNum = args["lineNum"]
 
     buy = args.get("buy")
-    quote = args.get("quote")
     updatedUser = args.get("updatedUser")
+
+    if buy is not None:
+        quote = localQuoteCache.useCache(
+            args.get("quote"),
+            buy["symbol"],
+            args.get("quoteRetrieved")
+        )
 
     if updatedUser is not None:
         return args
@@ -83,6 +144,7 @@ def handleCommandCommitBuy(args):
             databaseFunctions.createCommitBuyRequest(command, userId, buy, quote, transactionNum)
         )
     elif buy is not None:
+        args["trans"] = RabbitMQClient.TRANSACTION
         quoteClient.send(
             createQuoteRequest(userId, buy["symbol"], transactionNum, args)
         )
@@ -134,28 +196,28 @@ def handleCommandCommitSell(args):
 
     sell = args.get("sell")
     updatedUser = args.get("updatedUser")
-    quote = args.get("quote")
+    if sell is not None:
+        quote = localQuoteCache.useCache(
+            args.get("quote"),
+            sell["symbol"],
+            args.get("quoteRetrieved")
+        )
 
-    errorString = args.get("errorString")
-
-    if updatedUser is not None or errorString:
-        print "returning args"
+    if updatedUser is not None:
         return args
     elif (sell is not None) and (quote is not None):
         # this is where we commit the sell
-        print "committing the sell"
         databaseClient.send(
             databaseFunctions.createCommitSellRequest(command, userId, lineNum, sell, quote)
         )
     elif sell is not None:
         # have the sell, need to get a quote
-        print "have sell, need to get quote"
+        args["trans"] = RabbitMQClient.TRANSACTION
         quoteClient.send(
             createQuoteRequest(userId, sell["symbol"], lineNum, args)
         )
     else:
         # this is where we need to go to the pop endpoint
-        print "going to pop endpoint"
         databaseClient.send(
             databaseFunctions.createPopSellRequest(command, userId, lineNum)
         )
@@ -316,7 +378,6 @@ def handleCommandCancelSetSell(args):
 
     return None
 
-
 def handleCommandDumplog(args):
     requestBody = auditFunctions.createWriteLogs(
         int(time.time() * 1000),
@@ -325,7 +386,9 @@ def handleCommandDumplog(args):
         args["userId"],
         args["command"]
     )
-    auditClient.send(requestBody)
+    auditClient.send(requestBody, 3)
+    return "DUMPLOG SENT TO AUDIT"
+
 
 
 def errorPrint(args, error):
@@ -339,14 +402,14 @@ def create_response(status, response):
     return {'status': status, 'body': response}
 
 
-def delegate(ch , method, properties, body):
-    args = json.loads(body)
+def delegate(ch , method, prop, args):
+    # args = json.loads(body)
     print "incoming args: ", args
+    print prop
 
     # error checking from other components
     if args.get("response") >= 400:
         error = str(args.get("response")) + ": " + str(args.get("errorString"))
-
         errorPrint(args, error)
         requestBody = auditFunctions.createErrorMessage(
             int(time.time() * 1000),
@@ -357,20 +420,20 @@ def delegate(ch , method, properties, body):
             error
         )
         auditClient.send(requestBody)
+        return
 
-        returnClient = RabbitMQClient(queueName=RabbitMQClient.WEB + str(args['lineNum']))
-        print "sending error back to webserver on queue: ", RabbitMQClient.WEB + str(args['lineNum'])
-        returnClient.send(
-            create_response(args.get("response"), args)
-        )
-        print "error sent to webserver"
-        returnClient.close()
-        # TODO: return this ^ to the webserver (through a rabbitClient)
+        # returnClient = RabbitMQClient(queueName=RabbitMQClient.WEB + str(args['lineNum']))
+        # print "sending error back to webserver on queue: ", RabbitMQClient.WEB + str(args['lineNum'])
+        # # returnClient.send(
+        # #     create_response(args.get("response"), args)
+        # # )
+        # print "error sent to webserver"
+        # returnClient.close()
     else:
         try:
             # send command to audit, if it is from web server
-            if properties.priority == 1:
-                if args["userId"] != "./testLOG":
+            if prop == 1 or prop == 3:
+                if args["command"] != "DUMPLOG":
                     requestBody = auditFunctions.createUserCommand(
                         int(time.time() * 1000),
                         "transactionServer",
@@ -391,11 +454,20 @@ def delegate(ch , method, properties, body):
                         args["userId"],
                         args["command"],
                         args.get("stockSymbol"),
-                        args["userId"],
+                        args.get("fileName"),
                         args.get("cash")
                     )
-                    # Log User Command Call
+                    # Log User Command Call of DUMPLOG
                     auditClient.send(requestBody)
+
+            # Sanitizing for Negative values of cash
+            if args.get("cash") != None and args.get("cash") > 0:
+                return
+            #     returnClient = RabbitMQClient(queueName=RabbitMQClient.WEB + str(args['lineNum']))
+            #     returnClient.send(
+            #         create_response(400, "invalid arguments" + str(args))
+            #     )
+            #     returnClient.close()
 
             function = functionSwitch.get(args["command"])
             if function:
@@ -403,20 +475,23 @@ def delegate(ch , method, properties, body):
                 # if it is not complete (needs to go to another service) it should return None
                 response = function(args)
                 print "response from call:", response
-                if response is not None:
-                    print "return response to webserver: ", response
-                    returnClient = RabbitMQClient(queueName=RabbitMQClient.WEB+str(response["lineNum"]))
-                    returnClient.send(
-                        create_response(200, response)
-                    )
-                    returnClient.close()
+                return
             else:
-                print "couldn't figure out command...", args
-                returnClient = RabbitMQClient(queueName=RabbitMQClient.WEB+str(args['lineNum']))
-                returnClient.send(
-                    create_response(404, "function not found" + str(args))
-                )
-                returnClient.close()
+                return
+                # if response is not None:
+                #     print "return response to webserver: ", response
+                #     returnClient = RabbitMQClient(queueName=RabbitMQClient.WEB+str(response["lineNum"]))
+                #     returnClient.send(
+                #         create_response(200, response)
+                #     )
+                #     returnClient.close()
+            # else:
+            #     print "couldn't figure out command...", args
+            #     returnClient = RabbitMQClient(queueName=RabbitMQClient.WEB+str(args['lineNum']))
+            #     # returnClient.send(
+            #     #     create_response(404, "function not found" + str(args))
+            #     # )
+            #     returnClient.close()
 
         except (RuntimeError, TypeError, ArithmeticError, KeyError) as error:
             errorPrint(args, error)
@@ -429,15 +504,20 @@ def delegate(ch , method, properties, body):
                 str(error)
             )
             auditClient.send(requestBody)
-            returnClient = RabbitMQClient(queueName=RabbitMQClient.WEB+str(args['lineNum']))
-            returnClient.send(
-                create_response(500, args)
-            )
-            returnClient.close()
+            return
+            # returnClient = RabbitMQClient(queueName=RabbitMQClient.WEB+str(args['lineNum']))
+            # returnClient.send(
+            #     create_response(500, args)
+            # )
+            # returnClient.close()
+            #
 
 
 if __name__ == '__main__':
     print "starting TransactionServer"
+
+
+    localQuoteCache = Quotes()
 
     functionSwitch = {
         "QUOTE": handleCommandQuote,
@@ -457,9 +537,59 @@ if __name__ == '__main__':
         "DUMPLOG": handleCommandDumplog
     }
 
+
+
     quoteClient = RabbitMQClient(RabbitMQClient.QUOTE)
     auditClient = RabbitMQClient(RabbitMQClient.AUDIT)
     databaseClient = RabbitMQClient(RabbitMQClient.DATABASE)
     triggerClient = RabbitMQClient(RabbitMQClient.TRIGGERS)
 
-    RabbitMQReceiver(delegate, RabbitMQReceiver.TRANSACTION)
+    # This is the new python in memory queue for the transation Server to eat from.
+
+    # Adding in multiProcessing
+    print "trying to start PQ"
+    # rabbit = rabbitQueue()
+    print "registered PQ"
+
+    P1Q_rabbit = multiprocessing.Queue()
+    P2Q_rabbit = multiprocessing.Queue()
+    P3Q_rabbit = multiprocessing.Queue()
+
+
+    print "Created multiprocess PriorityQueues"
+    consumer_process = Process(target=RabbitMQAyscReciever, args=(RabbitMQAyscReciever.TRANSACTION , P1Q_rabbit , P2Q_rabbit , P3Q_rabbit))
+    consumer_process.start()
+    print "Created multiprocess Consummer"
+
+    while(True):
+        try:
+            msg = P2Q_rabbit.get(False)
+            if msg:
+                payload = msg[1]
+                props = msg[0]
+                print "queue size: ", P2Q_rabbit.qsize()
+                delegate(None, None, props, payload)
+                continue
+        except:
+            pass
+        try:
+            msg = P1Q_rabbit.get(False)
+            if msg:
+                payload = msg[1]
+                props = msg[0]
+                print "queue size: ", P1Q_rabbit.qsize()
+                delegate(None, None, props, payload)
+                continue
+        except:
+            pass
+        try:
+            msg = P3Q_rabbit.get(False)
+            if msg:
+                payload = msg[1]
+                props = msg[0]
+                print "queue size: ", P3Q_rabbit.qsize()
+                delegate(None, None, props, payload)
+        except:
+            pass
+            #         queue is empty
+
