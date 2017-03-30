@@ -16,31 +16,20 @@ class rabbitConsumer():
         self.rabbitPQueue1 = Q1
         self.rabbitPQueue2 = Q2
         self.rabbitPQueue3 = Q3
-        print "initialize queues"
         self.connection = RabbitMQReceiver(self.consume, queueName)
-        print "connectionb done"
 
     def consume(self, ch, method, props, body):
         payload = json.loads(body)
         print "Reciveed :", payload
 
-        # line = payload.get("lineNum")
-        # if line is None:
-        #     line = payload.get("transactionNum")
-        print "trying to put in QUEUE"
-        # self.rabbitPQueue2.put((1, payload))
-        if props.priority == 1:
-            # flipping priority b/c Priority works lowestest to highest
-            # But our system works the other way.
 
-            # We need to display lineNum infront of payload to so get() works properly
+        if props.priority == 1:
             self.rabbitPQueue1.put((1,  payload))
         elif props.priority == 2:
             self.rabbitPQueue2.put((2, payload))
         else:
             self.rabbitPQueue3.put((3,  payload))
 
-        print "put in queue"
 
 
 # quote shape: symbol: {value: string, retrieved: epoch time, user: string, cryptoKey: string}
@@ -521,17 +510,6 @@ def delegate(ch , method, prop, args):
             #
 
 
-# class RegisterQueue(SyncManager):
-#     def __init__(self):
-#         RegisterQueue.register(("PriorityQueue", PriorityQueue))
-
-
-#
-# def rabbitQueue():
-#     rabbit = RegisterQueue()
-#     rabbit.start()
-#     return rabbit
-
 if __name__ == '__main__':
     print "starting TransactionServer"
 
@@ -580,16 +558,16 @@ if __name__ == '__main__':
     print "Created multiprocess Consummer"
 
     while(True):
-        try:
-            msg = P2Q_rabbit.get(False)
-            if msg:
-                payload = msg[1]
-                props = msg[0]
-                print "queue size: ", P2Q_rabbit.qsize()
-                delegate(None, None, props, payload)
-                continue
-        except:
-            pass
+        # try:
+        #     msg = P2Q_rabbit.get(False)
+        #     if msg:
+        #         payload = msg[1]
+        #         props = msg[0]
+        #         print "queue size: ", P2Q_rabbit.qsize()
+        #         delegate(None, None, props, payload)
+        #         continue
+        # except:
+        #     pass
         try:
             msg = P1Q_rabbit.get(False)
             if msg:
