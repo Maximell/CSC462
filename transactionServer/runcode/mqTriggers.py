@@ -17,10 +17,8 @@ from multiprocessing import Process
 
 
 class rabbitConsumer():
-    def __init__(self, queueName,Q1, Q2, Q3):
-        self.rabbitPQueue1 = Q1
+    def __init__(self, queueName,Q2):
         self.rabbitPQueue2 = Q2
-        self.rabbitPQueue3 = Q3
         print "initialize queues"
         self.connection = RabbitMQReceiver(self.consume, queueName)
         print "connectionb done"
@@ -28,22 +26,7 @@ class rabbitConsumer():
     def consume(self, ch, method, props, body):
         payload = json.loads(body)
         print "Reciveed :", payload
-
-        line = payload.get("lineNum")
-        if line is None:
-            line = payload.get("transactionNum")
-        print "trying to put in QUEUE"
-        if props.priority == 1:
-            # flipping priority b/c Priority works lowestest to highest
-            # But our system works the other way.
-
-            # We need to display lineNum infront of payload to so get() works properly
-            self.rabbitPQueue1.put((1, [line, payload]))
-        elif props.priority == 2:
-            self.rabbitPQueue2.put((2, [line, payload]))
-        else:
-            self.rabbitPQueue3.put((3, [line, payload]))
-        print "put in queue"
+        self.rabbitPQueue2.put((2, payload))
 
 
 class TriggerFunctions:

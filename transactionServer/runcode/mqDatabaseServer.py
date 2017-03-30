@@ -15,14 +15,12 @@ from multiprocessing import Process
 class rabbitConsumer():
     def __init__(self, queueName,Q2):
         self.rabbitPQueue2 = Q2
-        print "initialize queues"
         self.connection = RabbitMQReceiver(self.consume, queueName)
-        print "connectionb done"
 
     def consume(self, ch, method, props, body):
         payload = json.loads(body)
         print "Reciveed :", payload
-        self.rabbitPQueue2.put(2, payload)
+        self.rabbitPQueue2.put((2, payload))
 
 class databaseFunctions:
     ADD = 1
@@ -724,7 +722,7 @@ if __name__ == '__main__':
 
     print "Created multiprocess PriorityQueues"
     consumer_process = Process(target=rabbitConsumer,
-                               args=(RabbitMQReceiver.DATABASE,  P2Q_rabbit))
+                               args=(RabbitMQReceiver.DATABASE, P2Q_rabbit))
     consumer_process.start()
     print "Created multiprocess Consummer"
 

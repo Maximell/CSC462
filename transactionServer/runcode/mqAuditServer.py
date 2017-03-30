@@ -24,11 +24,11 @@ class rabbitConsumer():
             # But our system works the other way.
 
             # We need to display lineNum infront of payload to so get() works properly
-            self.rabbitPQueue1.put(1,  payload)
+            self.rabbitPQueue1.put((1,  payload))
         elif props.priority == 2:
-            self.rabbitPQueue2.put(2 ,  payload)
+            self.rabbitPQueue2.put((2, payload))
         else:
-            self.rabbitPQueue3.put(3, payload )
+            self.rabbitPQueue3.put((3, payload ))
 
 class auditFunctions:
     USER_COMMAND = 1
@@ -531,37 +531,3 @@ if __name__ == '__main__':
                 continue
         except:
             pass
-                    #         queue is empty
-
-    #
-    # while (True):
-    #     # check if queue is empty
-    #     if rabbit.queue.empty():
-    #         # print "empty"
-    #         if seenDumpLog:
-    #             currentTime = time.time()
-    #             # send dumplog if you haven't seen anything for 30 sec
-    #             if  currentTime - countDown > 100:
-    #                 print "Making Dumplog"
-    #                 on_request(None, None, DumpLogProps, DumpLog)
-    #                 break
-    #
-    #
-    #         continue
-    #     # else service queue
-    #     else:
-    #         countDown = time.time()
-    #         msg = rabbit.queue.get()
-    #         payload = msg[1]
-    #         args = payload[1]
-    #         props = msg[0]
-    #         print "queue size: ", rabbit.queue.qsize()
-    #         if args.get("command") == "DUMPLOG":
-    #             print "seen Dumplog"
-    #             seenDumpLog = True
-    #             countDown = time.time()
-    #             DumpLog = args
-    #             DumpLogProps = props
-    #
-    #         else:
-    #             on_request(None, None, props, args)
