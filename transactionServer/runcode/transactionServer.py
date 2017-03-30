@@ -587,7 +587,7 @@ if __name__ == '__main__':
     while(True):
         try:
             print "trying to read Q2"
-            msg = P2Q_rabbit.get()
+            msg = P2Q_rabbit.get(False)
             payload = msg[1]
             args = payload[1]
             props = msg[0]
@@ -595,9 +595,11 @@ if __name__ == '__main__':
             delegate(None, None, props, args)
             continue
         except:
+            pass
+            print "nothing in q2"
             try:
                 print "trying to read Q1"
-                msg = P1Q_rabbit.get()
+                msg = P1Q_rabbit.get(False)
                 payload = msg[1]
                 args = payload[1]
                 props = msg[0]
@@ -607,7 +609,7 @@ if __name__ == '__main__':
             except:
                 try:
                     print "trying to read Q3"
-                    msg = P3Q_rabbit.get()
+                    msg = P3Q_rabbit.get(False)
                     payload = msg[1]
                     args = payload[1]
                     props = msg[0]
