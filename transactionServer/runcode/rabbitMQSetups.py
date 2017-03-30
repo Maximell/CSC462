@@ -49,16 +49,21 @@ class RabbitMQAyscClient(RabbitMQBase):
         self.PUBLISH_INTERVAL = 1
         self.requestQueue = requestQueue
         self.EXCHANGE = queueName
+        print "set up Publisher"
 
 
     def on_connection_open(self , blank_connection):
+        print "on open connection"
         self.add_on_connection_close_callback()
         self.open_channel()
 
     def add_on_connection_close_callback(self):
+        print "on closed connection do callback"
         self.connection.add_on_close_callback(self.on_connection_closed)
 
     def on_connection_closed(self, connection, reply_code, reply_text):
+
+
         """This method is invoked by pika when the connection to RabbitMQ is
         closed unexpectedly. Since it is unexpected, we will reconnect to
         RabbitMQ if it disconnects.
@@ -68,6 +73,7 @@ class RabbitMQAyscClient(RabbitMQBase):
         :param str reply_text: The server provided reply_text if given
 
         """
+        print "on Closed connection"
         self._channel = None
         if self.closing:
             self.connection.ioloop.stop()
@@ -81,6 +87,7 @@ class RabbitMQAyscClient(RabbitMQBase):
         closed. See the on_connection_closed method.
 
         """
+        print "reconnecting"
         self._deliveries = []
         self._acked = 0
         self._nacked = 0
@@ -96,17 +103,21 @@ class RabbitMQAyscClient(RabbitMQBase):
         self.connection.ioloop.start()
 
     def open_channel(self):
+        print "open Channel"
         self.connection.channel(on_open_callback=self.on_channel_open)
 
     def on_channel_open(self , channel):
+        print "on open channel"
         self.channel = channel
         self.add_on_channel_close_callback()
         self.setup_exchange(self.EXCHANGE)
 
     def add_on_channel_close_callback(self):
+
         """This method tells pika to call the on_channel_closed method if
         RabbitMQ unexpectedly closes the channel.
         """
+        print "callback after channel closed"
         self.channel.add_on_close_callback(self.on_channel_closed)
 
     def on_channel_closed(self, channel, reply_code, reply_text):
@@ -121,35 +132,43 @@ class RabbitMQAyscClient(RabbitMQBase):
         :param str reply_text: The text reason the channel was closed
 
         """
+        print "channel closed"
         # LOGGER.warning('Channel was closed: (%s) %s', reply_code, reply_text)
         if not self.closing:
             self.connection.close()
 
     def setup_exchange(self, exchange_name):
+        print "setup exchange"
         self.channel.exchange_declare(self.on_exchange_declareok,
                                        self.queueName,)
 
     def on_exchange_declareok(self, unused_frame):
+
         """Invoked by pika when RabbitMQ has finished the Exchange.Declare RPC
         command.
         :param pika.Frame.Method unused_frame: Exchange.DeclareOk response frame
 
         """
+        print "exchange all good"
         # LOGGER.info('Exchange declared')
         self.setup_queue(self.queueName)
 
     def setup_queue(self, queueName):
+        print "setting up queue"
         self.channel.queue_declare(self.on_queue_declareok, queueName)
 
     def on_queue_declareok(self, method_frame):
+        print "queue all good"
         self.channel.queue_bind(self.on_bindok, self.queueName,
                                  self.EXCHANGE, )
 
     def on_bindok(self, unused_frame):
+        print "bind all good"
         # Queue bound
         self.start_publishing()
 
     def start_publishing(self):
+        print "start Publishing"
         # self.enable_delivery_confirmations()
         self.schedule_next_message()
 
@@ -158,6 +177,7 @@ class RabbitMQAyscClient(RabbitMQBase):
         message to be delivered in PUBLISH_INTERVAL seconds.
 
         """
+        print "scheduale next msg"
         if self.stopping:
             return
         # LOGGER.info('Scheduling next message for %0.1f seconds',
@@ -167,13 +187,16 @@ class RabbitMQAyscClient(RabbitMQBase):
 
 
     def close_connection(self):
+
         """This method closes the connection to RabbitMQ."""
         # LOGGER.info('Closing connection')
+        print "closing connection... done"
         self.closing = True
         self.connection.close()
 
 
     def send(self):
+        print "try sending"
         try:
             payload  = self.requestQueue.get(False)
             if payload:
@@ -192,6 +215,7 @@ class RabbitMQAyscClient(RabbitMQBase):
                     body=json.dumps(requestBody),
 
                 )
+                print "schedule next msg"
                 self.schedule_next_message()
         except:
             print "failed in send"
