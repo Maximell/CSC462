@@ -9,10 +9,6 @@ from mqAuditServer import auditFunctions
 from threading import Thread
 import multiprocessing
 from multiprocessing import Process
-from multiprocessing.managers import SyncManager
-from Queue import PriorityQueue
-
-
 
 
 class rabbitConsumer():
