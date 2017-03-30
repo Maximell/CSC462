@@ -23,7 +23,7 @@ class rabbitConsumer():
 
     def consume(self, ch, method, props, body):
         payload = json.loads(body)
-        print "Reciveed :", payload
+        print "Received :", payload
         self.rabbitPQueue2.put((2, payload))
 
 
@@ -39,7 +39,7 @@ class poolHandler(Thread):
         self.start()
 
     def run(self):
-        print "starting thread for poolhandler"
+        # print "starting thread for poolhandler"
         while(True):
 #         look between pool of requests
 #          and the cache size.
@@ -55,7 +55,7 @@ class poolHandler(Thread):
                             payload["cryptoKey"] = quote["cryptoKey"]
                             payload["quoteRetrieved"] = quote["retrieved"]
 
-                            print "sending back form handler:", payload
+                            # print "sending back form handler:", payload
                             transactionServerID = payload["trans"]
                             # Need to figure out which transaction server to send back to.
                             transactionClient = RabbitMQClient(transactionServerID)
@@ -104,7 +104,7 @@ class getQuoteThread(Thread):
         quoteServer.quoteCache[self.symbol] = newQuote
         del quoteServer.inflight[quoteServer.inflight.index(self.symbol)]
         quoteServer.threadCount -= 1
-        print "thread terminating"
+        # print "thread terminating"
         # self.cacheLock.release()
 
 
