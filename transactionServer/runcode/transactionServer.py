@@ -25,9 +25,9 @@ class rabbitConsumer():
 
         if props.priority == 1:
             self.rabbitPQueue1.put((1,  payload))
-        # elif props.priority == 2:
-        #     self.rabbitPQueue2.put((2, payload))
-        elif props.priority == 3:
+        elif props.priority == 2:
+            self.rabbitPQueue2.put((2, payload))
+        else:
             self.rabbitPQueue3.put((3,  payload))
 
 
@@ -558,16 +558,16 @@ if __name__ == '__main__':
     print "Created multiprocess Consummer"
 
     while(True):
-        # try:
-        #     msg = P2Q_rabbit.get(False)
-        #     if msg:
-        #         payload = msg[1]
-        #         props = msg[0]
-        #         print "queue size: ", P2Q_rabbit.qsize()
-        #         delegate(None, None, props, payload)
-        #         continue
-        # except:
-        #     pass
+        try:
+            msg = P2Q_rabbit.get(False)
+            if msg:
+                payload = msg[1]
+                props = msg[0]
+                print "queue size: ", P2Q_rabbit.qsize()
+                delegate(None, None, props, payload)
+                continue
+        except:
+            pass
         try:
             msg = P1Q_rabbit.get(False)
             if msg:

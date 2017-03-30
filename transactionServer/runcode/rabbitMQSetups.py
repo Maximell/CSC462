@@ -53,7 +53,7 @@ class RabbitMQClient(RabbitMQBase):
 # usage: RabbitMQReceiver(on_request, RabbitMQClient.QUOTE)
 class RabbitMQReceiver(RabbitMQBase):
     def __init__(self, callback, queueName):
-        connection = pika.BlockingConnection(pika.ConnectionParameters('142.104.91.142',44429))
+        connection = pika.SelectConnection(pika.ConnectionParameters('142.104.91.142',44429))
         channel = connection.channel()
 
         args = {'x-max-priority': 3  , 'x-message-ttl': 600000}
