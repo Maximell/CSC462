@@ -23,12 +23,20 @@ class RabbitMQBase:
 class RabbitMQClient(RabbitMQBase):
     def __init__(self, queueName):
         self.queueName = queueName
-        self.connection = pika.SelectConnection(pika.ConnectionParameters('142.104.91.142',44429))
+        self.param = pika.ConnectionParameters('142.104.91.142',44429)
+        # self.channel = self.connection.channel(self.send)
+        #
+        # self.channel.queue_declare(self.send,queue=self.queueName, arguments=args)
+
+        self.connection = pika.SelectConnection(parameters=self.param,on_open_callback=self.send)
+        try:
+            self.connection.ioloop.start()
+        except:
+            self.connection.close()
+            self.connection.ioloop.start()
+
+    def on_open(self):
         self.channel = self.connection.channel(self.send)
-
-        args = {'x-max-priority': 3 , 'x-message-ttl': 600000}
-        self.channel.queue_declare(self.send,queue=self.queueName, arguments=args)
-
     # webserver should be using priority=1 when sending
     def send(self, requestBody, priority=2):
 
@@ -43,12 +51,12 @@ class RabbitMQClient(RabbitMQBase):
             body=json.dumps(requestBody),
 
         )
-        self.channel.close()
+        self.connection.close()
 
 
 
     def close(self):
-        self.channel.close()
+        self.connection.close()
 
 # usage: RabbitMQReceiver(on_request, RabbitMQClient.QUOTE)
 class RabbitMQReceiver(RabbitMQBase):
