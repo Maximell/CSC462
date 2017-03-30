@@ -13,18 +13,18 @@ import Queue
 import multiprocessing
 from multiprocessing import Process
 
-
-class rabbitConsumer():
-    def __init__(self, queueName,Q2):
-        self.rabbitPQueue2 = Q2
-        print "initialize queues"
-        self.connection = RabbitMQReceiver(self.consume, queueName)
-        print "connectionb done"
-
-    def consume(self, ch, method, props, body):
-        payload = json.loads(body)
-        print "Received :", payload
-        self.rabbitPQueue2.put((2, payload))
+#
+# class rabbitConsumer():
+#     def __init__(self, queueName,Q2):
+#         self.rabbitPQueue2 = Q2
+#         print "initialize queues"
+#         self.connection = RabbitMQReceiver(self.consume, queueName)
+#         print "connectionb done"
+#
+#     def consume(self, ch, method, props, body):
+#         payload = json.loads(body)
+#         print "Received :", payload
+#         self.rabbitPQueue2.put((2, payload))
 
 
 def createQuoteRequest(userId, stockSymbol, lineNum, args):
@@ -231,7 +231,7 @@ if __name__ == '__main__':
 
     print "Created multiprocess PriorityQueues"
     consumer_process = Process(target=RabbitMQAyscReciever,
-                               args=(RabbitMQAyscReciever.AUDIT, P1Q_rabbit, P2Q_rabbit, P3Q_rabbit))
+                               args=(RabbitMQAyscReciever.QUOTE, P1Q_rabbit, P2Q_rabbit, P3Q_rabbit))
     consumer_process.start()
     print "Created multiprocess Consummer"
 
