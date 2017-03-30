@@ -21,6 +21,7 @@ class rabbitConsumer():
     def consume(self, ch, method, props, body):
         payload = json.loads(body)
         print "Received :", payload
+        print "priority = ",props.priority
 
 
         if props.priority == 1:
