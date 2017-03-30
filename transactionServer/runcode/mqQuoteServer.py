@@ -6,7 +6,7 @@ from random import randint
 import pika
 from threading import Thread
 import threading
-from rabbitMQSetups import RabbitMQClient, RabbitMQReceiver, RabbitMQAyscClient
+from rabbitMQSetups import RabbitMQClient, RabbitMQReceiver, RabbitMQAyscClient, RabbitMQAyscReciever
 from mqAuditServer import auditFunctions
 import Queue
 
@@ -225,11 +225,13 @@ if __name__ == '__main__':
 
     auditClient = RabbitMQClient(RabbitMQClient.AUDIT)
 
+    P1Q_rabbit = multiprocessing.Queue()
     P2Q_rabbit = multiprocessing.Queue()
+    P3Q_rabbit = multiprocessing.Queue()
 
     print "Created multiprocess PriorityQueues"
-    consumer_process = Process(target=rabbitConsumer,
-                               args=(RabbitMQReceiver.QUOTE, P2Q_rabbit))
+    consumer_process = Process(target=RabbitMQAyscReciever,
+                               args=(RabbitMQAyscReciever.AUDIT, P1Q_rabbit, P2Q_rabbit, P3Q_rabbit))
     consumer_process.start()
     print "Created multiprocess Consummer"
 
