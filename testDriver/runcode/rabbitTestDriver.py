@@ -12,7 +12,7 @@ class RabbitMQClient():
         self.connection = pika.BlockingConnection(pika.ConnectionParameters('142.104.91.142', 44429))
         self.channel = self.connection.channel()
 
-        args = {'x-message-ttl': 60000 , 'x-max-priority': 3}
+        args = {'x-message-ttl': int(60000) , 'x-max-priority': 3}
         self.channel.queue_declare(queue=self.queueName, arguments=args)
 
     def send(self, requestBody , properties):
