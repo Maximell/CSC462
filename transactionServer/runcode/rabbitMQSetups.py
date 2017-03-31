@@ -241,9 +241,9 @@ class RabbitMQAyscClient(RabbitMQBase):
 # ==================================================================
 
 
-# This is for the aysnc rabbitMQ
+# This is for the aysnc rabbitMQ Consumer
 class RabbitMQAyscReciever(RabbitMQBase):
-    def __init__(self, queueName , rabbitPQueue1 , rabbitPQueue2 , rabbitPQueue3 ):
+    def __init__(self, queueName , rabbitPQueue2 , rabbitPQueue1=None , rabbitPQueue3=None ):
         self.queueName = queueName
         self.param = pika.ConnectionParameters('142.104.91.142',44429)
         self.connection = pika.SelectConnection(self.param, self.on_connection_open, stop_ioloop_on_close=False)
@@ -262,7 +262,7 @@ class RabbitMQAyscReciever(RabbitMQBase):
         self.nacked = 0
         self.message_number = 0
         self.consumer_tag = None
-        print "set up Publisher"
+        print "set up Consumer"
 
         self.connection.ioloop.start()
 
@@ -297,7 +297,7 @@ class RabbitMQAyscReciever(RabbitMQBase):
         else:
             # LOGGER.warning('Connection closed, reopening in 5 seconds: (%s) %s',
             #                reply_code, reply_text)
-            self.connection.add_timeout(5, self.reconnect)
+            self.connection.add_timeout(1, self.reconnect)
 
     def reconnect(self):
         """Will be invoked by the IOLoop timer if the connection is
@@ -386,7 +386,7 @@ class RabbitMQAyscReciever(RabbitMQBase):
         self.start_consuming()
 
     def start_consuming(self):
-        print "start Publishing"
+        print "start Consuming"
         # self.enable_delivery_confirmations()
         self.add_on_cancel_callback()
         self.consumer_tag = self.channel.basic_consume(self.on_message,
