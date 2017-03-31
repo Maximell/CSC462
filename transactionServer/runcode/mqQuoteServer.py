@@ -214,7 +214,7 @@ if __name__ == '__main__':
     print "create publisher"
     transQueue = multiprocessing.Queue()
     trans_producer_process = Process(target=RabbitMQAyscClient,
-                               args=(transQueue))
+                               args=(transQueue , None))
     trans_producer_process.start()
     print "created publisher"
 
