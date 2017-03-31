@@ -297,7 +297,7 @@ class RabbitMQAyscReciever(RabbitMQBase):
         else:
             # LOGGER.warning('Connection closed, reopening in 5 seconds: (%s) %s',
             #                reply_code, reply_text)
-            self.connection.add_timeout(1, self.reconnect)
+            self.connection.add_timeout(5, self.reconnect)
 
     def reconnect(self):
         """Will be invoked by the IOLoop timer if the connection is
