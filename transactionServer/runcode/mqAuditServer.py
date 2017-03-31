@@ -452,25 +452,25 @@ if __name__ == '__main__':
     P3Q_rabbit = multiprocessing.Queue()
 
     print "Created multiprocess PriorityQueues"
-    consumer_process = Process(target=RabbitMQAyscReciever,
+    consumer_process1 = Process(target=RabbitMQAyscReciever,
                                args=(RabbitMQAyscReciever.AUDIT, P1Q_rabbit, P2Q_rabbit, P3Q_rabbit))
-    consumer_process.start()
+    consumer_process1.start()
     print "Created multiprocess Consummer"
     print "Created multiprocess PriorityQueues"
-    consumer_process = Process(target=RabbitMQAyscReciever,
+    consumer_process2 = Process(target=RabbitMQAyscReciever,
                                args=(RabbitMQAyscReciever.AUDIT, P1Q_rabbit, P2Q_rabbit, P3Q_rabbit))
-    consumer_process.start()
-    # print "Created multiprocess Consummer"
-    # print "Created multiprocess PriorityQueues"
-    # consumer_process = Process(target=RabbitMQAyscReciever,
-    #                            args=(RabbitMQAyscReciever.AUDIT, P1Q_rabbit, P2Q_rabbit, P3Q_rabbit))
-    # consumer_process.start()
-    # print "Created multiprocess Consummer"
-    # print "Created multiprocess PriorityQueues"
-    # consumer_process = Process(target=RabbitMQAyscReciever,
-    #                            args=(RabbitMQAyscReciever.AUDIT, P1Q_rabbit, P2Q_rabbit, P3Q_rabbit))
-    # consumer_process.start()
-    # print "Created multiprocess Consummer"
+    consumer_process2.start()
+    print "Created multiprocess Consummer"
+    print "Created multiprocess PriorityQueues"
+    consumer_process3 = Process(target=RabbitMQAyscReciever,
+                               args=(RabbitMQAyscReciever.AUDIT, P1Q_rabbit, P2Q_rabbit, P3Q_rabbit))
+    consumer_process3.start()
+    print "Created multiprocess Consummer"
+    print "Created multiprocess PriorityQueues"
+    consumer_process4 = Process(target=RabbitMQAyscReciever,
+                               args=(RabbitMQAyscReciever.AUDIT, P1Q_rabbit, P2Q_rabbit, P3Q_rabbit))
+    consumer_process4.start()
+    print "Created multiprocess Consummer"
     seenDumpLog = False
     countDown = None
     DumpLog = None
