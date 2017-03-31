@@ -98,7 +98,7 @@ class getQuoteThread(Thread):
             newQuote['cryptoKey']
         )
         # print "built request: ",requestBody
-        auditClient.send(requestBody)
+        auditQueue.put(requestBody)
 
         # self.cacheLock.acquire()
         quoteServer.quoteCache[self.symbol] = newQuote
@@ -218,12 +218,17 @@ if __name__ == '__main__':
     producer_process.start()
     print "created publisher"
 
+    print "create publisher"
+    auditQueue = multiprocessing.Queue()
+    audit_producer_process = Process(target=RabbitMQAyscClient,
+                               args=(RabbitMQAyscClient.AUDIT, auditQueue))
+    audit_producer_process.start()
+    print "created publisher"
     # for triggers next
     # requestQueue = multiprocessing.Queue()
     # producer_process = Process(target=RabbitMQAyscClient,
     #                            args=(RabbitMQAyscClient.TRIGGERS, requestQueue))
 
-    auditClient = RabbitMQClient(RabbitMQClient.AUDIT)
 
     P1Q_rabbit = multiprocessing.Queue()
     P2Q_rabbit = multiprocessing.Queue()
