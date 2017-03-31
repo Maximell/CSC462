@@ -3,13 +3,13 @@
 # this command needs to be run from machine 142, as that is where the private-key is held.
 # quote server is running from root@142.104.91.130:44421
 # Audit server and testdriver are on root@142.104.91.131:44421
-# there are 4 'types' of servers:
-#   test driver (run on 142)
-#   'workers' that contain a transactionserver, triggerserver, and db
-#   audit server (also runs on 142)
-#   quote server (also runs on 142
 
-echo this should be run ./distributedFreshRun.sh branch testFile
+
+#   the rabbit server is on 142)
+#   15 'workers' that contain a transactionserver, triggerserver, and db
+#   audit server (runs on 131)
+#   3 quote servers (run on 140 ,141, 130)
+#   the test driver runs off 143
 
 # Do the configuration on the local machine
 echo doing local configuration
@@ -23,6 +23,10 @@ killall python
 echo killing all python
 pssh -i -h workersHostFile.txt killall python
 pssh -i -H root@142.104.91.130:44421 killall python
+pssh -i -H root@142.104.91.140:44421 killall python
+pssh -i -H root@142.104.91.141:44421 killall python
+
+
 pssh -i -H root@142.104.91.131:44421 killall python
 pssh -i -H root@142.104.91.143:44421 killall python
 
@@ -43,6 +47,10 @@ echo reset branch
 
 pssh -i -h workersHostFile.txt -x "cd $gitpath;" git pull
 pssh -i -H root@142.104.91.130:44421 -x "cd $gitpath;" git pull
+pssh -i -H root@142.104.91.140:44421 -x "cd $gitpath;" git pull
+pssh -i -H root@142.104.91.141:44421 -x "cd $gitpath;" git pull
+
+
 pssh -i -H root@142.104.91.131:44421 -x "cd $gitpath;" git pull
 pssh -i -H root@142.104.91.143:44421 -x "cd $gitpath;" git pull
 
@@ -57,6 +65,9 @@ pssh -i -h workersHostFile.txt -x "cd $workingDirectoryPath;" python runScript.p
 echo worker configuration complete
 echo starting quote server
 pssh -i -H root@142.104.91.130:44421 -x "cd $workingDirectoryPath;" python startQuoteServer.py
+pssh -i -H root@142.104.91.140:44421 -x "cd $workingDirectoryPath;" python startQuoteServer.py
+pssh -i -H root@142.104.91.141:44421 -x "cd $workingDirectoryPath;" python startQuoteServer.py
+
 echo done starting quote
 echo starting audit server on b131:
 pssh -i -H root@142.104.91.131:44421 -x "cd $workingDirectoryPath;" python startAuditServer.py

@@ -56,7 +56,7 @@ class RabbitMQAyscClient(RabbitMQBase):
         self.connection.ioloop.start()
 
     def on_connection_open(self , blank_connection):
-        print "on open connection"
+        # print "on open connection"
         self.add_on_connection_close_callback()
         self.open_channel()
 
@@ -214,7 +214,7 @@ class RabbitMQAyscClient(RabbitMQBase):
                     requestBody = payload[1]
                     priority = payload[2]
 
-                    print "sending", requestBody, "to", worderId, "with priority", priority
+                    # print "sending", requestBody, "to", worderId, "with priority", priority
 
                     self.channel.basic_publish(
                         exchange=self.EXCHANGE,
@@ -235,6 +235,7 @@ class RabbitMQAyscClient(RabbitMQBase):
 
         # exit after dumplog has been sent
         print "sentDumplog"
+        print workerMap
         # sleep for five seconds before shutdown
         time.sleep(5)
         quit()
