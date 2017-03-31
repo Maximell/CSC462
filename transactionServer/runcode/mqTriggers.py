@@ -416,13 +416,13 @@ if __name__ == '__main__':
     print "create transaction publisher"
     transQueue = multiprocessing.Queue()
     quote_producer_process = Process(target=RabbitMQAyscClient,
-                                     args=(RabbitMQAyscClient.TRANSACTION, transQueue))
+                                     args=(transQueue , RabbitMQAyscClient.TRANSACTION))
     quote_producer_process.start()
 
     print "create quote publisher"
     quoteQueue = multiprocessing.Queue()
     quote_producer_process = Process(target=RabbitMQAyscClient,
-                                     args=(RabbitMQAyscClient.QUOTE, quoteQueue))
+                                     args=( quoteQueue , RabbitMQAyscClient.QUOTE))
     quote_producer_process.start()
 
     P1Q_rabbit = multiprocessing.Queue()
