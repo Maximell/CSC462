@@ -379,6 +379,23 @@ def handleCommandCancelSetSell(args):
     return None
 
 def handleCommandDumplog(args):
+    print "--args for dumplog--"
+    print "--look for difference between dumplog and user dumplog--"
+    print args
+
+    #TODO: depending on what the args look like, create a WriteUserLogs command instead
+
+    # if args.get("userId"):
+    #     requestBody = auditFunctions.createWriteUserLogs(
+    #         int(time.time() * 1000),
+    #         args["lineNum"],
+    #         args["fileName"],
+    #         args["userId"],
+    #         args["command"]
+    #     )
+    #     auditClient.send(requestBody, 3)
+    #
+    # else:
     requestBody = auditFunctions.createWriteLogs(
         int(time.time() * 1000),
         "transactionServer",

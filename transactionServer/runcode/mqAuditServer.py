@@ -31,6 +31,7 @@ class auditFunctions:
     ERROR_MESSAGE = 5
     DEBUG_MESSAGE = 6
     WRITE_LOGS = 7
+    WRITE_USER_LOGS = 8
 
     @classmethod
     def createUserCommand(cls, timeStamp, server, transactionNum, userId, commandName, stockSymbol=None, fileName=None, amount=None):
@@ -110,6 +111,17 @@ class auditFunctions:
             'timeStamp': timeStamp,
             'transactionNum': transactionNum,
             'userId': userId,
+            'command': command
+        }
+
+    @classmethod
+    def createWriteUserLogs(cls, timeStamp, transactionNum, fileName, userId, command):
+        return {
+            'function': cls.WRITE_USER_LOGS,
+            'timeStamp': timeStamp,
+            'transactionNum': transactionNum,
+            'userId': userId,
+            'fileName': fileName,
             'command': command
         }
 
@@ -291,13 +303,22 @@ class AuditServer:
         return dictionary
 
     def writeLogs(self, fileName):
-        self._dumpIntoFile(fileName)
+        self._dumpIntoFile(fileName, self.logFile)
         return {
             "success": True
         }
 
+    def writeUserLogs(self, fileName, userId):
+        # http://book.pythontips.com/en/latest/map_filter.html
+        logFile = list(filter(
+            lambda log: log['userId'] == userId,
+            self.logFile
+        ))
+        self._dumpIntoFile(fileName, logFile)
+        return {"success": True}
+
     # dumps the logs to a given file
-    def _dumpIntoFile(self, fileName):
+    def _dumpIntoFile(self, fileName, logFile):
         try:
             file = open(fileName, 'w')
         except IOError:
@@ -305,7 +326,7 @@ class AuditServer:
 
         file.write('<?xml version="1.0"?>\n')
         file.write('<log>\n\n')
-        for log in self.logFile:
+        for log in logFile:
             logType = log['logType']
             file.write('\t<' + logType + '>\n')
             file.write('\t\t<timestamp>' + str(log['timeStamp']) + '</timestamp>\n')
@@ -417,7 +438,16 @@ def handleDebugMessage(payload):
     )
 
 def handleWriteLogs(payload):
+    print "---dumplog---"
+    print payload
     return auditServer.writeLogs("./testLOG")
+
+def handleWriteUserLogs(payload):
+    print "---user dumplog---"
+    print payload
+    fileName = payload["fileName"]
+    userId = payload["userId"]
+    return auditServer.writeUserLogs(fileName, userId)
 
 
 def on_request(ch, method, props, payload):
@@ -444,7 +474,8 @@ if __name__ == '__main__':
         auditFunctions.SYSTEM_EVENT: handleSystemEvent,
         auditFunctions.ERROR_MESSAGE: handleErrorMessage,
         auditFunctions.DEBUG_MESSAGE: handleDebugMessage,
-        auditFunctions.WRITE_LOGS: handleWriteLogs
+        auditFunctions.WRITE_LOGS: handleWriteLogs,
+        auditFunctions.WRITE_USER_LOGS: handleWriteUserLogs
     }
 
     P1Q_rabbit = multiprocessing.Queue()
