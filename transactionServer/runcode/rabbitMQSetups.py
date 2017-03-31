@@ -145,8 +145,9 @@ class RabbitMQAyscClient(RabbitMQBase):
 
     def setup_exchange(self, exchange_name):
         print "setup exchange"
-        self.channel.exchange_declare(self.on_exchange_declareok,
-                                       self.queueName,)
+        if self.queueName != None:
+            self.channel.exchange_declare(self.on_exchange_declareok,
+                                           self.queueName,)
 
     def on_exchange_declareok(self, unused_frame):
 
