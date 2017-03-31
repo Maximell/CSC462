@@ -41,7 +41,8 @@ class RabbitMQAyscClient(RabbitMQBase):
                                 "transactionIn193826241687624", #B048B048B048
                                 "transactionIn193830553497929", #B049B149B149
                                 "transactionIn193860618727760", #B050B150B150
-                                "transactionIn8796760983851" ]
+
+                                "transactionIn8796760983851" ]  #b132
 
         self.param = pika.ConnectionParameters('142.104.91.142',44429)
         self.connection = pika.SelectConnection(self.param,self.on_connection_open,stop_ioloop_on_close=False)

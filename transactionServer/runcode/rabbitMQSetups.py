@@ -7,6 +7,7 @@ from uuid import getnode as get_mac
 class RabbitMQBase:
     # Host Server group
     QUOTE = 'quoteIn'
+
     AUDIT = 'AuditIn'
     WEB = 'webIn'
 
@@ -43,7 +44,7 @@ class RabbitMQClient(RabbitMQBase):
 
 # This is for the aysnc rabbitMQ Publisher
 class RabbitMQAyscClient(RabbitMQBase):
-    def __init__(self, queueName , requestQueue ):
+    def __init__(self,  requestQueue, queueName=None ):
         self.queueName = queueName
         self.param = pika.ConnectionParameters('142.104.91.142',44429)
         self.connection = pika.SelectConnection(self.param,self.on_connection_open,stop_ioloop_on_close=False)
@@ -161,12 +162,14 @@ class RabbitMQAyscClient(RabbitMQBase):
     def setup_queue(self, queueName):
         args = {'x-max-priority': 3, 'x-message-ttl': 600000}
         print "setting up queue"
-        self.channel.queue_declare(self.on_queue_declareok, queueName , arguments=args)
+        if queueName != None:
+            self.channel.queue_declare(self.on_queue_declareok, queueName , arguments=args)
 
     def on_queue_declareok(self, method_frame):
         print "queue all good"
-        self.channel.queue_bind(self.on_bindok, self.queueName,
-                                 self.EXCHANGE, )
+        if self.queueName != None:
+            self.channel.queue_bind(self.on_bindok, self.queueName,
+                                     self.EXCHANGE, )
 
     def on_bindok(self, unused_frame):
         print "bind all good"
