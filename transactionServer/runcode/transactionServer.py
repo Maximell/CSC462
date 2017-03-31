@@ -10,27 +10,26 @@ from threading import Thread
 import multiprocessing
 from multiprocessing import Process
 
-#
-# class rabbitConsumer():
-#     def __init__(self, queueName,Q1, Q2, Q3):
-#         self.rabbitPQueue1 = Q1
-#         self.rabbitPQueue2 = Q2
-#         self.rabbitPQueue3 = Q3
-#         self.connection = RabbitMQReceiver(self.consume, queueName)
-#
-#     def consume(self, ch, method, props, body):
-#         payload = json.loads(body)
-#         print "Received :", payload
-#         print "priority = ",props.priority
-#
-#
-#         if props.priority == 1:
-#             self.rabbitPQueue1.put((1,  payload))
-#         elif props.priority == 2:
-#             self.rabbitPQueue2.put((2, payload))
-#         else:
-#             self.rabbitPQueue3.put((3,  payload))
+# userDisplaySummary shape: {userId: [command, command ...], ...}
+class DisplaySummary():
+    def __init__(self, max=10):
+        self.max = max
+        self.userDisplaySummary = {}
 
+    def addCommand(self, command):
+        userId = command["userId"]
+
+        userSummary = self.userDisplaySummary.get(userId)
+        if not userSummary:
+            self.userDisplaySummary[userId] = []
+            userSummary = self.userDisplaySummary[userId]
+
+        userSummary.append(command)
+        if len(userSummary) > self.max:
+            del userSummary[0]
+
+    def getDisplaySummary(self, userId):
+        return self.userDisplaySummary.get(userId)
 
 
 # quote shape: symbol: {value: string, retrieved: epoch time, user: string, cryptoKey: string}
@@ -389,6 +388,9 @@ def handleCommandDumplog(args):
     auditClient.send(requestBody, 3)
     return "DUMPLOG SENT TO AUDIT"
 
+def handleDisplaySummary(args):
+    userId = args["userId"]
+    return localDisplaySummary.getDisplaySummary(userId)
 
 
 def errorPrint(args, error):
@@ -434,6 +436,10 @@ def delegate(ch , method, prop, args):
             # send command to audit, if it is from web server
             if prop == 1 or prop == 3:
                 if args["command"] != "DUMPLOG":
+                    # add command to local memory for the user
+                    localDisplaySummary.addCommand(args)
+
+                    # send command to audit
                     requestBody = auditFunctions.createUserCommand(
                         int(time.time() * 1000),
                         "transactionServer",
@@ -518,6 +524,7 @@ if __name__ == '__main__':
 
 
     localQuoteCache = Quotes()
+    localDisplaySummary = DisplaySummary()
 
     functionSwitch = {
         "QUOTE": handleCommandQuote,
@@ -534,7 +541,8 @@ if __name__ == '__main__':
         "SET_SELL_AMOUNT": handleCommandSetSellAmount,
         "CANCEL_SET_SELL": handleCommandCancelSetSell,
         "SET_SELL_TRIGGER": handleCommandSetSellTrigger,
-        "DUMPLOG": handleCommandDumplog
+        "DUMPLOG": handleCommandDumplog,
+        "DISPLAY_SUMMARY": handleDisplaySummary
     }
 
 
