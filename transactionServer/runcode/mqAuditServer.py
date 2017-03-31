@@ -456,11 +456,28 @@ if __name__ == '__main__':
                                args=(RabbitMQAyscReciever.AUDIT, P1Q_rabbit, P2Q_rabbit, P3Q_rabbit))
     consumer_process.start()
     print "Created multiprocess Consummer"
+    print "Created multiprocess PriorityQueues"
+    consumer_process = Process(target=RabbitMQAyscReciever,
+                               args=(RabbitMQAyscReciever.AUDIT, P1Q_rabbit, P2Q_rabbit, P3Q_rabbit))
+    consumer_process.start()
+    # print "Created multiprocess Consummer"
+    # print "Created multiprocess PriorityQueues"
+    # consumer_process = Process(target=RabbitMQAyscReciever,
+    #                            args=(RabbitMQAyscReciever.AUDIT, P1Q_rabbit, P2Q_rabbit, P3Q_rabbit))
+    # consumer_process.start()
+    # print "Created multiprocess Consummer"
+    # print "Created multiprocess PriorityQueues"
+    # consumer_process = Process(target=RabbitMQAyscReciever,
+    #                            args=(RabbitMQAyscReciever.AUDIT, P1Q_rabbit, P2Q_rabbit, P3Q_rabbit))
+    # consumer_process.start()
+    # print "Created multiprocess Consummer"
     seenDumpLog = False
     countDown = None
     DumpLog = None
     DumpLogProps = None
     DumplogNotMade = True
+
+
 
     while (DumplogNotMade):
         try:
@@ -477,7 +494,8 @@ if __name__ == '__main__':
                     DumpLogProps = props
                     break
 
-                on_request(None, None, props, payload)
+                Thread(target=on_request(None,None,props , payload)).setDaemon(True)
+                # on_request(None, None, props, payload)
                 countDown = time.time()
                 continue
         except:
