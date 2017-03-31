@@ -6,7 +6,7 @@ from random import randint
 import pika
 from threading import Thread
 import threading
-from rabbitMQSetups import RabbitMQClient, RabbitMQReceiver, RabbitMQAyscClient, RabbitMQAyscReciever
+from rabbitMQSetups import  RabbitMQAyscClient, RabbitMQAyscReciever
 from mqAuditServer import auditFunctions
 import Queue
 
@@ -58,8 +58,8 @@ class poolHandler(Thread):
                             # print "sending back form handler:", payload
                             transactionServerID = payload["trans"]
                             # Need to figure out which transaction server to send back to.
-                            transactionClient = RabbitMQClient(transactionServerID)
-                            transactionClient.send(payload)
+                            transQueue.put((transactionServerID , payload))
+
                         quoteServer.pool[sym] = []
 
 
@@ -203,7 +203,7 @@ def on_request(ch, method, props, payload):
     # transactionClient = RabbitMQClient(transactionServerID)
     # transactionClient.send(payload)
     print "adding payload to Queue",payload
-    requestQueue.put((payload , transactionServerID))
+    transQueue.put((payload , transactionServerID))
 
 
 if __name__ == '__main__':
@@ -212,10 +212,10 @@ if __name__ == '__main__':
     poolHandler()
 
     print "create publisher"
-    requestQueue = multiprocessing.Queue()
-    producer_process = Process(target=RabbitMQAyscClient,
-                               args=(RabbitMQAyscClient.TRANSACTION, requestQueue))
-    producer_process.start()
+    transQueue = multiprocessing.Queue()
+    trans_producer_process = Process(target=RabbitMQAyscClient,
+                               args=(RabbitMQAyscClient.TRANSACTION, transQueue))
+    trans_producer_process.start()
     print "created publisher"
 
     print "create publisher"
