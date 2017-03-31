@@ -243,7 +243,7 @@ class RabbitMQAyscClient(RabbitMQBase):
 
 # This is for the aysnc rabbitMQ Consumer
 class RabbitMQAyscReciever(RabbitMQBase):
-    def __init__(self, queueName , rabbitPQueue2 , rabbitPQueue1=None , rabbitPQueue3=None ):
+    def __init__(self, queueName , rabbitPQueue1 , rabbitPQueue2=None , rabbitPQueue3=None ):
         self.queueName = queueName
         self.param = pika.ConnectionParameters('142.104.91.142',44429)
         self.connection = pika.SelectConnection(self.param, self.on_connection_open, stop_ioloop_on_close=False)
