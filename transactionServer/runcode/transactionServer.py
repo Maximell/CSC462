@@ -80,7 +80,7 @@ def handleCommandQuote(args):
         return args
     else:
         args["trans"] = RabbitMQClient.TRANSACTION
-        quoteClient.send(
+        quoteQueue.put(
             createQuoteRequest(userId, symbol, lineNum, args)
         )
         return None
@@ -98,7 +98,7 @@ def handleCommandAdd(args):
     if reserve is not None:
         return args
     else:
-        databaseClient.send(
+        databaseQueue.put(
             databaseFunctions.createAddRequest(command, userId, lineNum, cash)
         )
         return None
@@ -116,7 +116,7 @@ def handleCommandBuy(args):
     if args.get('response') is not None:
         return args
     else:
-        databaseClient.send(
+        databaseQueue.put(
             databaseFunctions.createBuyRequest(command, userId, lineNum, cash, symbol)
         )
         return None
@@ -140,16 +140,16 @@ def handleCommandCommitBuy(args):
     if updatedUser is not None:
         return args
     elif (buy is not None) and (quote is not None):
-        databaseClient.send(
+        databaseQueue.put(
             databaseFunctions.createCommitBuyRequest(command, userId, buy, quote, transactionNum)
         )
     elif buy is not None:
         args["trans"] = RabbitMQClient.TRANSACTION
-        quoteClient.send(
+        quoteQueue.put(
             createQuoteRequest(userId, buy["symbol"], transactionNum, args)
         )
     else:
-        databaseClient.send(
+        databaseQueue.put(
             databaseFunctions.createPopBuyRequest(command, userId, transactionNum)
         )
     return None
@@ -165,7 +165,7 @@ def handleCommandCancelBuy(args):
     if buy is not None:
         return args
     else:
-        databaseClient.send(
+        databaseQueue.put(
             databaseFunctions.createCancelBuyRequest(command, userId, transactionNum)
         )
     return None
@@ -183,7 +183,7 @@ def handleCommandSell(args):
     if args.get("response") is not None:
         return args
     else:
-        databaseClient.send(
+        databaseQueue.put(
             databaseFunctions.createSellRequest(command, userId, lineNum, cash, stockSymbol)
         )
     return None
@@ -207,18 +207,18 @@ def handleCommandCommitSell(args):
         return args
     elif (sell is not None) and (quote is not None):
         # this is where we commit the sell
-        databaseClient.send(
+        databaseQueue.put(
             databaseFunctions.createCommitSellRequest(command, userId, lineNum, sell, quote)
         )
     elif sell is not None:
         # have the sell, need to get a quote
         args["trans"] = RabbitMQClient.TRANSACTION
-        quoteClient.send(
+        quoteQueue.put(
             createQuoteRequest(userId, sell["symbol"], lineNum, args)
         )
     else:
         # this is where we need to go to the pop endpoint
-        databaseClient.send(
+        databaseQueue.put(
             databaseFunctions.createPopSellRequest(command, userId, lineNum)
         )
     return None
@@ -234,7 +234,7 @@ def handleCommandCancelSell(args):
     if sell is not None:
         return args
     else:
-        databaseClient.send(
+        databaseQueue.put(
             databaseFunctions.createCancelSellRequest(command, userId, lineNum)
         )
     return None
@@ -253,11 +253,11 @@ def handleCommandSetBuyAmount(args):
     if trigger is not None:
         return args
     elif reserved is not None:
-        triggerClient.send(
+        triggerQueue.put(
             TriggerFunctions.createAddBuyRequest(command, userId, symbol, amount, transactionNum)
         )
     else:
-        databaseClient.send(
+        databaseQueue.put(
             databaseFunctions.createReserveCashRequest(command, userId, amount, symbol, transactionNum)
         )
     return None
@@ -275,7 +275,7 @@ def handleCommandSetBuyTrigger(args):
     if trigger is not None:
         return args
     else:
-        triggerClient.send(
+        triggerQueue.put(
             TriggerFunctions.createSetBuyActiveRequest(command, userId, symbol, buyAt, transactionNum)
         )
     return None
@@ -293,11 +293,11 @@ def handleCommandCancelSetBuy(args):
     if cash is not None:
         return args
     elif trigger is not None:
-        databaseClient.send(
+        databaseQueue.put(
             databaseFunctions.createReleaseCashRequest(command, userId, trigger["cashReserved"], symbol, transactionNum)
         )
     else:
-        triggerClient.send(
+         triggerQueue.put(
             TriggerFunctions.createCancelBuyRequest(command, userId, symbol, transactionNum)
         )
     return None
@@ -314,7 +314,7 @@ def handleCommandSetSellAmount(args):
     if trigger is not None:
         return args
     else:
-        triggerClient.send(
+         triggerQueue.put(
             TriggerFunctions.createAddSellRequest(command, userId, symbol, amount, transactionNum)
         )
     return None
@@ -334,16 +334,16 @@ def handleCommandSetSellTrigger(args):
     if trigger is not None:
         return args
     elif reservedPortfolio:
-        triggerClient.send(
+         triggerQueue.put(
             TriggerFunctions.createSetSellActiveRequest(command, userId, symbol, sellAt, transactionNum)
         )
     elif sellTrigger is not None:
         reserve = math.floor(sellTrigger["maxSellAmount"] / sellAt)
-        databaseClient.send(
+        databaseQueue.put(
             databaseFunctions.createReservePortfolioRequest(command, userId, reserve, symbol, sellAt, transactionNum)
         )
     else:
-        triggerClient.send(
+         triggerQueue.put(
             TriggerFunctions.createGetSellRequest(command, userId, symbol, sellAt, transactionNum)
         )
 
@@ -365,14 +365,14 @@ def handleCommandCancelSetSell(args):
         # if the removed trigger was active, then we set aside portfolio for it
         if trigger["active"]:
             refund = math.floor(trigger["maxSellAmount"] / trigger["sellAt"])
-            databaseClient.send(
+            databaseQueue.put(
                 databaseFunctions.createReleasePortfolioRequest(command, userId, refund, symbol, transactionNum)
             )
         # if it wasnt active yet, nothing set aside, so we can just return
         else:
             return args
     else:
-        triggerClient.send(
+         triggerQueue.put(
             TriggerFunctions.createCancelSellRequest(command, userId, symbol, transactionNum)
         )
 
@@ -386,7 +386,7 @@ def handleCommandDumplog(args):
         args["userId"],
         args["command"]
     )
-    auditClient.send(requestBody, 3)
+    auditQueue.put(requestBody, 3)
     return "DUMPLOG SENT TO AUDIT"
 
 
@@ -419,7 +419,7 @@ def delegate(ch , method, prop, args):
             args["command"],
             error
         )
-        auditClient.send(requestBody)
+        auditQueue.put(requestBody)
         return
 
         # returnClient = RabbitMQClient(queueName=RabbitMQClient.WEB + str(args['lineNum']))
@@ -444,7 +444,7 @@ def delegate(ch , method, prop, args):
                         None,
                         args.get("cash")
                     )
-                    auditClient.send(requestBody)
+                    auditQueue.put(requestBody)
 
                 else:
                     requestBody = auditFunctions.createUserCommand(
@@ -458,7 +458,7 @@ def delegate(ch , method, prop, args):
                         args.get("cash")
                     )
                     # Log User Command Call of DUMPLOG
-                    auditClient.send(requestBody)
+                    auditQueue.put(requestBody)
 
             # Sanitizing for Negative values of cash
             if args.get("cash") != None and args.get("cash") > 0:
@@ -503,7 +503,7 @@ def delegate(ch , method, prop, args):
                 args["command"],
                 str(error)
             )
-            auditClient.send(requestBody)
+            auditQueue.put(requestBody)
             return
             # returnClient = RabbitMQClient(queueName=RabbitMQClient.WEB+str(args['lineNum']))
             # returnClient.send(
@@ -538,11 +538,35 @@ if __name__ == '__main__':
     }
 
 
+    #
+    # quoteClient = RabbitMQClient(RabbitMQClient.QUOTE)
+    # auditClient = RabbitMQClient(RabbitMQClient.AUDIT)
+    # databaseClient = RabbitMQClient(RabbitMQClient.DATABASE)
+    # triggerClient = RabbitMQClient(RabbitMQClient.TRIGGERS)
 
-    quoteClient = RabbitMQClient(RabbitMQClient.QUOTE)
-    auditClient = RabbitMQClient(RabbitMQClient.AUDIT)
-    databaseClient = RabbitMQClient(RabbitMQClient.DATABASE)
-    triggerClient = RabbitMQClient(RabbitMQClient.TRIGGERS)
+    print "create Auditpublisher"
+    auditQueue = multiprocessing.Queue()
+    audit_producer_process = Process(target=RabbitMQAyscClient,
+                                     args=(RabbitMQAyscClient.AUDIT, auditQueue))
+    audit_producer_process.start()
+
+    print "create Quotepublisher"
+    quoteQueue = multiprocessing.Queue()
+    quote_producer_process = Process(target=RabbitMQAyscClient,
+                                     args=(RabbitMQAyscClient.QUOTE, quoteQueue))
+    quote_producer_process.start()
+
+    print "create Triggerpublisher"
+    triggerQueue = multiprocessing.Queue()
+    trigger_producer_process = Process(target=RabbitMQAyscClient,
+                                     args=(RabbitMQAyscClient.TRIGGERS, triggerQueue))
+    trigger_producer_process.start()
+
+    print "create databasepublisher"
+    databaseQueue = multiprocessing.Queue()
+    database_producer_process = Process(target=RabbitMQAyscClient,
+                                     args=(RabbitMQAyscClient.DATABASE, databaseQueue))
+    database_producer_process.start()
 
     # This is the new python in memory queue for the transation Server to eat from.
 

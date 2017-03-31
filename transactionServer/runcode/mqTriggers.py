@@ -6,7 +6,7 @@ import json
 import uuid
 import math
 from threading import Thread
-from rabbitMQSetups import RabbitMQClient, RabbitMQReceiver , RabbitMQAyscReciever
+from rabbitMQSetups import  RabbitMQAyscReciever , RabbitMQAyscClient
 from mqDatabaseServer import databaseFunctions
 from mqQuoteServer import createQuoteRequest
 import Queue
@@ -205,9 +205,11 @@ class BuyTriggerThread(Thread):
                     # get the id of someone for the request to the quote server
                     someonesUserId = triggers.buyTriggers[symbol].itervalues().next()
                     transId = triggers.buyTriggers[symbol][someonesUserId]["transId"]
-                    quote = quote_rpc.call(
+                    quoteQueue.put(
                         createQuoteRequest(someonesUserId, symbol, transId)
                     )
+
+                    # need to block for quote here
                     quoteValue = quote["value"]
                     for userId in triggers.buyTriggers[symbol]:
                         trigger = triggers.buyTriggers[symbol][userId]
@@ -241,9 +243,11 @@ class SellTriggerThread(Thread):
                     # get the id of someone for the request to the quote server
                     someonesUserId = triggers.sellTriggers[symbol].itervalues().next()
                     transId = triggers.sellTriggers[symbol][someonesUserId]["transId"]
-                    quote = quote_rpc.call(
+                    quoteQueue.put(
                         createQuoteRequest(someonesUserId, symbol, transId)
                     )
+                    # need to block for quote here
+
                     quoteValue = quote["value"]
                     for userId in triggers.sellTriggers[symbol]:
                         trigger = triggers.sellTriggers[symbol][userId]
@@ -258,6 +262,7 @@ class SellTriggerThread(Thread):
                                     portfolioReleaseAmount,
                                     symbol
                                 )
+
                                 db_rpc.call(request)
 
             time.sleep(15)
@@ -378,7 +383,7 @@ def on_request(ch, method, props, payload):
         payload['errorString'] = "function not found"
         response = payload
 
-    transactionClient.send(response)
+        transQueue.put(response)
 
 
 def create_error_response(status, response):
@@ -402,9 +407,23 @@ if __name__ == '__main__':
     buyThread = BuyTriggerThread()
     sellThread = SellTriggerThread()
 
-    transactionClient = RabbitMQClient(RabbitMQClient.TRANSACTION)
+    # transactionClient = RabbitMQClient(RabbitMQClient.TRANSACTION)
 
     print("awaiting trigger requests")
+
+
+
+    print "create transaction publisher"
+    transQueue = multiprocessing.Queue()
+    quote_producer_process = Process(target=RabbitMQAyscClient,
+                                     args=(RabbitMQAyscClient.TRANSACTION, transQueue))
+    quote_producer_process.start()
+
+    print "create quote publisher"
+    quoteQueue = multiprocessing.Queue()
+    quote_producer_process = Process(target=RabbitMQAyscClient,
+                                     args=(RabbitMQAyscClient.QUOTE, quoteQueue))
+    quote_producer_process.start()
 
     P1Q_rabbit = multiprocessing.Queue()
     P2Q_rabbit = multiprocessing.Queue()
@@ -414,7 +433,6 @@ if __name__ == '__main__':
     consumer_process = Process(target=RabbitMQAyscReciever,
                                args=(RabbitMQAyscReciever.TRIGGERS, P1Q_rabbit, P2Q_rabbit, P3Q_rabbit))
     consumer_process.start()
-    print "Created multiprocess Consummer"
 
     while (True):
         try:
