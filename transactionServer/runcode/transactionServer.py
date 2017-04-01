@@ -80,7 +80,9 @@ def handleCommandQuote(args):
         return args
     else:
         args["trans"] = RabbitMQClient.TRANSACTION
-        quoteQueue.put(
+
+        i = sum([ord(c) for c in symbol]) % 3
+        quoteQueues[i].put(
             createQuoteRequest(userId, symbol, lineNum, args)
         )
         return None
@@ -145,7 +147,9 @@ def handleCommandCommitBuy(args):
         )
     elif buy is not None:
         args["trans"] = RabbitMQClient.TRANSACTION
-        quoteQueue.put(
+
+        i = sum([ord(c) for c in buy["symbol"]]) % 3
+        quoteQueues[i].put(
             createQuoteRequest(userId, buy["symbol"], transactionNum, args)
         )
     else:
@@ -213,7 +217,9 @@ def handleCommandCommitSell(args):
     elif sell is not None:
         # have the sell, need to get a quote
         args["trans"] = RabbitMQClient.TRANSACTION
-        quoteQueue.put(
+
+        i = sum([ord(c) for c in sell["symbol"]]) % 3
+        quoteQueues[i].put(
             createQuoteRequest(userId, sell["symbol"], lineNum, args)
         )
     else:
@@ -547,25 +553,45 @@ if __name__ == '__main__':
     print "create Auditpublisher"
     auditQueue = multiprocessing.Queue()
     audit_producer_process = Process(target=RabbitMQAyscClient,
-                                     args=( RabbitMQAyscClient.AUDIT , auditQueue))
+                                     args=( auditQueue, RabbitMQAyscClient.AUDIT))
     audit_producer_process.start()
 
-    print "create Quotepublisher"
-    quoteQueue = multiprocessing.Queue()
-    quote_producer_process = Process(target=RabbitMQAyscClient,
-                                     args=(  RabbitMQAyscClient.QUOTE , quoteQueue))
-    quote_producer_process.start()
+    print "create Quotepublisher1"
+    quoteQueue1 = multiprocessing.Queue()
+    quote_producer_process1 = Process(
+        target=RabbitMQAyscClient,
+        args=( quoteQueue1, RabbitMQAyscClient.QUOTE1)
+    )
+    quote_producer_process1.start()
+
+    print "create Quotepublisher2"
+    quoteQueue2 = multiprocessing.Queue()
+    quote_producer_process2 = Process(
+        target=RabbitMQAyscClient,
+        args=(quoteQueue2, RabbitMQAyscClient.QUOTE2)
+    )
+    quote_producer_process2.start()
+
+    print "create Quotepublisher3"
+    quoteQueue3 = multiprocessing.Queue()
+    quote_producer_process3 = Process(
+        target=RabbitMQAyscClient,
+        args=(quoteQueue3, RabbitMQAyscClient.QUOTE3)
+    )
+    quote_producer_process3.start()
+
+    quoteQueues = [quoteQueue1, quoteQueue2, quoteQueue3]
 
     print "create Triggerpublisher"
     triggerQueue = multiprocessing.Queue()
     trigger_producer_process = Process(target=RabbitMQAyscClient,
-                                     args=(  RabbitMQAyscClient.TRIGGERS, triggerQueue ))
+                                     args=( triggerQueue , RabbitMQAyscClient.TRIGGERS))
     trigger_producer_process.start()
 
     print "create databasepublisher"
     databaseQueue = multiprocessing.Queue()
     database_producer_process = Process(target=RabbitMQAyscClient,
-                                     args=( RabbitMQAyscClient.DATABASE, databaseQueue))
+                                     args=( databaseQueue , RabbitMQAyscClient.DATABASE))
     database_producer_process.start()
 
     # This is the new python in memory queue for the transation Server to eat from.
