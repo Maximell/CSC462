@@ -547,25 +547,25 @@ if __name__ == '__main__':
     print "create Auditpublisher"
     auditQueue = multiprocessing.Queue()
     audit_producer_process = Process(target=RabbitMQAyscClient,
-                                     args=( auditQueue, RabbitMQAyscClient.AUDIT))
+                                     args=( RabbitMQAyscClient.AUDIT , auditQueue))
     audit_producer_process.start()
 
     print "create Quotepublisher"
     quoteQueue = multiprocessing.Queue()
     quote_producer_process = Process(target=RabbitMQAyscClient,
-                                     args=( quoteQueue , RabbitMQAyscClient.QUOTE))
+                                     args=(  RabbitMQAyscClient.QUOTE , quoteQueue))
     quote_producer_process.start()
 
     print "create Triggerpublisher"
     triggerQueue = multiprocessing.Queue()
     trigger_producer_process = Process(target=RabbitMQAyscClient,
-                                     args=( triggerQueue , RabbitMQAyscClient.TRIGGERS))
+                                     args=(  RabbitMQAyscClient.TRIGGERS, triggerQueue ))
     trigger_producer_process.start()
 
     print "create databasepublisher"
     databaseQueue = multiprocessing.Queue()
     database_producer_process = Process(target=RabbitMQAyscClient,
-                                     args=( databaseQueue , RabbitMQAyscClient.DATABASE))
+                                     args=( RabbitMQAyscClient.DATABASE, databaseQueue))
     database_producer_process.start()
 
     # This is the new python in memory queue for the transation Server to eat from.
