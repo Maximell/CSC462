@@ -75,10 +75,13 @@ def add():
     print request
     print request.form
     try:
-        cash = float(request.form['cash'].decode('utf-8'))
-        userId = request.form['cash'].decode('utf-8')
+        cash = float(request.form.getlist("cash"))
+        #cash = float(request.form['cash'].decode('utf-8'))
+        userId = request.form.getlist('userId')
     except:
         return "Something went wrong getting post data"
+    print cash
+    print userId
     result = doAdd(userId, cash, getRandomRequestLineNum())
     return result
 
