@@ -2,11 +2,21 @@ import json
 import pika
 from uuid import getnode as get_mac
 
+quoteMacMap = {
+    '193595670795008': "1",
+    '193599966811136': "2",
+    '193600282694676': "3"
+}
 
 # Names for RabbitMQ queues
 class RabbitMQBase:
     # Host Server group
-    QUOTE = 'quoteIn'
+    # TODO: remove 'quote' once triggers is moved over as well
+    QUOTE_BASE = 'quoteIn'
+
+    QUOTE1 = 'quoteIn1'
+    QUOTE2 = 'quoteIn2'
+    QUOTE3 = 'quoteIn3'
 
     AUDIT = 'AuditIn'
     WEB = 'webIn'
