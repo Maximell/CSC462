@@ -12,7 +12,7 @@ import Queue
 
 import multiprocessing
 from multiprocessing import Process
-
+from uuid import getnode as get_mac
 #
 # class rabbitConsumer():
 #     def __init__(self, queueName,Q2):
