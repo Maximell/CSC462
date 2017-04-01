@@ -45,11 +45,15 @@ def sendAndReceive(data, host='142.104.91.142',port=44429, queueName=None):
     return result
 
 def getRandomRequestLineNum(start=-1, stop=-10000, step=1):
-    return random.randrange(start, stop, step)
+    print "in get random"
+    result = random.randrange(start, stop, step)
+    print "result: ", result
+    return result
 
 # Home
 @app.route('/', methods=['GET'])
 def index():
+    print "returning index.html"
     return render_template('index.html')
 
 # Add methods
