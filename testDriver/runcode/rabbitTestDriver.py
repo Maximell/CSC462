@@ -241,6 +241,8 @@ class RabbitMQAyscClient(RabbitMQBase):
 
         # exit after dumplog has been sent
         print "sentDumplog"
+        print payload
+        print worderId
         print workerMap
         # sleep for five seconds before shutdown
         time.sleep(5)
