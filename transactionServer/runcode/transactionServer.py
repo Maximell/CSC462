@@ -32,7 +32,6 @@ from multiprocessing import Process
 #             self.rabbitPQueue3.put((3,  payload))
 
 
-
 # quote shape: symbol: {value: string, retrieved: epoch time, user: string, cryptoKey: string}
 class Quotes():
     def __init__(self, cacheExpire=60):
@@ -478,23 +477,23 @@ def delegate(ch , method, prop, args):
                 # if it is not complete (needs to go to another service) it should return None
                 response = function(args)
                 print "response from call:", response
+                if response.get('lineNum') <= 0:
+                    print "return response to webserver: ", response
+                    returnClient = RabbitMQClient(queueName=RabbitMQClient.WEB+str(response["lineNum"]))
+                    returnClient.send(
+                        create_response(200, response)
+                    )
+                    returnClient.close()
                 return
             else:
+                print "couldn't figure out command...", args
+                if args.get('lineNum') <= 0:
+                    returnClient = RabbitMQClient(queueName=RabbitMQClient.WEB+str(args['lineNum']))
+                    returnClient.send(
+                         create_response(404, "function not found" + str(args))
+                    )
+                    returnClient.close()
                 return
-                # if response is not None:
-                #     print "return response to webserver: ", response
-                #     returnClient = RabbitMQClient(queueName=RabbitMQClient.WEB+str(response["lineNum"]))
-                #     returnClient.send(
-                #         create_response(200, response)
-                #     )
-                #     returnClient.close()
-            # else:
-            #     print "couldn't figure out command...", args
-            #     returnClient = RabbitMQClient(queueName=RabbitMQClient.WEB+str(args['lineNum']))
-            #     # returnClient.send(
-            #     #     create_response(404, "function not found" + str(args))
-            #     # )
-            #     returnClient.close()
         except (RuntimeError, TypeError, ArithmeticError, KeyError) as error:
             print "before error print here"
             errorPrint(args, error)
@@ -507,13 +506,13 @@ def delegate(ch , method, prop, args):
                 str(error)
             )
             auditClient.send(requestBody)
+            if args.get('lineNum') <= 0:
+                returnClient = RabbitMQClient(queueName=RabbitMQClient.WEB+str(args['lineNum']))
+                returnClient.send(
+                    create_response(500, args)
+                )
+                returnClient.close()
             return
-            # returnClient = RabbitMQClient(queueName=RabbitMQClient.WEB+str(args['lineNum']))
-            # returnClient.send(
-            #     create_response(500, args)
-            # )
-            # returnClient.close()
-            #
 
 
 if __name__ == '__main__':

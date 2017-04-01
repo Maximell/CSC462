@@ -1,6 +1,7 @@
 import time
 import json
 import pika
+import random
 from flask import Flask, request, render_template
 from rabbitMQSetups import RabbitMQClient, RabbitMQReceiver
 
@@ -43,6 +44,9 @@ def sendAndReceive(data, host='142.104.91.142',port=44429, queueName=None):
     channel.close()
     return result
 
+def getRandomRequestLineNum(start=-1, stop=-10000, step=1):
+    return random.randrange(start, stop, step)
+
 # Home
 @app.route('/', methods=['GET'])
 def index():
@@ -68,7 +72,7 @@ def add(userId):
         cash = float(request.form['cash'].decode('utf-8'))
     except:
         return "Can't convert cash value to float" , request.form['cash'].decode('utf-8')
-    result = doAdd(userId, cash)
+    result = doAdd(userId, cash, getRandomRequestLineNum())
     return render_template('result.html', result=result)
 
 # Quote methods
@@ -84,7 +88,7 @@ def apiQuote(userId, stockSymbol):
 
 @app.route('/quote/<string:userId>/<string:stockSymbol>/', methods=['GET'])
 def quote(userId, stockSymbol):
-    result = doQuote(userId, stockSymbol)
+    result = doQuote(userId, stockSymbol, getRandomRequestLineNum())
     return  render_template('result.html', result=result)
 
 # Buy methods
