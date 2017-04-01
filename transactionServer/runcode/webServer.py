@@ -44,7 +44,7 @@ def sendAndReceive(data, host='142.104.91.142',port=44429, queueName=None):
     channel.close()
     return result
 
-def getRandomRequestLineNum(start=-1, stop=-10000, step=1):
+def getRandomRequestLineNum(start=-100000, stop=-1, step=1):
     print "in get random"
     result = random.randrange(start, stop, step)
     print "result: ", result
