@@ -477,7 +477,7 @@ if __name__ == '__main__':
                     countDown = time.time()
                     DumpLog = payload
                     DumpLogProps = props
-                    break
+                    continue
 
                 Thread(target=on_request(None,None,props , payload)).setDaemon(True)
                 # on_request(None, None, props, payload)
@@ -494,7 +494,7 @@ if __name__ == '__main__':
                     print "Making Dumplog"
                     on_request(None, None, DumpLogProps, DumpLog)
                     DumplogNotMade = False
-                    break
+                    continue
 
             msg = P3Q_rabbit.get(False)
             if msg:

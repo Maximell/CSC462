@@ -216,14 +216,14 @@ if __name__ == '__main__':
     print "create publisher"
     transQueue = multiprocessing.Queue()
     trans_producer_process = Process(target=RabbitMQAyscClient,
-                               args=(transQueue , None))
+                               args=("DummyQueue" , transQueue))
     trans_producer_process.start()
     print "created publisher"
 
     print "create publisher"
     auditQueue = multiprocessing.Queue()
     audit_producer_process = Process(target=RabbitMQAyscClient,
-                               args=( auditQueue , RabbitMQAyscClient.AUDIT))
+                               args=(  RabbitMQAyscClient.AUDIT , auditQueue ))
     audit_producer_process.start()
     print "created publisher"
     # for triggers next

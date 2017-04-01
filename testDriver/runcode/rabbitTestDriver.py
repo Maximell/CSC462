@@ -11,38 +11,43 @@ class RabbitMQBase:
 
 # tried to import -> code completion worked, running it didnt, why is python like this
 # from transactionServer.runCode.rabbitMQSetups import RabbitMQClient
-class RabbitMQClient():
-    def __init__(self, queueName):
-        self.queueName = queueName
-        self.connection = pika.BlockingConnection(pika.ConnectionParameters('142.104.91.142', 44429))
-        self.channel = self.connection.channel()
-
-        args = {'x-max-priority': 3 , 'x-message-ttl': 600000}
-        self.channel.queue_declare(queue=self.queueName, arguments=args)
-
-    def send(self, requestBody , properties):
-        self.channel.basic_publish(
-            exchange='',
-            routing_key=self.queueName,
-            properties=properties,
-            body=json.dumps(requestBody),
-
-        )
+# class RabbitMQClient():
+    # def __init__(self, queueName):
+    #     self.queueName = queueName
+    #     self.connection = pika.BlockingConnection(pika.ConnectionParameters('142.104.91.142', 44429))
+    #     self.channel = self.connection.channel()
+    #
+    #     args = {'x-max-priority': 3 , 'x-message-ttl': 600000}
+    #     self.channel.queue_declare(queue=self.queueName, arguments=args)
+    #
+    # def send(self, requestBody , properties):
+    #     self.channel.basic_publish(
+    #         exchange='',
+    #         routing_key=self.queueName,
+    #         properties=properties,
+    #         body=json.dumps(requestBody),
+    #
+    #     )
 
 # This is for the aysnc rabbitMQ
 class RabbitMQAyscClient(RabbitMQBase):
-    def __init__(self, queueName , requestQueue ):
-        self.queueNames = 	  ["transactionIn193596476298033", #B01331331331
-                                "transactionIn193596744799041", #B01341341341
-                                "transactionIn193601473895188", #B0145B145B14
-                                "transactionIn193601742334740", #B0146B146B14
-                                "transactionIn193809078333764", #B044B144B144
-                                "transactionIn193821963432263", #B047B147B147
-                                "transactionIn193826241687624", #B048B048B048
-                                "transactionIn193830553497929", #B049B149B149
-                                "transactionIn193860618727760", #B050B150B150
-
-                                "transactionIn8796760983851" ]  #b132
+    def __init__(self,  requestQueue , queueName ):
+        self.queueNames = 	  ["transactionIn193596476298033"
+                                ,"transactionIn193596744799041"
+                                ,"transactionIn193597013300049"
+                                ,"transactionIn193597281801057"
+                                ,"transactionIn193597550302065"
+                                ,"transactionIn193597818803073"
+                                ,"transactionIn193598087304081"
+                                ,"transactionIn193601473895188"
+                                ,"transactionIn193601742334740"
+                                ,"transactionIn193605068330289"
+                                ,"transactionIn193809078333764"
+                                ,"transactionIn193821963432263"
+                                ,"transactionIn193826241687624"
+                                ,"transactionIn193830553497929"
+                                ,"transactionIn193860618727760"
+                                ,"transactionIn8796760983851" ]  #b132
 
         self.param = pika.ConnectionParameters('142.104.91.142',44429)
         self.connection = pika.SelectConnection(self.param,self.on_connection_open,stop_ioloop_on_close=False)
@@ -62,7 +67,7 @@ class RabbitMQAyscClient(RabbitMQBase):
         self.open_channel()
 
     def add_on_connection_close_callback(self):
-        print "on closed connection do callback"
+        # print "on closed connection do callback"
         self.connection.add_on_close_callback(self.on_connection_closed)
 
     def on_connection_closed(self, connection, reply_code, reply_text):
@@ -77,7 +82,7 @@ class RabbitMQAyscClient(RabbitMQBase):
         :param str reply_text: The server provided reply_text if given
 
         """
-        print "on Closed connection"
+        # print "on Closed connection"
         self._channel = None
         if self.closing:
             self.connection.ioloop.stop()
@@ -91,7 +96,7 @@ class RabbitMQAyscClient(RabbitMQBase):
         closed. See the on_connection_closed method.
 
         """
-        print "reconnecting"
+        # print "reconnecting"
         self._deliveries = []
         self._acked = 0
         self._nacked = 0
@@ -107,11 +112,11 @@ class RabbitMQAyscClient(RabbitMQBase):
         self.connection.ioloop.start()
 
     def open_channel(self):
-        print "open Channel"
+        # print "open Channel"
         self.connection.channel(on_open_callback=self.on_channel_open)
 
     def on_channel_open(self , channel):
-        print "on open channel"
+        # print "on open channel"
         self.channel = channel
         self.add_on_channel_close_callback()
         self.setup_exchange(self.EXCHANGE)
@@ -121,7 +126,7 @@ class RabbitMQAyscClient(RabbitMQBase):
         """This method tells pika to call the on_channel_closed method if
         RabbitMQ unexpectedly closes the channel.
         """
-        print "callback after channel closed"
+        # print "callback after channel closed"
         self.channel.add_on_close_callback(self.on_channel_closed)
 
     def on_channel_closed(self, channel, reply_code, reply_text):
@@ -136,13 +141,13 @@ class RabbitMQAyscClient(RabbitMQBase):
         :param str reply_text: The text reason the channel was closed
 
         """
-        print "channel closed"
+        # print "channel closed"
         # LOGGER.warning('Channel was closed: (%s) %s', reply_code, reply_text)
         if not self.closing:
             self.connection.close()
 
     def setup_exchange(self, exchange_name):
-        print "setup exchange"
+        # print "setup exchange"
         for queue in self.queueNames:
             self.channel.exchange_declare(self.on_exchange_declareok,
                                        queue,)
@@ -154,30 +159,30 @@ class RabbitMQAyscClient(RabbitMQBase):
         :param pika.Frame.Method unused_frame: Exchange.DeclareOk response frame
 
         """
-        print "exchange all good"
+        # print "exchange all good"
         # LOGGER.info('Exchange declared')
         for queue in self.queueNames:
             self.setup_queue(queue)
 
     def setup_queue(self, queueName):
         args = {'x-max-priority': 3, 'x-message-ttl': 600000}
-        print "setting up queue"
+        # print "setting up queue"
         for queue in self.queueNames:
             self.channel.queue_declare(self.on_queue_declareok, queue , arguments=args)
 
     def on_queue_declareok(self, method_frame):
-        print "queue all good"
+        # print "queue all good"
         for queue in self.queueNames:
             self.channel.queue_bind(self.on_bindok, queue,
                                  self.EXCHANGE, )
 
     def on_bindok(self, unused_frame):
-        print "bind all good"
+        # print "bind all good"
         # Queue bound
         self.start_publishing()
 
     def start_publishing(self):
-        print "start Publishing"
+        # print "start Publishing"
         # self.enable_delivery_confirmations()
         self.schedule_next_message()
 
@@ -186,7 +191,7 @@ class RabbitMQAyscClient(RabbitMQBase):
         message to be delivered in PUBLISH_INTERVAL seconds.
 
         """
-        print "scheduale next msg"
+        # print "scheduale next msg"
         if self.stopping:
             return
         # LOGGER.info('Scheduling next message for %0.1f seconds',
@@ -205,7 +210,7 @@ class RabbitMQAyscClient(RabbitMQBase):
 
 
     def send(self):
-        print "try sending"
+        # print "try sending"
         noDump = True
         while(noDump):
             try:
@@ -227,7 +232,7 @@ class RabbitMQAyscClient(RabbitMQBase):
                     if requestBody["command"] == "DUMPLOG":
                         noDump = False
                         break
-                print "schedule next msg"
+                # print "schedule next msg"
                 self.schedule_next_message()
             except:
                 pass
@@ -259,16 +264,22 @@ class RabbitMQAyscClient(RabbitMQBase):
 #     [RabbitMQClient("transactionIn8796760983851"), [0 , 0]] #B132
 # ]
 workerMap = [
-	["transactionIn193596476298033", [0 , 0]], #B01331331331
-    ["transactionIn193596744799041", [0 , 0]], #B01341341341
-    ["transactionIn193601473895188", [0 , 0]], #B0145B145B14
-    ["transactionIn193601742334740", [0 , 0]], #B0146B146B14
-    ["transactionIn193809078333764", [0 , 0]], #B044B144B144
-    ["transactionIn193821963432263", [0 , 0]], #B047B147B147
-    ["transactionIn193826241687624", [0 , 0]], # B048B048B048
-    ["transactionIn193830553497929", [0 , 0]], #B049B149B149
-    ["transactionIn193860618727760", [0 , 0]], #B050B150B150
-    ["transactionIn8796760983851",[0 , 0]] #B132
+    ["transactionIn193596476298033", [0, 0]],
+    ["transactionIn193596744799041", [0, 0]],
+    ["transactionIn193597013300049", [0, 0]],
+    ["transactionIn193597281801057", [0, 0]],
+    ["transactionIn193597550302065", [0, 0]],
+    ["transactionIn193597818803073", [0, 0]],
+    ["transactionIn193598087304081", [0, 0]],
+    ["transactionIn193601473895188", [0, 0]],
+    ["transactionIn193601742334740", [0, 0]],
+    ["transactionIn193605068330289", [0, 0]],
+    ["transactionIn193809078333764", [0, 0]],
+    ["transactionIn193821963432263", [0, 0]],
+    ["transactionIn193826241687624", [0, 0]],
+    ["transactionIn193830553497929", [0, 0]],
+    ["transactionIn193860618727760", [0, 0]],
+    ["transactionIn8796760983851", [0, 0]]
 ]
 # last mac addr queue is 132 - Haven't changed the mac yet.
 
@@ -379,6 +390,7 @@ def send(command, args, lineNum):
     if DUMPFLAG:
         # time.sleep()
         print requestQueue.qsize()
+        print workerMap
         quit()
 
 
@@ -423,7 +435,7 @@ if __name__ == '__main__':
         print "create publisher"
         requestQueue = multiprocessing.Queue()
         producer_process = Process(target=RabbitMQAyscClient,
-                                   args=(RabbitMQBase.TRANSACTION, requestQueue))
+                                   args=( requestQueue , RabbitMQBase.TRANSACTION))
         producer_process.start()
         print "created publisher"
 
