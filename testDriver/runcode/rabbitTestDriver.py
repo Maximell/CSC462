@@ -31,7 +31,7 @@ class RabbitMQBase:
 
 # This is for the aysnc rabbitMQ
 class RabbitMQAyscClient(RabbitMQBase):
-    def __init__(self,  requestQueue , queueName=None ):
+    def __init__(self,  requestQueue , queueName ):
         self.queueNames = 	  ["transactionIn193596476298033"
                                 ,"transactionIn193596744799041"
                                 ,"transactionIn193597013300049"
@@ -264,16 +264,22 @@ class RabbitMQAyscClient(RabbitMQBase):
 #     [RabbitMQClient("transactionIn8796760983851"), [0 , 0]] #B132
 # ]
 workerMap = [
-	["transactionIn193596476298033", [0 , 0]], #B01331331331
-    ["transactionIn193596744799041", [0 , 0]], #B01341341341
-    ["transactionIn193601473895188", [0 , 0]], #B0145B145B14
-    ["transactionIn193601742334740", [0 , 0]], #B0146B146B14
-    ["transactionIn193809078333764", [0 , 0]], #B044B144B144
-    ["transactionIn193821963432263", [0 , 0]], #B047B147B147
-    ["transactionIn193826241687624", [0 , 0]], # B048B048B048
-    ["transactionIn193830553497929", [0 , 0]], #B049B149B149
-    ["transactionIn193860618727760", [0 , 0]], #B050B150B150
-    ["transactionIn8796760983851",[0 , 0]] #B132
+    ["transactionIn193596476298033", [0, 0]],
+    ["transactionIn193596744799041", [0, 0]],
+    ["transactionIn193597013300049", [0, 0]],
+    ["transactionIn193597281801057", [0, 0]],
+    ["transactionIn193597550302065", [0, 0]],
+    ["transactionIn193597818803073", [0, 0]],
+    ["transactionIn193598087304081", [0, 0]],
+    ["transactionIn193601473895188", [0, 0]],
+    ["transactionIn193601742334740", [0, 0]],
+    ["transactionIn193605068330289", [0, 0]],
+    ["transactionIn193809078333764", [0, 0]],
+    ["transactionIn193821963432263", [0, 0]],
+    ["transactionIn193826241687624", [0, 0]],
+    ["transactionIn193830553497929", [0, 0]],
+    ["transactionIn193860618727760", [0, 0]],
+    ["transactionIn8796760983851", [0, 0]]
 ]
 # last mac addr queue is 132 - Haven't changed the mac yet.
 
@@ -428,7 +434,7 @@ if __name__ == '__main__':
         print "create publisher"
         requestQueue = multiprocessing.Queue()
         producer_process = Process(target=RabbitMQAyscClient,
-                                   args=(RabbitMQBase.TRANSACTION, requestQueue))
+                                   args=( requestQueue , RabbitMQBase.TRANSACTION))
         producer_process.start()
         print "created publisher"
 
