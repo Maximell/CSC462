@@ -74,10 +74,10 @@ echo configuring iptables
 pssh -i -h workersHostFile.txt iptables -I INPUT -p tcp --dport 44424 -j ACCEPT
 
 echo reset branch again
-pssh -i -h workersHostFile.txt -x "cd $gitpath;" git reset --hard
-pssh -i -H root@142.104.91.130:44421 -x "cd $gitpath;" git reset --hard
-pssh -i -H root@142.104.91.131:44421 -x "cd $gitpath;" git reset --hard
-pssh -i -H root@142.104.91.143:44421 -x "cd $gitpath;" git reset --hard
+pssh -i -h workersHostFile.txt -x "cd $gitpath;" git reset --hard origin/$1
+pssh -i -H root@142.104.91.130:44421 -x "cd $gitpath;" git reset --hard origin/$1
+pssh -i -H root@142.104.91.131:44421 -x "cd $gitpath;" git reset --hard origin/$1
+pssh -i -H root@142.104.91.143:44421 -x "cd $gitpath;" git reset --hard origin/$1
 
 echo done configuring iptables
 echo starting workers
