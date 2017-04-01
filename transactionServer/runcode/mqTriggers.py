@@ -431,6 +431,7 @@ def on_request(ch, method, props, payload):
         payload['errorString'] = "function not found"
         response = payload
 
+    print "reponse to transactionClient:", response
     transactionClient.send(response)
 
 
@@ -476,7 +477,7 @@ if __name__ == '__main__':
                 payload = msg[1]
                 props = msg[0]
                 print "queue size: ", P2Q_rabbit.qsize()
-                # on_request(None, None, props, payload)
+                on_request(None, None, props, payload)
                 continue
         except:
             pass
