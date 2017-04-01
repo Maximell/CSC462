@@ -8,6 +8,7 @@ from threading import Thread
 import threading
 from rabbitMQSetups import  RabbitMQAyscClient, RabbitMQAyscReciever
 from mqAuditServer import auditFunctions
+from uuid import getnode as get_mac
 import Queue
 
 import multiprocessing
@@ -214,14 +215,14 @@ if __name__ == '__main__':
     print "create publisher"
     transQueue = multiprocessing.Queue()
     trans_producer_process = Process(target=RabbitMQAyscClient,
-                               args=(transQueue , None))
+                               args=("DummyQueue" , transQueue))
     trans_producer_process.start()
     print "created publisher"
 
     print "create publisher"
     auditQueue = multiprocessing.Queue()
     audit_producer_process = Process(target=RabbitMQAyscClient,
-                               args=( auditQueue , RabbitMQAyscClient.AUDIT))
+                               args=(  RabbitMQAyscClient.AUDIT , auditQueue ))
     audit_producer_process.start()
     print "created publisher"
     # for triggers next
@@ -236,7 +237,7 @@ if __name__ == '__main__':
 
     print "Created multiprocess PriorityQueues"
     consumer_process = Process(target=RabbitMQAyscReciever,
-                               args=(RabbitMQAyscReciever.QUOTE, P1Q_rabbit, P2Q_rabbit, P3Q_rabbit))
+                               args=("QUTOE"+str(get_mac()), P1Q_rabbit, P2Q_rabbit, P3Q_rabbit))
     consumer_process.start()
     print "Created multiprocess Consummer"
 

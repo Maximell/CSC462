@@ -11,38 +11,43 @@ class RabbitMQBase:
 
 # tried to import -> code completion worked, running it didnt, why is python like this
 # from transactionServer.runCode.rabbitMQSetups import RabbitMQClient
-class RabbitMQClient():
-    def __init__(self, queueName):
-        self.queueName = queueName
-        self.connection = pika.BlockingConnection(pika.ConnectionParameters('142.104.91.142', 44429))
-        self.channel = self.connection.channel()
-
-        args = {'x-max-priority': 3 , 'x-message-ttl': 600000}
-        self.channel.queue_declare(queue=self.queueName, arguments=args)
-
-    def send(self, requestBody , properties):
-        self.channel.basic_publish(
-            exchange='',
-            routing_key=self.queueName,
-            properties=properties,
-            body=json.dumps(requestBody),
-
-        )
+# class RabbitMQClient():
+    # def __init__(self, queueName):
+    #     self.queueName = queueName
+    #     self.connection = pika.BlockingConnection(pika.ConnectionParameters('142.104.91.142', 44429))
+    #     self.channel = self.connection.channel()
+    #
+    #     args = {'x-max-priority': 3 , 'x-message-ttl': 600000}
+    #     self.channel.queue_declare(queue=self.queueName, arguments=args)
+    #
+    # def send(self, requestBody , properties):
+    #     self.channel.basic_publish(
+    #         exchange='',
+    #         routing_key=self.queueName,
+    #         properties=properties,
+    #         body=json.dumps(requestBody),
+    #
+    #     )
 
 # This is for the aysnc rabbitMQ
 class RabbitMQAyscClient(RabbitMQBase):
-    def __init__(self, queueName , requestQueue ):
-        self.queueNames = 	  ["transactionIn193596476298033", #B01331331331
-                                "transactionIn193596744799041", #B01341341341
-                                "transactionIn193601473895188", #B0145B145B14
-                                "transactionIn193601742334740", #B0146B146B14
-                                "transactionIn193809078333764", #B044B144B144
-                                "transactionIn193821963432263", #B047B147B147
-                                "transactionIn193826241687624", #B048B048B048
-                                "transactionIn193830553497929", #B049B149B149
-                                "transactionIn193860618727760", #B050B150B150
-
-                                "transactionIn8796760983851" ]  #b132
+    def __init__(self,  requestQueue , queueName=None ):
+        self.queueNames = 	  ["transactionIn193596476298033"
+                                ,"transactionIn193596744799041"
+                                ,"transactionIn193597013300049"
+                                ,"transactionIn193597281801057"
+                                ,"transactionIn193597550302065"
+                                ,"transactionIn193597818803073"
+                                ,"transactionIn193598087304081"
+                                ,"transactionIn193601473895188"
+                                ,"transactionIn193601742334740"
+                                ,"transactionIn193605068330289"
+                                ,"transactionIn193809078333764"
+                                ,"transactionIn193821963432263"
+                                ,"transactionIn193826241687624"
+                                ,"transactionIn193830553497929"
+                                ,"transactionIn193860618727760"
+                                ,"transactionIn8796760983851" ]  #b132
 
         self.param = pika.ConnectionParameters('142.104.91.142',44429)
         self.connection = pika.SelectConnection(self.param,self.on_connection_open,stop_ioloop_on_close=False)
@@ -227,7 +232,7 @@ class RabbitMQAyscClient(RabbitMQBase):
                     if requestBody["command"] == "DUMPLOG":
                         noDump = False
                         break
-                print "schedule next msg"
+                # print "schedule next msg"
                 self.schedule_next_message()
             except:
                 pass
