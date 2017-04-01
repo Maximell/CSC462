@@ -719,7 +719,7 @@ if __name__ == '__main__':
     print "create publisher"
     requestQueue = multiprocessing.Queue()
     producer_process = Process(target=RabbitMQAyscClient,
-                               args=(requestQueue , RabbitMQAyscClient.TRANSACTION))
+                               args=( RabbitMQAyscClient.TRANSACTION , requestQueue ))
     producer_process.start()
     # transactionClient = RabbitMQClient(RabbitMQClient.TRANSACTION)
     print "created publisher"
