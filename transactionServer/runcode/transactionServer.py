@@ -390,7 +390,27 @@ def handleCommandDumplog(args):
 
 def handleDisplaySummary(args):
     userId = args["userId"]
-    return localDisplaySummary.getDisplaySummary(userId)
+
+    buyTriggers = args.get("buyTriggers")
+    sellTriggers = args.get("sellTriggers")
+
+    user = args.get("user")
+
+    if user is not None:
+        args["commandSummary"] = localDisplaySummary.getDisplaySummary(userId)
+        print "---response from handle summary---"
+        print args
+        return args
+    elif (buyTriggers is not None) and (sellTriggers is not None):
+        databaseClient.send(
+            databaseFunctions.createSummaryRequest(userId, args)
+        )
+    else:
+        triggerClient.send(
+            TriggerFunctions.createSummaryRequest(userId, args)
+        )
+
+    return None
 
 
 def errorPrint(args, error):

@@ -37,6 +37,7 @@ class TriggerFunctions:
     ACTIVATE_SELL = 5
     CANCEL_SELL = 6
     GET_SELL = 7
+    SUMMARY = 8
 
     @classmethod
     def createAddBuyRequest(cls, command, userId, stockSymbol, amount, lineNum):
@@ -114,6 +115,11 @@ class TriggerFunctions:
         }
 
     @classmethod
+    def createSummaryRequest(cls, userId, args):
+        args.update({'function': cls.SUMMARY, "userId": userId})
+        return args
+
+    @classmethod
     def listOptions(cls):
         return [attr for attr in dir(databaseFunctions) if not callable(attr) and not attr.startswith("__") and attr != "listOptions" ]
 
@@ -130,12 +136,30 @@ class Triggers:
         if self._triggerExists(userId, symbol, self.buyTriggers):
             return self.buyTriggers[symbol][userId]
 
+    def getUserBuyTriggers(self, userId):
+        triggers = []
+        for symbol in self.buyTriggers:
+            for user in self.buyTriggers[symbol]:
+                if user == userId:
+                    triggers.append(self.buyTriggers[symbol][user])
+
+        return triggers
+
     def getSellTriggers(self):
         return self.sellTriggers
 
     def getSellTrigger(self, userId, symbol):
         if self._triggerExists(userId, symbol, self.sellTriggers):
             return self.sellTriggers[symbol][userId]
+
+    def getUserSellTriggers(self, userId):
+        triggers = []
+        for symbol in self.sellTriggers:
+            for user in self.sellTriggers[symbol]:
+                if user == userId:
+                    triggers.append(self.sellTriggers[symbol][user])
+
+        return triggers
 
     def addBuyTrigger(self, userId, sym, cashReserved, transactionNum):
         if sym not in self.buyTriggers:
@@ -379,6 +403,22 @@ def handleGetSell(payload):
         payload['errorString'] = "trigger doesnt exist"
     return payload
 
+def handleSummary(payload):
+    # TODO: might have to hold onto triggers in 2 ways if it is a performance problem, currently have to look through all triggers to get single users
+    userId = payload["userId"]
+
+    buyTriggers = triggers.getUserBuyTriggers(userId)
+    sellTriggers = triggers.getUserSellTriggers(userId)
+
+    if buyTriggers and sellTriggers:
+        payload['response'] = 200
+        payload['buyTriggers'] = buyTriggers
+        payload['sellTriggers'] = sellTriggers
+    else:
+        payload['response'] = 500
+        payload['errorString'] = "error finding triggers"
+    return payload
+
 
 def on_request(ch, method, props, payload):
     print "payload: ", payload
@@ -408,7 +448,8 @@ if __name__ == '__main__':
         TriggerFunctions.SELL: handleAddSell,
         TriggerFunctions.ACTIVATE_SELL: handleSetSellActive,
         TriggerFunctions.CANCEL_SELL: handleCancelSell,
-        TriggerFunctions.GET_SELL: handleGetSell
+        TriggerFunctions.GET_SELL: handleGetSell,
+        TriggerFunctions.SUMMARY: handleSummary,
     }
 
     # self.start() currently commented out in both threads
