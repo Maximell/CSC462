@@ -179,12 +179,15 @@ def apiSell(userId, stockSymbol):
         return "Can't convert cash value to float" , request.form['cash'].decode('utf-8')
     return doSell(userId, stockSymbol, cash, lineNum)
 
-@app.route('/sell/<string:userId>/<string:stockSymbol>/', methods=['POST'])
-def sell(userId, stockSymbol):
+@app.route('/sell/', methods=['POST'])
+def sell():
     try:
-        cash = float(request.form['cash'].decode('utf-8'))
+        userId = request.form.getlist('userId')[0]
+        stockSymbol = request.form.getlist('stockSymbol')[0]
+        cash = float(request.form.getlist('cash')[0])
     except:
-        return "Can't convert cash value to float" , request.form['cash'].decode('utf-8')
+        print "something went wrong getting data."
+        return
     result = doSell(userId, stockSymbol, cash)
     return render_template('results.html', result=result)
 
@@ -198,8 +201,13 @@ def apiCommitSell(userId):
     lineNum = int(request.form['lineNum'].decode('utf-8'))
     return doCommitSell(userId, lineNum)
 
-@app.route('/commit-sell/<string:userId>/', methods=['POST'])
-def commitSell(userId):
+@app.route('/commit-sell/', methods=['POST'])
+def commitSell():
+    try:
+        userId = request.form.getlist('userId')[0]
+    except:
+        print "something went wrong getting data."
+        return
     result = doCommitSell(userId)
     return render_template('results.html', result=result)
 
@@ -213,8 +221,13 @@ def apiCancelSell(userId):
     lineNum = int(request.form['lineNum'].decode('utf-8'))
     return doCommitSell(userId, lineNum)
 
-@app.route('/cancel-sell/<string:userId>/', methods=['POST'])
-def cancelSell(userId):
+@app.route('/cancel-sell/', methods=['POST'])
+def cancelSell():
+    try:
+        userId = request.form.getlist('userId')[0]
+    except:
+        print "something went wrong getting data."
+        return
     result = doCommitSell(userId)
     return render_template('results.html', result=result)
 
@@ -232,12 +245,15 @@ def apiSetBuyAmount(userId, stockSymbol):
         return "Can't convert cash value to float" , request.form['cash'].decode('utf-8')
     return doSetBuyAmount(userId, stockSymbol, cash, lineNum)
 
-@app.route('/set-buy-amount/<string:userId>/<string:stockSymbol>/', methods=['POST'])
-def setBuyAmount(userId, stockSymbol):
+@app.route('/set-buy-amount/', methods=['POST'])
+def setBuyAmount():
     try:
-        cash = float(request.form['cash'].decode('utf-8'))
+        userId = request.form.getlist('userId')[0]
+        stockSymbol = request.form.getlist('stockSymbol')[0]
+        cash = float(request.form.getlist('cash')[0])
     except:
-        return "Can't convert cash value to float" , request.form['cash'].decode('utf-8')
+        print "something went wrong getting data."
+        return
     result = doSetBuyAmount(userId, stockSymbol, cash)
     return render_template('results.html', result=result)
 
@@ -251,8 +267,14 @@ def apiCancelSetBuy(userId, stockSymbol):
     lineNum = int(request.form['lineNum'].decode('utf-8'))
     return doCancelSetBuy(userId, stockSymbol, lineNum)
 
-@app.route('/cancel-set-buy/<string:userId>/<string:stockSymbol>/', methods=['POST'])
-def cancelSetBuy(userId, stockSymbol):
+@app.route('/cancel-set-buy/', methods=['POST'])
+def cancelSetBuy():
+    try:
+        userId = request.form.getlist('userId')[0]
+        stockSymbol = request.form.getlist('stockSymbol')[0]
+    except:
+        print "something went wrong getting data."
+        return
     result = doCancelSetBuy(userId, stockSymbol)
     return render_template('results.html', result=result)
 
@@ -270,12 +292,15 @@ def apiSetBuyTrigger(userId, stockSymbol):
         return "Can't convert cash value to float" , request.form['cash'].decode('utf-8')
     return doSetBuyTrigger(userId, stockSymbol, cash, lineNum)
 
-@app.route('/set-buy-trigger/<string:userId>/<string:stockSymbol>/', methods=['POST'])
-def setBuyTrigger(userId, stockSymbol):
+@app.route('/set-buy-trigger/', methods=['POST'])
+def setBuyTrigger():
     try:
-        cash = float(request.form['cash'].decode('utf-8'))
+        userId = request.form.getlist('userId')[0]
+        stockSymbol = request.form.getlist('stockSymbol')[0]
+        cash = float(request.form.getlist('cash')[0])
     except:
-        return "Can't convert cash value to float" , request.form['cash'].decode('utf-8')
+        print "something went wrong getting data."
+        return
     result = doSetBuyTrigger(userId, stockSymbol, cash)
     return render_template('results.html', result=result)
 
@@ -293,12 +318,15 @@ def apiSetSellAmount(userId, stockSymbol):
         return "Can't convert cash value to float" , request.form['cash'].decode('utf-8')
     return doSetSellAmount(userId, stockSymbol, cash, lineNum)
 
-@app.route('/set-sell-amount/<string:userId>/<string:stockSymbol>/', methods=['POST'])
-def setSellAmount(userId, stockSymbol):
+@app.route('/set-sell-amount/', methods=['POST'])
+def setSellAmount():
     try:
-        cash = float(request.form['cash'].decode('utf-8'))
+        userId = request.form.getlist('userId')[0]
+        stockSymbol = request.form.getlist('stockSymbol')[0]
+        cash = float(request.form.getlist('cash')[0])
     except:
-        return "Can't convert cash value to float" , request.form['cash'].decode('utf-8')
+        print "something went wrong getting data."
+        return
     result = doSetSellAmount(userId, stockSymbol, cash)
     return render_template('results.html', result=result)
 
@@ -316,12 +344,15 @@ def apiSetSellTrigger(userId, stockSymbol):
         return "Can't convert cash Vvlue to float" , request.form['cash'].decode('utf-8')
     return doSetSellTrigger(userId, stockSymbol, cash, lineNum)
 
-@app.route('/set-sell-trigger/<string:userId>/<string:stockSymbol>/', methods=['POST'])
-def setSellTrigger(userId, stockSymbol):
+@app.route('/set-sell-trigger/', methods=['POST'])
+def setSellTrigger():
     try:
-        cash = float(request.form['cash'].decode('utf-8'))
+        userId = request.form.getlist('userId')[0]
+        stockSymbol = request.form.getlist('stockSymbol')[0]
+        cash = float(request.form.getlist('cash')[0])
     except:
-        return "Can't convert cash Vvlue to float" , request.form['cash'].decode('utf-8')
+        print "something went wrong getting data."
+        return
     result = doSetSellTrigger(userId, stockSymbol, cash)
     return render_template('results.html', result=result)
 
@@ -335,8 +366,14 @@ def apiCancelSetSell(userId, stockSymbol):
     lineNum = int(request.form['lineNum'].decode('utf-8'))
     return doCancelSetSell(userId, stockSymbol, lineNum)
 
-@app.route('/cancel-set-sell/<string:userId>/<string:stockSymbol>/', methods=['POST'])
-def cancelSetSell(userId, stockSymbol):
+@app.route('/cancel-set-sell/', methods=['POST'])
+def cancelSetSell():
+    try:
+        userId = request.form.getlist('userId')[0]
+        stockSymbol = request.form.getlist('stockSymbol')[0]
+    except:
+        print "something went wrong getting data."
+        return
     result = doCancelSetSell(userId, stockSymbol)
     return render_template('results.html', result=result)
 
@@ -361,8 +398,13 @@ def apiDisplaySummary(userId):
     lineNum = int(request.form['lineNum'].decode('utf-8'))
     return doDisplaySummary(userId, lineNum)
 
-@app.route('/display-summary/<string:userId>/', methods=['GET'])
-def displaySummary(userId):
+@app.route('/display-summary/', methods=['GET'])
+def displaySummary():
+    try:
+        userId = request.form.getlist('userId')[0]
+    except:
+        print "something went wrong getting data."
+        return
     result = doDisplaySummary(userId)
     return render_template('results.html', result=result)
 
