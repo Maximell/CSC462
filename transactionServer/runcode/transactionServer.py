@@ -480,10 +480,13 @@ def delegate(ch , method, prop, args):
                 if response.get('lineNum') <= 0:
                     print "return response to webserver: ", response
                     returnClient = RabbitMQClient(queueName=RabbitMQClient.WEB+str(response["lineNum"]))
+                    print "created the return client"
                     returnClient.send(
                         create_response(200, response)
                     )
+                    print "sent the message back"
                     returnClient.close()
+                    print "closed the return client"
                 return
             else:
                 print "couldn't figure out command...", args
