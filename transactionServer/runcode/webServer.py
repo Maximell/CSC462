@@ -70,14 +70,17 @@ def apiAdd(userId):
         return "Can't convert cash value to float" , request.form['cash'].decode('utf-8')
     return doAdd(userId, cash, lineNum)
 
-@app.route('/add/<string:userId>/', methods=['POST'])
-def add(userId):
+@app.route('/add/', methods=['POST'])
+def add():
+    print request
+    print request.form
     try:
         cash = float(request.form['cash'].decode('utf-8'))
+        userId = request.form['cash'].decode('utf-8')
     except:
-        return "Can't convert cash value to float" , request.form['cash'].decode('utf-8')
+        return "Something went wrong getting post data"
     result = doAdd(userId, cash, getRandomRequestLineNum())
-    return render_template('result.html', result=result)
+    return result
 
 # Quote methods
 def doQuote(userId, stockSumbol, lineNum=0):
