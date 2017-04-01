@@ -6,7 +6,7 @@ from random import randint
 import pika
 from threading import Thread
 import threading
-from rabbitMQSetups import  RabbitMQAyscClient, RabbitMQAyscReciever
+from rabbitMQSetups import  RabbitMQAyscClient, RabbitMQAyscReciever, quoteMacMap
 from mqAuditServer import auditFunctions
 import Queue
 
@@ -207,21 +207,22 @@ def on_request(ch, method, props, payload):
 
 
 if __name__ == '__main__':
-    print "starting QuoteServer"
+    mac = str(get_mac())
+    print "starting QuoteServer " + quoteMacMap[mac]
     quoteServer = Quotes()
     poolHandler()
 
     print "create publisher"
     transQueue = multiprocessing.Queue()
     trans_producer_process = Process(target=RabbitMQAyscClient,
-                               args=(transQueue , None))
+                               args=("DummyQueue" , transQueue))
     trans_producer_process.start()
     print "created publisher"
 
     print "create publisher"
     auditQueue = multiprocessing.Queue()
     audit_producer_process = Process(target=RabbitMQAyscClient,
-                               args=( auditQueue , RabbitMQAyscClient.AUDIT))
+                               args=(  RabbitMQAyscClient.AUDIT , auditQueue ))
     audit_producer_process.start()
     print "created publisher"
     # for triggers next
@@ -236,7 +237,7 @@ if __name__ == '__main__':
 
     print "Created multiprocess PriorityQueues"
     consumer_process = Process(target=RabbitMQAyscReciever,
-                               args=("QUTOE"+str(get_mac()), P1Q_rabbit, P2Q_rabbit, P3Q_rabbit))
+                               args=(RabbitMQAyscReciever.QUOTE_BASE + quoteMacMap[mac], P1Q_rabbit, P2Q_rabbit, P3Q_rabbit))
     consumer_process.start()
     print "Created multiprocess Consummer"
 
