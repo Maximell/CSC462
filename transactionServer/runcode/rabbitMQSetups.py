@@ -37,7 +37,7 @@ class RabbitMQClient(RabbitMQBase):
             self.connection = pika.BlockingConnection(pika.ConnectionParameters('142.104.91.142', 44429))
             self.channel = self.connection.channel()
 
-            args = {'x-max-priority': 3 , 'x-message-ttl': 600000 }
+            args = {'x-max-priority': 3 , 'x-message-ttl': 600000}
             self.channel.queue_declare(queue=self.queueName, arguments=args)
         except Exception as e:
             print "Error occurred initializing RabbitMQClient: ", e
@@ -45,15 +45,18 @@ class RabbitMQClient(RabbitMQBase):
     def send(self, requestBody , priority=2):
         # print "sending", requestBody, "to", self.queueName, "with priority", priority
         try:
-            proporties = pika.BasicProperties(
+            print "creating basic properties"
+            properties = pika.BasicProperties(
                 priority=priority
             )
+            print "done creating basic properties. Doing basic publish."
             self.channel.basic_publish(
                 exchange='',
                 routing_key=self.queueName,
-                properties=proporties,
+                properties=properties,
                 body=json.dumps(requestBody),
             )
+            print "basic publish done"
         except Exception as e:
             print "Error occurred sending rabbitMQMessage: ", e
 
