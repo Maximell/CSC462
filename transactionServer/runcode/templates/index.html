@@ -3,7 +3,11 @@
 {% block javascript %}
 {{ super() }}
 <script>
+    $('.btn-submit').click(
+        $.ajax(
 
+        )
+    )
 </script>
 {% endblock %}
 
@@ -16,15 +20,42 @@
     <li>
         <a>add</a>
         <form action="/add/" method="POST">
+            <p>userId</p>
             <input type="text" name="userId">
             <br>
+            <p>cash</p>
             <input type="text" name="cash">
             <br>
-            <input type="submit" value="Submit">
+            <input class="btn btn-primary btn-submit" type="submit" value="Submit">
         </form>
     </li>
-    <li><a>quote</a></li>
-    <li><a>buy</a></li>
+    <li>
+        <a>quote</a>
+        <form action="/quote/" method="GET">
+            <p>userId</p>
+            <input type="text" name="userId">
+            <br>
+            <p>stock symbol</p>
+            <input type="text" name="stockSymbol">
+            <br>
+            <input class="btn btn-primary btn-submit" type="submit" value="Submit">
+        </form>
+    </li>
+    <li>
+        <a>buy</a>
+        <form action="/buy/" method="POST">
+            <p>userId</p>
+            <input type="text" name="userId">
+            <br>
+            <p>stock symbol</p>
+            <input type="text" name="stockSymbol">
+            <br>
+            <p>cash</p>
+            <input type="text" name="cash">
+            <br>
+            <input class="btn btn-primary btn-submit" type="submit" value="Submit">
+        </form>
+    </li>
     <li><a>commitBuy</a></li>
     <li><a>cancelBuy</a></li>
     <li><a>sell</a></li>

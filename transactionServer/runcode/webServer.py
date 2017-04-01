@@ -53,7 +53,6 @@ def getRandomRequestLineNum(start=-100000, stop=-1, step=1):
 # Home
 @app.route('/', methods=['GET'])
 def index():
-    print "returning index.html"
     return render_template('index.html')
 
 # Add methods
@@ -72,22 +71,13 @@ def apiAdd(userId):
 
 @app.route('/add/', methods=['POST'])
 def add():
-    print request
-    print request.form
     try:
-        print "about to get cash"
-        cash = request.form.getlist("cash")[0]
-        print "done getting cash: ", cash
-        #cash = float(request.form['cash'].decode('utf-8'))
-        print "about to get userId"
         userId = request.form.getlist('userId')[0]
-        print "done getting userId", userId
+        cash = float(request.form.getlist("cash")[0])
     except:
         return "Something went wrong getting post data"
-    print cash
-    print userId
     result = doAdd(userId, cash, getRandomRequestLineNum())
-    return result
+    return render_template('results.html', result=result)
 
 # Quote methods
 def doQuote(userId, stockSumbol, lineNum=0):
@@ -100,10 +90,16 @@ def apiQuote(userId, stockSymbol):
     lineNum = int(request.form['lineNum'].decode('utf-8'))
     return doQuote(userId, stockSymbol, lineNum)
 
-@app.route('/quote/<string:userId>/<string:stockSymbol>/', methods=['GET'])
-def quote(userId, stockSymbol):
+@app.route('/quote/', methods=['GET', 'POST'])
+def quote():
+    try:
+        userId = request.form.getlist('userId')[0]
+        stockSymbol = request.form.getlist('stockSymbol')[0]
+    except:
+        print "something went wrong getting data."
+        return
     result = doQuote(userId, stockSymbol, getRandomRequestLineNum())
-    return  render_template('result.html', result=result)
+    return render_template('results.html', result=result)
 
 # Buy methods
 def doBuy(userId, stockSymbol, cash, lineNum=0):
@@ -119,14 +115,15 @@ def apiBuy(userId, stockSymbol):
         return "Can't convert cash value to float" , request.form['cash'].decode('utf-8')
     return doBuy(userId, stockSymbol, cash, lineNum)
 
-@app.route('/buy/<string:userId>/<string:stockSymbol>/', methods=['POST'])
-def buy(userId, stockSymbol):
+@app.route('/buy/', methods=['POST'])
+def buy():
     try:
-        cash = float(request.form['cash'].decode('utf-8'))
+        userId = request.form.getlist('userId')[0]
+        stockSymbol = request.form.getlist('stockSymbol')[0]
+        cash = float(request.form.getlist('cash')[0])
     except:
-        return "Can't convert cash value to float" , request.form['cash'].decode('utf-8')
-    result = doBuy(userId, stockSymbol, cash)
-    return render_template('result.html', result=result)
+        print "something went wrong getting data."
+    return doBuy(userId, stockSymbol, cash)
 
 # Commit Buy methods
 def doCommitBuy(userId, lineNum=0):
