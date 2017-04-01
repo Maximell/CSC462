@@ -423,15 +423,14 @@ def delegate(ch , method, prop, args):
             error
         )
         auditClient.send(requestBody)
+        returnClient = RabbitMQClient(queueName=RabbitMQClient.WEB + str(args['lineNum']))
+        print "sending error back to webserver on queue: ", RabbitMQClient.WEB + str(args['lineNum'])
+        returnClient.send(
+            create_response(args.get("response"), args)
+        )
+        print "error sent to webserver"
+        returnClient.close()
         return
-
-        # returnClient = RabbitMQClient(queueName=RabbitMQClient.WEB + str(args['lineNum']))
-        # print "sending error back to webserver on queue: ", RabbitMQClient.WEB + str(args['lineNum'])
-        # # returnClient.send(
-        # #     create_response(args.get("response"), args)
-        # # )
-        # print "error sent to webserver"
-        # returnClient.close()
     else:
         try:
             # send command to audit, if it is from web server

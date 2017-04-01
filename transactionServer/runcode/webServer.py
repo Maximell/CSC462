@@ -135,8 +135,13 @@ def apiCommitBuy(userId):
     lineNum = int(request.form['lineNum'].decode('utf-8'))
     return doCommitBuy(userId, lineNum)
 
-@app.route('/commit-buy/<string:userId>/', methods=['POST'])
-def commitBuy(userId):
+@app.route('/commit-buy/', methods=['POST'])
+def commitBuy():
+    try:
+        userId = request.form.getlist('userId')[0]
+    except:
+        print "something went wrong getting data."
+        return
     result = doCommitBuy(userId)
     return render_template('results.html', result=result)
 
@@ -150,9 +155,14 @@ def apiCancelBuy(userId):
     lineNum = int(request.form['lineNum'].decode('utf-8'))
     return doCancelBuy(userId, lineNum)
 
-@app.route('/cancel-buy/<string:userId>/', methods=['POST'])
-def cancelBuy(userId):
-    result = doCancelBuy(userId)
+@app.route('/cancel-buy/', methods=['POST'])
+def cancelBuy():
+    try:
+        userId = request.form.getlist('userId')[0]
+    except:
+        print "something went wrong getting data."
+        return
+    result = doCommitBuy(userId)
     return render_template('results.html', result=result)
 
 # Sell methods
