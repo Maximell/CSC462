@@ -1,11 +1,24 @@
 {% extends "base.html" %}
 
+{% block javascript %}
+{{ super() }}
+<script>
+
+</script>
+{% endblock %}
+
+
 {% block heading %}System Actions{% endblock %}
 
 {% block content %}
 <p>Commands:</p>
 <ul>
-    <li><a>add</a></li>
+    <li>
+        <a>add</a>
+        <form class="hidden" action="/api/add/" method="POST">
+            <input
+        </form>
+    </li>
     <li><a>quote</a></li>
     <li><a>buy</a></li>
     <li><a>commitBuy</a></li>
