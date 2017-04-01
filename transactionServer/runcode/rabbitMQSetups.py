@@ -463,7 +463,7 @@ class RabbitMQReceiver(RabbitMQBase):
         connection = pika.BlockingConnection(pika.ConnectionParameters('142.104.91.142',44429))
         channel = connection.channel()
 
-        args = {'x-max-priority': 3  , 'x-message-ttl': 600000}
+        args = {'x-max-priority': 3, 'x-message-ttl': 600000}
         channel.queue_declare(queue=queueName, arguments=args)
 
         channel.basic_consume(callback, queue=queueName, no_ack=True , exclusive=True)

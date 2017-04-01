@@ -27,7 +27,7 @@ def sendAndReceive(data, host='142.104.91.142',port=44429, queueName=None):
     connection = pika.BlockingConnection(pika.ConnectionParameters(host=host, port=port))
     channel = connection.channel()
     # declare a queue
-    args = {'x-max-priority': 3}
+    args = {'x-max-priority': 3, 'x-message-ttl': 600000}
     channel.queue_declare(queue=queueName, arguments=args)
     print("waiting for transaction return on queue: ", queueName)
     # wait for a response from the transactionServer in that queue
