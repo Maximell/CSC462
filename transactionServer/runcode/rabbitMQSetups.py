@@ -21,25 +21,30 @@ class RabbitMQBase:
 # quoteClient.send({a: requestBody})
 class RabbitMQClient(RabbitMQBase):
     def __init__(self, queueName):
-        self.queueName = queueName
-        self.connection = pika.BlockingConnection(pika.ConnectionParameters('142.104.91.142', 44429))
-        self.channel = self.connection.channel()
+        try:
+            self.queueName = queueName
+            self.connection = pika.BlockingConnection(pika.ConnectionParameters('142.104.91.142', 44429))
+            self.channel = self.connection.channel()
 
-        args = {'x-max-priority': 3 , 'x-message-ttl': 600000 }
-        self.channel.queue_declare(queue=self.queueName, arguments=args)
+            args = {'x-max-priority': 3 , 'x-message-ttl': 600000 }
+            self.channel.queue_declare(queue=self.queueName, arguments=args)
+        except Exception as e:
+            print "Error occurred initializing RabbitMQClient: ", e
 
     def send(self, requestBody , priority=2):
         # print "sending", requestBody, "to", self.queueName, "with priority", priority
-        proporties = pika.BasicProperties(
-            priority=priority
-        )
-        self.channel.basic_publish(
-            exchange='',
-            routing_key=self.queueName,
-            properties=proporties,
-            body=json.dumps(requestBody),
-
-        )
+        try:
+            proporties = pika.BasicProperties(
+                priority=priority
+            )
+            self.channel.basic_publish(
+                exchange='',
+                routing_key=self.queueName,
+                properties=proporties,
+                body=json.dumps(requestBody),
+            )
+        except Exception as e:
+            print "Error occurred sending rabbitMQMessage: ", e
 
 # This is for the aysnc rabbitMQ Publisher
 class RabbitMQAyscClient(RabbitMQBase):
