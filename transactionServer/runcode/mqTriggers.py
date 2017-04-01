@@ -410,7 +410,9 @@ def handleSummary(payload):
     buyTriggers = triggers.getUserBuyTriggers(userId)
     sellTriggers = triggers.getUserSellTriggers(userId)
 
-    if buyTriggers and sellTriggers:
+    print buyTriggers, sellTriggers
+
+    if (buyTriggers is not None) and (sellTriggers is not None):
         payload['response'] = 200
         payload['buyTriggers'] = buyTriggers
         payload['sellTriggers'] = sellTriggers
