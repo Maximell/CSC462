@@ -9,6 +9,7 @@ from mqAuditServer import auditFunctions
 from threading import Thread
 import multiprocessing
 from multiprocessing import Process
+from pprint import pprint
 
 # userDisplaySummary shape: {userId: [command, command ...], ...}
 class DisplaySummary():
@@ -402,6 +403,8 @@ def handleDisplaySummary(args):
         args["commandSummary"] = localDisplaySummary.getDisplaySummary(userId)
         print "---response from handle summary---"
         print args
+        pprint(args["commandSummary"])
+        print len(args["commandSummary"])
         return args
     elif (buyTriggers is not None) and (sellTriggers is not None):
         databaseClient.send(

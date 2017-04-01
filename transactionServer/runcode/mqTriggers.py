@@ -410,8 +410,6 @@ def handleSummary(payload):
     buyTriggers = triggers.getUserBuyTriggers(userId)
     sellTriggers = triggers.getUserSellTriggers(userId)
 
-    print buyTriggers, sellTriggers
-
     if (buyTriggers is not None) and (sellTriggers is not None):
         payload['response'] = 200
         payload['buyTriggers'] = buyTriggers
@@ -433,7 +431,7 @@ def on_request(ch, method, props, payload):
         payload['errorString'] = "function not found"
         response = payload
 
-    print "reponse to transactionClient:", response
+    print "response to transactionClient:", response
     transactionClient.send(response)
 
 
