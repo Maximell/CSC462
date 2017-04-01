@@ -553,14 +553,14 @@ if __name__ == '__main__':
     print "create Auditpublisher"
     auditQueue = multiprocessing.Queue()
     audit_producer_process = Process(target=RabbitMQAyscClient,
-                                     args=( auditQueue, RabbitMQAyscClient.AUDIT))
+                                     args=( RabbitMQAyscClient.AUDIT , auditQueue))
     audit_producer_process.start()
 
     print "create Quotepublisher1"
     quoteQueue1 = multiprocessing.Queue()
     quote_producer_process1 = Process(
         target=RabbitMQAyscClient,
-        args=( quoteQueue1, RabbitMQAyscClient.QUOTE1)
+        args=( RabbitMQAyscClient.QUOTE1, quoteQueue1)
     )
     quote_producer_process1.start()
 
@@ -568,7 +568,7 @@ if __name__ == '__main__':
     quoteQueue2 = multiprocessing.Queue()
     quote_producer_process2 = Process(
         target=RabbitMQAyscClient,
-        args=(quoteQueue2, RabbitMQAyscClient.QUOTE2)
+        args=(RabbitMQAyscClient.QUOTE2, quoteQueue2)
     )
     quote_producer_process2.start()
 
@@ -576,7 +576,7 @@ if __name__ == '__main__':
     quoteQueue3 = multiprocessing.Queue()
     quote_producer_process3 = Process(
         target=RabbitMQAyscClient,
-        args=(quoteQueue3, RabbitMQAyscClient.QUOTE3)
+        args=(RabbitMQAyscClient.QUOTE3, quoteQueue3)
     )
     quote_producer_process3.start()
 
@@ -585,13 +585,13 @@ if __name__ == '__main__':
     print "create Triggerpublisher"
     triggerQueue = multiprocessing.Queue()
     trigger_producer_process = Process(target=RabbitMQAyscClient,
-                                     args=( triggerQueue , RabbitMQAyscClient.TRIGGERS))
+                                     args=(  RabbitMQAyscClient.TRIGGERS, triggerQueue ))
     trigger_producer_process.start()
 
     print "create databasepublisher"
     databaseQueue = multiprocessing.Queue()
     database_producer_process = Process(target=RabbitMQAyscClient,
-                                     args=( databaseQueue , RabbitMQAyscClient.DATABASE))
+                                     args=( RabbitMQAyscClient.DATABASE, databaseQueue))
     database_producer_process.start()
 
     # This is the new python in memory queue for the transation Server to eat from.

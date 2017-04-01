@@ -54,7 +54,7 @@ class RabbitMQClient(RabbitMQBase):
 
 # This is for the aysnc rabbitMQ Publisher
 class RabbitMQAyscClient(RabbitMQBase):
-    def __init__(self,  requestQueue, queueName=None ):
+    def __init__(self, queueName , requestQueue ):
         self.queueName = queueName
         self.param = pika.ConnectionParameters('142.104.91.142',44429)
         self.connection = pika.SelectConnection(self.param,self.on_connection_open,stop_ioloop_on_close=False)
@@ -155,9 +155,8 @@ class RabbitMQAyscClient(RabbitMQBase):
 
     def setup_exchange(self, exchange_name):
         print "setup exchange"
-        if self.queueName != None:
-            self.channel.exchange_declare(self.on_exchange_declareok,
-                                           self.queueName,)
+        self.channel.exchange_declare(self.on_exchange_declareok,
+                                       self.queueName,)
 
     def on_exchange_declareok(self, unused_frame):
 
@@ -173,14 +172,12 @@ class RabbitMQAyscClient(RabbitMQBase):
     def setup_queue(self, queueName):
         args = {'x-max-priority': 3, 'x-message-ttl': 600000}
         print "setting up queue"
-        if queueName != None:
-            self.channel.queue_declare(self.on_queue_declareok, queueName , arguments=args)
+        self.channel.queue_declare(self.on_queue_declareok, queueName , arguments=args)
 
     def on_queue_declareok(self, method_frame):
         print "queue all good"
-        if self.queueName != None:
-            self.channel.queue_bind(self.on_bindok, self.queueName,
-                                     self.EXCHANGE, )
+        self.channel.queue_bind(self.on_bindok, self.queueName,
+                                 self.EXCHANGE, )
 
     def on_bindok(self, unused_frame):
         print "bind all good"
