@@ -75,9 +75,13 @@ def add():
     print request
     print request.form
     try:
-        cash = float(request.form.getlist("cash"))
+        print "about to get cash"
+        cash = request.form.getlist("cash")
+        print "done getting cash: ", cash
         #cash = float(request.form['cash'].decode('utf-8'))
+        print "about to get userId"
         userId = request.form.getlist('userId')
+        print "done getting userId", userId
     except:
         return "Something went wrong getting post data"
     print cash
