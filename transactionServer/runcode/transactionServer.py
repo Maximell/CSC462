@@ -390,7 +390,6 @@ def handleCommandDumplog(args):
     return "DUMPLOG SENT TO AUDIT"
 
 def handleDisplaySummary(args):
-    print "-- handle display summary--"
     userId = args["userId"]
 
     buyTriggers = args.get("buyTriggers")
@@ -401,10 +400,6 @@ def handleDisplaySummary(args):
 
     if user is not None:
         args["commandSummary"] = localDisplaySummary.getDisplaySummary(userId)
-        print "---response from handle summary---"
-        print args
-        pprint(args["commandSummary"])
-        print len(args["commandSummary"])
         return args
     elif (buyTriggers is not None) and (sellTriggers is not None):
         databaseClient.send(
