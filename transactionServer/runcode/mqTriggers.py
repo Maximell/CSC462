@@ -128,14 +128,14 @@ class Triggers:
     def addBuyTrigger(self, userId, sym, cashReserved, transactionNum):
         if sym not in self.buyTriggers:
             self.buyTriggers[sym] = {}
-        trigger = {"cashReserved": cashReserved, "active": False, "buyAt": 0, "transId": transactionNum}
+        trigger = {"cashReserved": cashReserved, "active": False, "buyAt": 0, "transactionNum": transactionNum}
         self.buyTriggers[sym][userId] = trigger
         return trigger
 
     def addSellTrigger(self, userId, sym, maxSellAmount, transactionNum):
         if sym not in self.sellTriggers:
             self.sellTriggers[sym] = {}
-        trigger = {"maxSellAmount": maxSellAmount, "active": False, "sellAt": 0, "transId": transactionNum}
+        trigger = {"maxSellAmount": maxSellAmount, "active": False, "sellAt": 0, "transactionNum": transactionNum}
         self.sellTriggers[sym][userId] = trigger
         return trigger
 
@@ -225,16 +225,19 @@ class BuyTriggerThread(Thread):
                 if len(triggers.buyTriggers[symbol]):
                     # get the id of someone for the request to the quote server
                     someonesUserId = triggers.buyTriggers[symbol].itervalues().next()
-                    transId = triggers.buyTriggers[symbol][someonesUserId]["transId"]
+                    transactionNum = triggers.buyTriggers[symbol][someonesUserId]["transactionNum"]
 
                     # essentially a stop and wait RPC
                     quote = quotesCache.getQuote(symbol)
                     if quote is None:
                         # tells quote client where to return to
-                        args = {"trans": RabbitMQClient.TRIGGERS}
-                        quoteQueue.put(
-                            createQuoteRequest(someonesUserId, symbol, transId, args)
+                        args = {"trans": RabbitMQAyscClient.TRIGGERS}
+
+                        i = sum([ord(c) for c in symbol]) % 3
+                        quoteQueues[i].put(
+                            createQuoteRequest(someonesUserId, symbol, transactionNum, args)
                         )
+
                         while quote is None:
                             # .1 is a guess? better interval to sleep?
                             time.sleep(0.1)
@@ -250,7 +253,7 @@ class BuyTriggerThread(Thread):
                                 cashReleaseAmount = trigger["cashReserved"] - cashCommitAmount
 
                                 # TODO update this to new style
-                                databaseClient.send(
+                                databaseQueue.put(
                                     databaseFunctions.createBuyTriggerRequest(
                                         userId,
                                         cashCommitAmount,
@@ -282,16 +285,20 @@ class SellTriggerThread(Thread):
                 if len(triggers.buyTriggers[symbol]):
                     # get the id of someone for the request to the quote server
                     someonesUserId = triggers.sellTriggers[symbol].itervalues().next()
-                    transId = triggers.sellTriggers[symbol][someonesUserId]["transId"]
+                    transactionNum = triggers.sellTriggers[symbol][someonesUserId]["transactionNum"]
 
                     # essentially a stop and wait RPC
                     quote = quotesCache.getQuote(symbol)
                     if quote is None:
                         # tells quote client where to return to
-                        args = {"trans": RabbitMQClient.TRIGGERS}
-                        quoteQueue.put(
-                            createQuoteRequest(someonesUserId, symbol, transId, args)
+                        args = {"trans": RabbitMQAyscClient.TRIGGERS}
+
+
+                        i = sum([ord(c) for c in symbol]) % 3
+                        quoteQueues[i].put(
+                            createQuoteRequest(userId, symbol, transactionNum, args)
                         )
+
                         while quote is None:
                             # .1 is a guess? better interval to sleep?
                             time.sleep(.1)
@@ -305,7 +312,7 @@ class SellTriggerThread(Thread):
                                 portfolioCommitAmount = math.floor(trigger["maxSellAmount"] / quoteValue)
                                 portfolioReleaseAmount = math.floor(trigger["maxSellAmount"] / trigger["sellAt"]) - portfolioCommitAmount
                                 # TODO use new style
-                                databaseClient.send(
+                                databaseQueue.put(
                                     databaseFunctions.createSellTriggerRequest(
                                         userId,
                                         quoteValue,
@@ -483,7 +490,11 @@ if __name__ == '__main__':
 
 
     print("awaiting trigger requests")
-
+    print "create transaction publisher"
+    databaseQueue = multiprocessing.Queue()
+    database_producer_process = Process(target=RabbitMQAyscClient,
+                                     args=(RabbitMQAyscClient.DATABASE, databaseQueue))
+    database_producer_process.start()
 
 
     print "create transaction publisher"
@@ -492,11 +503,31 @@ if __name__ == '__main__':
                                      args=( RabbitMQAyscClient.TRANSACTION , transQueue))
     quote_producer_process.start()
 
-    print "create quote publisher"
-    quoteQueue = multiprocessing.Queue()
-    quote_producer_process = Process(target=RabbitMQAyscClient,
-                                     args=( RabbitMQAyscClient.QUOTE , quoteQueue ))
-    quote_producer_process.start()
+    print "create Quotepublisher1"
+    quoteQueue1 = multiprocessing.Queue()
+    quote_producer_process1 = Process(
+        target=RabbitMQAyscClient,
+        args=(RabbitMQAyscClient.QUOTE1, quoteQueue1)
+    )
+    quote_producer_process1.start()
+
+    print "create Quotepublisher2"
+    quoteQueue2 = multiprocessing.Queue()
+    quote_producer_process2 = Process(
+        target=RabbitMQAyscClient,
+        args=(RabbitMQAyscClient.QUOTE2, quoteQueue2)
+    )
+    quote_producer_process2.start()
+
+    print "create Quotepublisher3"
+    quoteQueue3 = multiprocessing.Queue()
+    quote_producer_process3 = Process(
+        target=RabbitMQAyscClient,
+        args=(RabbitMQAyscClient.QUOTE3, quoteQueue3)
+    )
+    quote_producer_process3.start()
+
+    quoteQueues = [quoteQueue1, quoteQueue2, quoteQueue3]
 
     P1Q_rabbit = multiprocessing.Queue()
     P2Q_rabbit = multiprocessing.Queue()

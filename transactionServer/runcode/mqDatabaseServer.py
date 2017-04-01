@@ -12,6 +12,7 @@ import multiprocessing
 from multiprocessing import Process
 
 
+
 # class rabbitConsumer():
 #     def __init__(self, queueName,Q2):
 #         self.rabbitPQueue2 = Q2
