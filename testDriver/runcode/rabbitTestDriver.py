@@ -191,7 +191,7 @@ class RabbitMQAyscClient(RabbitMQBase):
         message to be delivered in PUBLISH_INTERVAL seconds.
 
         """
-        print "scheduale next msg"
+        # print "scheduale next msg"
         if self.stopping:
             return
         # LOGGER.info('Scheduling next message for %0.1f seconds',
@@ -210,7 +210,7 @@ class RabbitMQAyscClient(RabbitMQBase):
 
 
     def send(self):
-        print "try sending"
+        # print "try sending"
         noDump = True
         while(noDump):
             try:
@@ -390,6 +390,7 @@ def send(command, args, lineNum):
     if DUMPFLAG:
         # time.sleep()
         print requestQueue.qsize()
+        print workerMap
         quit()
 
 
