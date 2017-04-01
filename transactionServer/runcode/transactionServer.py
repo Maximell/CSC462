@@ -389,12 +389,14 @@ def handleCommandDumplog(args):
     return "DUMPLOG SENT TO AUDIT"
 
 def handleDisplaySummary(args):
+    print "-- handle display summary--"
     userId = args["userId"]
 
     buyTriggers = args.get("buyTriggers")
     sellTriggers = args.get("sellTriggers")
 
     user = args.get("user")
+    print userId, buyTriggers, sellTriggers, user
 
     if user is not None:
         args["commandSummary"] = localDisplaySummary.getDisplaySummary(userId)
