@@ -75,7 +75,8 @@ def add():
         userId = request.form.getlist('userId')[0]
         cash = float(request.form.getlist("cash")[0])
     except:
-        return "Something went wrong getting post data"
+        print "something went wrong parsing the data."
+        return "something went wrong parsing the data."
     result = doAdd(userId, cash, getRandomRequestLineNum())
     return render_template('result.html', result=result)
 
@@ -93,11 +94,15 @@ def apiQuote(userId, stockSymbol):
 @app.route('/quote/', methods=['GET', 'POST'])
 def quote():
     try:
+        print request
+        print request.form
         userId = request.form.getlist('userId')[0]
+        print userId
         stockSymbol = request.form.getlist('stockSymbol')[0]
+        print stockSymbol
     except:
-        print "something went wrong getting data."
-        return
+        print "something went wrong parsing the data."
+        return "something went wrong parsing the data."
     result = doQuote(userId, stockSymbol, getRandomRequestLineNum())
     return render_template('result.html', result=result)
 
