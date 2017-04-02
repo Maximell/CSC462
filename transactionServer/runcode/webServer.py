@@ -77,7 +77,7 @@ def add():
     except:
         return "Something went wrong getting post data"
     result = doAdd(userId, cash, getRandomRequestLineNum())
-    return render_template('results.html', result=result)
+    return render_template('result.html', result=result)
 
 # Quote methods
 def doQuote(userId, stockSumbol, lineNum=0):
@@ -99,7 +99,7 @@ def quote():
         print "something went wrong getting data."
         return
     result = doQuote(userId, stockSymbol, getRandomRequestLineNum())
-    return render_template('results.html', result=result)
+    return render_template('result.html', result=result)
 
 # Buy methods
 def doBuy(userId, stockSymbol, cash, lineNum=0):
@@ -143,7 +143,7 @@ def commitBuy():
         print "something went wrong getting data."
         return
     result = doCommitBuy(userId)
-    return render_template('results.html', result=result)
+    return render_template('result.html', result=result)
 
 # Cancel Buy methods
 def doCancelBuy(userId, lineNum=0):
@@ -163,7 +163,7 @@ def cancelBuy():
         print "something went wrong getting data."
         return
     result = doCommitBuy(userId)
-    return render_template('results.html', result=result)
+    return render_template('result.html', result=result)
 
 # Sell methods
 def doSell(userId, stockSymbol, cash, lineNum=0):
@@ -189,7 +189,7 @@ def sell():
         print "something went wrong getting data."
         return
     result = doSell(userId, stockSymbol, cash)
-    return render_template('results.html', result=result)
+    return render_template('result.html', result=result)
 
 # Commit Sell methods
 def doCommitSell(userId, lineNum=0):
@@ -209,7 +209,7 @@ def commitSell():
         print "something went wrong getting data."
         return
     result = doCommitSell(userId)
-    return render_template('results.html', result=result)
+    return render_template('result.html', result=result)
 
 # Cancel Sell methods
 def doCancelSell(userId, lineNum=0):
@@ -229,7 +229,7 @@ def cancelSell():
         print "something went wrong getting data."
         return
     result = doCommitSell(userId)
-    return render_template('results.html', result=result)
+    return render_template('result.html', result=result)
 
 # Set Buy Amount methods
 def doSetBuyAmount(userId, stockSymbol, cash, lineNum=0):
@@ -255,7 +255,7 @@ def setBuyAmount():
         print "something went wrong getting data."
         return
     result = doSetBuyAmount(userId, stockSymbol, cash)
-    return render_template('results.html', result=result)
+    return render_template('result.html', result=result)
 
 # Cancel Set Buy methods
 def doCancelSetBuy(userId, stockSymbol, lineNum=0):
@@ -276,7 +276,7 @@ def cancelSetBuy():
         print "something went wrong getting data."
         return
     result = doCancelSetBuy(userId, stockSymbol)
-    return render_template('results.html', result=result)
+    return render_template('result.html', result=result)
 
 # Set Buy Trigger methods
 def doSetBuyTrigger(userId, stockSymbol, cash, lineNum=0):
@@ -302,7 +302,7 @@ def setBuyTrigger():
         print "something went wrong getting data."
         return
     result = doSetBuyTrigger(userId, stockSymbol, cash)
-    return render_template('results.html', result=result)
+    return render_template('result.html', result=result)
 
 # Set Sell Amount methods
 def doSetSellAmount(userId, stockSymbol, cash, lineNum=0):
@@ -328,7 +328,7 @@ def setSellAmount():
         print "something went wrong getting data."
         return
     result = doSetSellAmount(userId, stockSymbol, cash)
-    return render_template('results.html', result=result)
+    return render_template('result.html', result=result)
 
 # Set Sell Trigger methods
 def doSetSellTrigger(userId, stockSymbol, cash, lineNum=0):
@@ -354,7 +354,7 @@ def setSellTrigger():
         print "something went wrong getting data."
         return
     result = doSetSellTrigger(userId, stockSymbol, cash)
-    return render_template('results.html', result=result)
+    return render_template('result.html', result=result)
 
 # Cancel Set Sell methods
 def doCancelSetSell(userId, stockSymbol, lineNum=0):
@@ -375,7 +375,7 @@ def cancelSetSell():
         print "something went wrong getting data."
         return
     result = doCancelSetSell(userId, stockSymbol)
-    return render_template('results.html', result=result)
+    return render_template('result.html', result=result)
 
 # Dumplog methods
 def doDumplog(userId, lineNum=0):
@@ -406,7 +406,7 @@ def displaySummary():
         print "something went wrong getting data."
         return
     result = doDisplaySummary(userId)
-    return render_template('results.html', result=result)
+    return render_template('result.html', result=result)
 
 if __name__ == '__main__':
     transactionClient = RabbitMQClient(RabbitMQClient.TRANSACTION)
