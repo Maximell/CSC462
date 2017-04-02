@@ -87,6 +87,8 @@ echo done installing requirements on workers
 
 echo starting workers
 pssh -i -h workersHostFile.txt -x "cd $workingDirectoryPath;" python startWorker.py
+sleep 5
+pssh -i -h workersHostFile.txt -x "cd $workingDirectoryPath;" python webServer.py
 echo worker configuration complete
 
 echo starting quote server
