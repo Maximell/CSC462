@@ -137,7 +137,7 @@ def doQuote(userId, stockSumbol, lineNum):
 @login_required
 def quote():
     try:
-        userId = current_user.id        print userId
+        userId = current_user.id
         stockSymbol = request.form.getlist('stockSymbol')[0]
     except:
         print "something went wrong parsing the data."
