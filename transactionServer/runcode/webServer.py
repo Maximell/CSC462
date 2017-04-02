@@ -3,16 +3,13 @@ import json
 import pika
 import random
 from flask import Flask, request, render_template
+from flask_mail import Mail
+from flask_sqlalchemy import SQLAlchemy
+from flask_user import login_required, UserManager, UserMixin, SQLAlchemyAdapter
 from rabbitMQSetups import RabbitMQClient, RabbitMQReceiver
-
-
-app = Flask(__name__)
-
-# args now has keys: userId , sym , lineNum , command , cash
 
 def sendToQueue(data):
     transactionClient.send(data, priority=1)
-
 
 def sendAndReceive(data, host='142.104.91.142',port=44429, queueName=None):
     # if the queueName is None, set it to a default
@@ -50,10 +47,58 @@ def getRandomRequestLineNum(start=-100000, stop=-1, step=1):
     print "result: ", result
     return result
 
+app = Flask(__name__)
+
+class ConfigClass(object):
+    # Flask settings
+    SECRET_KEY = os.getenv('SECRET_KEY', 'THIS IS AN INSECURE SECRET')
+    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', 'sqlite:///basic_app.sqlite')
+
+    # Flask-Mail settings
+    # TODO if we want emails
+
+    # Flask-User settings
+    USER_APP_NAME = "AppName"
+
+# Setup Flask app and app.config
+app = Flask(__name__)
+app.config.from_object(__name__+'.ConfigClass')
+
+# Initialize Flask extensions
+db = SQLAlchemy(app)
+# mail = Mail(app) TODO if we want to do emails
+
+# Define the User data model.
+class User(db.Model, UserMixin):
+    id = db.Column(db.Integer, primary_key=True)
+
+    # User authentication infromation
+    username = db.Column(db.String(50), nullable=False, unique=True)
+    password = db.Column(db.String(255), nullable=False, server_default='')
+
+    # User email information
+    # email = db.Column(db.String(255), nullable=False, unique=True)
+    # confirmed_at = db.Column(db.DateTime())
+
+    # User information
+    active  = db.Column('is_active', db.Boolean(), nullable=False, server_default='0')
+
+# Create all database tables
+db.create_all()
+
+# Setup Flask-User
+db_adapter = SQLAlchemyAdapter(db, User) # Register the User Model
+user_manager = UserManager(db_adapter, app) # Initialize Flask-User
+
 # Home
 @app.route('/', methods=['GET'])
 def index():
     return render_template('index.html')
+
+@app.route('/members')
+@login_required
+def membersPage():
+    return render_template('result.html', result="You are a member")
 
 # Add methods
 def doAdd(userId, cash, lineNum=0):
@@ -415,6 +460,7 @@ def displaySummary():
     result = doDisplaySummary(userId)
     return render_template('result.html', result=result)
 
+
 if __name__ == '__main__':
     transactionClient = RabbitMQClient(RabbitMQClient.TRANSACTION)
-    app.run(host="0.0.0.0",port=44424) 
+    app.run(host="0.0.0.0",port=44424)
