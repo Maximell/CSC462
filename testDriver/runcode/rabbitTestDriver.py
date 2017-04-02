@@ -220,7 +220,7 @@ class RabbitMQAyscClient(RabbitMQBase):
                     requestBody = payload[1]
                     priority = payload[2]
 
-                    print "sending", requestBody, "to", worderId, "with priority", priority
+                    # print "sending", requestBody, "to", worderId, "with priority", priority
 
                     self.channel.basic_publish(
                         exchange=self.EXCHANGE,
