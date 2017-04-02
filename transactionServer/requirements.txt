@@ -1,1 +1,9 @@
 pyOpenSSL
+flask
+flask-login
+flask-mail
+flask-WTF
+passlib
+pycrypto
+py-bcript
+flask-user

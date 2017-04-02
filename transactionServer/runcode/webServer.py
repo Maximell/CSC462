@@ -127,8 +127,10 @@ def buy():
         stockSymbol = request.form.getlist('stockSymbol')[0]
         cash = float(request.form.getlist('cash')[0])
     except:
-        print "something went wrong getting data."
-    return doBuy(userId, stockSymbol, cash)
+        print "something went wrong parsing the data."
+        return "something went wrong parsing the data."
+    result = doBuy(userId, stockSymbol, cash)
+    return render_template('result.html', result=result)
 
 # Commit Buy methods
 def doCommitBuy(userId, lineNum=0):
@@ -145,8 +147,8 @@ def commitBuy():
     try:
         userId = request.form.getlist('userId')[0]
     except:
-        print "something went wrong getting data."
-        return
+        print "something went wrong parsing the data."
+        return "something went wrong parsing the data."
     result = doCommitBuy(userId)
     return render_template('result.html', result=result)
 
@@ -165,8 +167,8 @@ def cancelBuy():
     try:
         userId = request.form.getlist('userId')[0]
     except:
-        print "something went wrong getting data."
-        return
+        print "something went wrong parsing the data."
+        return "something went wrong parsing the data."
     result = doCommitBuy(userId)
     return render_template('result.html', result=result)
 
@@ -191,8 +193,8 @@ def sell():
         stockSymbol = request.form.getlist('stockSymbol')[0]
         cash = float(request.form.getlist('cash')[0])
     except:
-        print "something went wrong getting data."
-        return
+        print "something went wrong parsing the data."
+        return "something went wrong parsing the data."
     result = doSell(userId, stockSymbol, cash)
     return render_template('result.html', result=result)
 
@@ -211,8 +213,8 @@ def commitSell():
     try:
         userId = request.form.getlist('userId')[0]
     except:
-        print "something went wrong getting data."
-        return
+        print "something went wrong parsing the data."
+        return "something went wrong parsing the data."
     result = doCommitSell(userId)
     return render_template('result.html', result=result)
 
@@ -231,8 +233,8 @@ def cancelSell():
     try:
         userId = request.form.getlist('userId')[0]
     except:
-        print "something went wrong getting data."
-        return
+        print "something went wrong parsing the data."
+        return "something went wrong parsing the data."
     result = doCommitSell(userId)
     return render_template('result.html', result=result)
 
@@ -257,8 +259,8 @@ def setBuyAmount():
         stockSymbol = request.form.getlist('stockSymbol')[0]
         cash = float(request.form.getlist('cash')[0])
     except:
-        print "something went wrong getting data."
-        return
+        print "something went wrong parsing the data."
+        return "something went wrong parsing the data."
     result = doSetBuyAmount(userId, stockSymbol, cash)
     return render_template('result.html', result=result)
 
@@ -278,8 +280,8 @@ def cancelSetBuy():
         userId = request.form.getlist('userId')[0]
         stockSymbol = request.form.getlist('stockSymbol')[0]
     except:
-        print "something went wrong getting data."
-        return
+        print "something went wrong parsing the data."
+        return "something went wrong parsing the data."
     result = doCancelSetBuy(userId, stockSymbol)
     return render_template('result.html', result=result)
 
@@ -304,8 +306,8 @@ def setBuyTrigger():
         stockSymbol = request.form.getlist('stockSymbol')[0]
         cash = float(request.form.getlist('cash')[0])
     except:
-        print "something went wrong getting data."
-        return
+        print "something went wrong parsing the data."
+        return "something went wrong parsing the data."
     result = doSetBuyTrigger(userId, stockSymbol, cash)
     return render_template('result.html', result=result)
 
@@ -330,8 +332,8 @@ def setSellAmount():
         stockSymbol = request.form.getlist('stockSymbol')[0]
         cash = float(request.form.getlist('cash')[0])
     except:
-        print "something went wrong getting data."
-        return
+        print "something went wrong parsing the data."
+        return "something went wrong parsing the data."
     result = doSetSellAmount(userId, stockSymbol, cash)
     return render_template('result.html', result=result)
 
@@ -356,8 +358,8 @@ def setSellTrigger():
         stockSymbol = request.form.getlist('stockSymbol')[0]
         cash = float(request.form.getlist('cash')[0])
     except:
-        print "something went wrong getting data."
-        return
+        print "something went wrong parsing the data."
+        return "something went wrong parsing the data."
     result = doSetSellTrigger(userId, stockSymbol, cash)
     return render_template('result.html', result=result)
 
@@ -377,8 +379,8 @@ def cancelSetSell():
         userId = request.form.getlist('userId')[0]
         stockSymbol = request.form.getlist('stockSymbol')[0]
     except:
-        print "something went wrong getting data."
-        return
+        print "something went wrong parsing the data."
+        return "something went wrong parsing the data."
     result = doCancelSetSell(userId, stockSymbol)
     return render_template('result.html', result=result)
 
@@ -408,8 +410,8 @@ def displaySummary():
     try:
         userId = request.form.getlist('userId')[0]
     except:
-        print "something went wrong getting data."
-        return
+        print "something went wrong parsing the data."
+        return "something went wrong parsing the data."
     result = doDisplaySummary(userId)
     return render_template('result.html', result=result)
 
