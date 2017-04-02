@@ -19,6 +19,7 @@ if __name__ == '__main__':
     except:
         print "Database Server failed to start"
     try:
+        print "starting webserver"
         os.system("python -u webServer.py > webserverOutput.txt &")
     except:
-        print "web server failed to start"
+        print "Web server failed to start"
