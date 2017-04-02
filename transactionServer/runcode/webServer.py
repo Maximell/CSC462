@@ -121,7 +121,7 @@ def doAdd(userId, cash, lineNum):
 @login_required
 def add():
     try:
-        userId = current_user.id
+        userId = current_user.username
         cash = float(request.form.getlist("cash")[0])
     except:
         print "something went wrong parsing the data."
@@ -138,7 +138,7 @@ def doQuote(userId, stockSumbol, lineNum):
 @login_required
 def quote():
     try:
-        userId = current_user.id
+        userId = current_user.username
         stockSymbol = request.form.getlist('stockSymbol')[0]
     except:
         print "something went wrong parsing the data."
