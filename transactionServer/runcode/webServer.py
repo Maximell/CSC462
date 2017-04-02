@@ -3,10 +3,10 @@ import time
 import json
 import pika
 import random
-from flask import Flask, request, render_template
+from flask import Flask, request, render_template, url_for
 from flask_mail import Mail
 from flask_sqlalchemy import SQLAlchemy
-from flask_user import login_required, current_user, UserManager, UserMixin, SQLAlchemyAdapter
+from flask_user import login_required, current_user, logout_user, UserManager, UserMixin, SQLAlchemyAdapter
 from rabbitMQSetups import RabbitMQClient, RabbitMQReceiver
 
 def sendToQueue(data):
@@ -104,6 +104,12 @@ user_manager = UserManager(db_adapter, app) # Initialize Flask-User
 @login_required
 def index():
     return render_template('index.html')
+
+@app.route("/logout")
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('login'))
 
 # Add methods
 def doAdd(userId, cash, lineNum):
