@@ -72,6 +72,7 @@ pssh -i -H root@142.104.91.143:44421 -x "cd $gitpath;" git pull
 
 echo configuring iptables
 pssh -i -h workersHostFile.txt iptables -I INPUT -p tcp --dport 44424 -j ACCEPT
+echo done configuring iptables
 
 echo reset branch again
 pssh -i -h workersHostFile.txt -x "cd $gitpath;" git reset --hard origin/$1
@@ -79,7 +80,10 @@ pssh -i -H root@142.104.91.130:44421 -x "cd $gitpath;" git reset --hard origin/$
 pssh -i -H root@142.104.91.131:44421 -x "cd $gitpath;" git reset --hard origin/$1
 pssh -i -H root@142.104.91.143:44421 -x "cd $gitpath;" git reset --hard origin/$1
 
-echo done configuring iptables
+echo installing requirements on workers
+pssh -i -h workersHostFile.txt -x "cd $gitpath;" pip install -r transactionServer/requirements.txt
+echo done installing requirements on workers
+
 echo starting workers
 pssh -i -h workersHostFile.txt -x "cd $workingDirectoryPath;" python startWorker.py
 echo worker configuration complete
