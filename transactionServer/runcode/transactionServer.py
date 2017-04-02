@@ -40,7 +40,7 @@ class Quotes():
 
     def getQuote(self, symbol):
         cache = self.quoteCache.get(symbol)
-        if cache:
+        if cache is not None:
             if self._cacheIsActive(cache):
                 return cache
         return None
@@ -66,6 +66,10 @@ class Quotes():
         return quote
 
     def _cacheIsActive(self, quote):
+        print "checking cache active"
+        print "retrieved:", int(quote.get('retrieved', 0)), "+", self.cacheExpire, "=", self.cacheExpire
+        print "current:", int(time.time())
+        print "active:", (int(quote.get('retrieved', 0)) + self.cacheExpire) > int(time.time())
         return (int(quote.get('retrieved', 0)) + self.cacheExpire) > int(time.time())
 
 # From webServer: {"transactionNum": lineNum, "command": "QUOTE", "userId": userId, "stockSymbol": stockSymbol}
