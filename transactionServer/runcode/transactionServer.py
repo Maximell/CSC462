@@ -49,12 +49,20 @@ class Quotes():
         self.quoteCache[symbol] = {"retrieved": retrieved, "value": value}
 
     def useCache(self, quote, symbol, retrieved):
+        print "-------"
+        print "using quote cache"
+        print quote, symbol, retrieved
         if quote is not None:
+            print "caching quote"
             self.cacheQuote(symbol, retrieved, quote)
         else:
+            print "no quote"
             localQuote = self.getQuote(symbol)
+            print "local quote", localQuote
             if localQuote is not None:
                 quote = localQuote["value"]
+        print "returning", quote
+        print "--------"
         return quote
 
     def _cacheIsActive(self, quote):
