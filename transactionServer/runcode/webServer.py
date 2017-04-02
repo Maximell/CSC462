@@ -106,24 +106,15 @@ def index():
     return render_template('index.html')
 
 # Add methods
-def doAdd(userId, cash, lineNum=0):
+def doAdd(userId, cash, lineNum):
     data = {"command": "ADD", "userId": userId, "cash": cash, "lineNum": lineNum}
     return sendAndReceive(data)
-
-@app.route('/api/add/<string:userId>/', methods=['POST'])
-def apiAdd(userId):
-    lineNum = int(request.form['lineNum'].decode('utf-8'))
-    try:
-        cash = float(request.form['cash'].decode('utf-8'))
-    except:
-        return "Can't convert cash value to float" , request.form['cash'].decode('utf-8')
-    return doAdd(userId, cash, lineNum)
 
 @app.route('/add/', methods=['POST'])
 @login_required
 def add():
     try:
-        userId = request.form.getlist('userId')[0]
+        userId = current_user.id
         cash = float(request.form.getlist("cash")[0])
     except:
         print "something went wrong parsing the data."
@@ -132,26 +123,16 @@ def add():
     return render_template('result.html', result=result)
 
 # Quote methods
-def doQuote(userId, stockSumbol, lineNum=0):
+def doQuote(userId, stockSumbol, lineNum):
     data = {"command": "QUOTE", "userId": userId, "stockSymbol": stockSumbol, "lineNum": lineNum}
-    print "doing a quote with data: ", data
     return sendAndReceive(data)
-
-@app.route('/api/quote/<string:userId>/<string:stockSymbol>/', methods=['GET'])
-def apiQuote(userId, stockSymbol):
-    lineNum = int(request.form['lineNum'].decode('utf-8'))
-    return doQuote(userId, stockSymbol, lineNum)
 
 @app.route('/quote/', methods=['GET', 'POST'])
 @login_required
 def quote():
     try:
-        print request
-        print request.form
-        userId = request.form.getlist('userId')[0]
-        print userId
+        userId = current_user.id        print userId
         stockSymbol = request.form.getlist('stockSymbol')[0]
-        print stockSymbol
     except:
         print "something went wrong parsing the data."
         return "something went wrong parsing the data."
@@ -159,99 +140,71 @@ def quote():
     return render_template('result.html', result=result)
 
 # Buy methods
-def doBuy(userId, stockSymbol, cash, lineNum=0):
+def doBuy(userId, stockSymbol, cash, lineNum):
     data = {"command": "BUY", "userId": userId, "stockSymbol": stockSymbol, "cash": cash, "lineNum": lineNum}
     return sendAndReceive(data)
-
-@app.route('/api/buy/<string:userId>/<string:stockSymbol>/', methods=['POST'])
-def apiBuy(userId, stockSymbol):
-    lineNum = int(request.form['lineNum'].decode('utf-8'))
-    try:
-        cash = float(request.form['cash'].decode('utf-8'))
-    except:
-        return "Can't convert cash value to float" , request.form['cash'].decode('utf-8')
-    return doBuy(userId, stockSymbol, cash, lineNum)
 
 @app.route('/buy/', methods=['POST'])
 @login_required
 def buy():
     try:
-        userId = request.form.getlist('userId')[0]
+        userId = current_user.id
         stockSymbol = request.form.getlist('stockSymbol')[0]
         cash = float(request.form.getlist('cash')[0])
     except:
         print "something went wrong parsing the data."
         return "something went wrong parsing the data."
-    result = doBuy(userId, stockSymbol, cash)
+    result = doBuy(userId, stockSymbol, cash, getRandomRequestLineNum())
     return render_template('result.html', result=result)
 
 # Commit Buy methods
-def doCommitBuy(userId, lineNum=0):
+def doCommitBuy(userId, lineNum):
     data = {"command": "COMMIT_BUY", "userId": userId, "lineNum": lineNum}
     return sendAndReceive(data)
-
-@app.route('/api/commit-buy/<string:userId>/', methods=['POST'])
-def apiCommitBuy(userId):
-    lineNum = int(request.form['lineNum'].decode('utf-8'))
-    return doCommitBuy(userId, lineNum)
 
 @app.route('/commit-buy/', methods=['POST'])
 @login_required
 def commitBuy():
     try:
-        userId = request.form.getlist('userId')[0]
+        userId = current_user.id
     except:
         print "something went wrong parsing the data."
         return "something went wrong parsing the data."
-    result = doCommitBuy(userId)
+    result = doCommitBuy(userId, getRandomRequestLineNum())
     return render_template('result.html', result=result)
 
 # Cancel Buy methods
-def doCancelBuy(userId, lineNum=0):
+def doCancelBuy(userId, lineNum):
     data = {"command": "CANCEL_BUY", "userId": userId, "lineNum": lineNum}
     return sendAndReceive(data)
-
-@app.route('/api/cancel-buy/<string:userId>/', methods=['POST'])
-def apiCancelBuy(userId):
-    lineNum = int(request.form['lineNum'].decode('utf-8'))
-    return doCancelBuy(userId, lineNum)
 
 @app.route('/cancel-buy/', methods=['POST'])
 @login_required
 def cancelBuy():
     try:
-        userId = request.form.getlist('userId')[0]
+        userId = current_user.id
     except:
         print "something went wrong parsing the data."
         return "something went wrong parsing the data."
-    result = doCommitBuy(userId)
+    result = doCommitBuy(userId, getRandomRequestLineNum())
     return render_template('result.html', result=result)
 
 # Sell methods
-def doSell(userId, stockSymbol, cash, lineNum=0):
+def doSell(userId, stockSymbol, cash, lineNum):
     data = {"command": "SELL", "userId": userId, "stockSymbol": stockSymbol, "cash": cash, "lineNum": lineNum}
     return sendAndReceive(data)
-
-@app.route('/api/sell/<string:userId>/<string:stockSymbol>/', methods=['POST'])
-def apiSell(userId, stockSymbol):
-    lineNum = int(request.form['lineNum'].decode('utf-8'))
-    try:
-        cash = float(request.form['cash'].decode('utf-8'))
-    except:
-        return "Can't convert cash value to float" , request.form['cash'].decode('utf-8')
-    return doSell(userId, stockSymbol, cash, lineNum)
 
 @app.route('/sell/', methods=['POST'])
 @login_required
 def sell():
     try:
-        userId = request.form.getlist('userId')[0]
+        userId = current_user.id
         stockSymbol = request.form.getlist('stockSymbol')[0]
         cash = float(request.form.getlist('cash')[0])
     except:
         print "something went wrong parsing the data."
         return "something went wrong parsing the data."
-    result = doSell(userId, stockSymbol, cash)
+    result = doSell(userId, stockSymbol, cash, getRandomRequestLineNum())
     return render_template('result.html', result=result)
 
 # Commit Sell methods
@@ -259,16 +212,11 @@ def doCommitSell(userId, lineNum=0):
     data = {"command": "COMMIT_SELL", "userId": userId, "lineNum": lineNum}
     return sendAndReceive(data)
 
-@app.route('/api/commit-sell/<string:userId>/', methods=['POST'])
-def apiCommitSell(userId):
-    lineNum = int(request.form['lineNum'].decode('utf-8'))
-    return doCommitSell(userId, lineNum)
-
 @app.route('/commit-sell/', methods=['POST'])
 @login_required
 def commitSell():
     try:
-        userId = request.form.getlist('userId')[0]
+        userId = current_user.id
     except:
         print "something went wrong parsing the data."
         return "something went wrong parsing the data."
@@ -276,210 +224,152 @@ def commitSell():
     return render_template('result.html', result=result)
 
 # Cancel Sell methods
-def doCancelSell(userId, lineNum=0):
+def doCancelSell(userId, lineNum):
     data = {"command": "CANCEL_SELL", "userId": userId, "lineNum": lineNum}
     return sendAndReceive(data)
-
-@app.route('/api/cancel-sell/<string:userId>/', methods=['POST'])
-def apiCancelSell(userId):
-    lineNum = int(request.form['lineNum'].decode('utf-8'))
-    return doCommitSell(userId, lineNum)
 
 @app.route('/cancel-sell/', methods=['POST'])
 @login_required
 def cancelSell():
     try:
-        userId = request.form.getlist('userId')[0]
+        userId = current_user.id
     except:
         print "something went wrong parsing the data."
         return "something went wrong parsing the data."
-    result = doCommitSell(userId)
+    result = doCommitSell(userId, getRandomRequestLineNum())
     return render_template('result.html', result=result)
 
 # Set Buy Amount methods
-def doSetBuyAmount(userId, stockSymbol, cash, lineNum=0):
+def doSetBuyAmount(userId, stockSymbol, cash, lineNum):
     data = {"command": "SET_BUY_AMOUNT", "userId": userId, "stockSymbol": stockSymbol, "cash": cash, "lineNum": lineNum}
     return sendAndReceive(data)
-
-@app.route('/api/set-buy-amount/<string:userId>/<string:stockSymbol>/', methods=['POST'])
-def apiSetBuyAmount(userId, stockSymbol):
-    lineNum = int(request.form['lineNum'].decode('utf-8'))
-    try:
-        cash = float(request.form['cash'].decode('utf-8'))
-    except:
-        return "Can't convert cash value to float" , request.form['cash'].decode('utf-8')
-    return doSetBuyAmount(userId, stockSymbol, cash, lineNum)
 
 @app.route('/set-buy-amount/', methods=['POST'])
 @login_required
 def setBuyAmount():
     try:
-        userId = request.form.getlist('userId')[0]
+        userId = current_user.id
         stockSymbol = request.form.getlist('stockSymbol')[0]
         cash = float(request.form.getlist('cash')[0])
     except:
         print "something went wrong parsing the data."
         return "something went wrong parsing the data."
-    result = doSetBuyAmount(userId, stockSymbol, cash)
+    result = doSetBuyAmount(userId, stockSymbol, cash, getRandomRequestLineNum())
     return render_template('result.html', result=result)
 
 # Cancel Set Buy methods
-def doCancelSetBuy(userId, stockSymbol, lineNum=0):
+def doCancelSetBuy(userId, stockSymbol, lineNum):
     data = {"command": "CANCEL_SET_BUY", "userId": userId, "stockSymbol": stockSymbol, "lineNum": lineNum}
     return sendAndReceive(data)
-
-@app.route('/api/cancel-set-buy/<string:userId>/<string:stockSymbol>/', methods=['POST'])
-def apiCancelSetBuy(userId, stockSymbol):
-    lineNum = int(request.form['lineNum'].decode('utf-8'))
-    return doCancelSetBuy(userId, stockSymbol, lineNum)
 
 @app.route('/cancel-set-buy/', methods=['POST'])
 @login_required
 def cancelSetBuy():
     try:
-        userId = request.form.getlist('userId')[0]
+        userId = current_user.id
         stockSymbol = request.form.getlist('stockSymbol')[0]
     except:
         print "something went wrong parsing the data."
         return "something went wrong parsing the data."
-    result = doCancelSetBuy(userId, stockSymbol)
+    result = doCancelSetBuy(userId, stockSymbol, getRandomRequestLineNum())
     return render_template('result.html', result=result)
 
 # Set Buy Trigger methods
-def doSetBuyTrigger(userId, stockSymbol, cash, lineNum=0):
+def doSetBuyTrigger(userId, stockSymbol, cash, lineNum):
     data = {"command": "SET_BUY_TRIGGER", "userId": userId, "stockSymbol": stockSymbol, "cash": cash, "lineNum": lineNum}
     return sendAndReceive(data)
-
-@app.route('/api/set-buy-trigger/<string:userId>/<string:stockSymbol>/', methods=['POST'])
-def apiSetBuyTrigger(userId, stockSymbol):
-    lineNum = int(request.form['lineNum'].decode('utf-8'))
-    try:
-        cash = float(request.form['cash'].decode('utf-8'))
-    except:
-        return "Can't convert cash value to float" , request.form['cash'].decode('utf-8')
-    return doSetBuyTrigger(userId, stockSymbol, cash, lineNum)
 
 @app.route('/set-buy-trigger/', methods=['POST'])
 @login_required
 def setBuyTrigger():
     try:
-        userId = request.form.getlist('userId')[0]
+        userId = current_user.id
         stockSymbol = request.form.getlist('stockSymbol')[0]
         cash = float(request.form.getlist('cash')[0])
     except:
         print "something went wrong parsing the data."
         return "something went wrong parsing the data."
-    result = doSetBuyTrigger(userId, stockSymbol, cash)
+    result = doSetBuyTrigger(userId, stockSymbol, cash, getRandomRequestLineNum())
     return render_template('result.html', result=result)
 
 # Set Sell Amount methods
-def doSetSellAmount(userId, stockSymbol, cash, lineNum=0):
+def doSetSellAmount(userId, stockSymbol, cash, lineNum):
     data = {"command": "SET_SELL_AMOUNT", "userId": userId, "stockSymbol": stockSymbol, "cash": cash, "lineNum": lineNum}
     return sendAndReceive(data)
-
-@app.route('/api/set-sell-amount/<string:userId>/<string:stockSymbol>/', methods=['POST'])
-def apiSetSellAmount(userId, stockSymbol):
-    lineNum = int(request.form['lineNum'].decode('utf-8'))
-    try:
-        cash = float(request.form['cash'].decode('utf-8'))
-    except:
-        return "Can't convert cash value to float" , request.form['cash'].decode('utf-8')
-    return doSetSellAmount(userId, stockSymbol, cash, lineNum)
 
 @app.route('/set-sell-amount/', methods=['POST'])
 @login_required
 def setSellAmount():
     try:
-        userId = request.form.getlist('userId')[0]
+        userId = current_user.id
         stockSymbol = request.form.getlist('stockSymbol')[0]
         cash = float(request.form.getlist('cash')[0])
     except:
         print "something went wrong parsing the data."
         return "something went wrong parsing the data."
-    result = doSetSellAmount(userId, stockSymbol, cash)
+    result = doSetSellAmount(userId, stockSymbol, cash, getRandomRequestLineNum())
     return render_template('result.html', result=result)
 
 # Set Sell Trigger methods
-def doSetSellTrigger(userId, stockSymbol, cash, lineNum=0):
+def doSetSellTrigger(userId, stockSymbol, cash, lineNum):
     data = {"command": "SET_SELL_TRIGGER", "userId": userId, "stockSymbol": stockSymbol, "cash": cash,"lineNum": lineNum}
     return sendAndReceive(data)
-
-@app.route('/api/set-sell-trigger/<string:userId>/<string:stockSymbol>/', methods=['POST'])
-def apiSetSellTrigger(userId, stockSymbol):
-    lineNum = int(request.form['lineNum'].decode('utf-8'))
-    try:
-        cash = float(request.form['cash'].decode('utf-8'))
-    except:
-        return "Can't convert cash Vvlue to float" , request.form['cash'].decode('utf-8')
-    return doSetSellTrigger(userId, stockSymbol, cash, lineNum)
 
 @app.route('/set-sell-trigger/', methods=['POST'])
 @login_required
 def setSellTrigger():
     try:
-        userId = request.form.getlist('userId')[0]
+        userId = current_user.id
         stockSymbol = request.form.getlist('stockSymbol')[0]
         cash = float(request.form.getlist('cash')[0])
     except:
         print "something went wrong parsing the data."
         return "something went wrong parsing the data."
-    result = doSetSellTrigger(userId, stockSymbol, cash)
+    result = doSetSellTrigger(userId, stockSymbol, cash, getRandomRequestLineNum())
     return render_template('result.html', result=result)
 
 # Cancel Set Sell methods
-def doCancelSetSell(userId, stockSymbol, lineNum=0):
+def doCancelSetSell(userId, stockSymbol, lineNum):
     data = {"command": "CANCEL_SET_SELL", "userId": userId, "stockSymbol": stockSymbol, "lineNum": lineNum}
     return sendAndReceive(data)
-
-@app.route('/api/cancel-set-sell/<string:userId>/<string:stockSymbol>/', methods=['POST'])
-def apiCancelSetSell(userId, stockSymbol):
-    lineNum = int(request.form['lineNum'].decode('utf-8'))
-    return doCancelSetSell(userId, stockSymbol, lineNum)
 
 @app.route('/cancel-set-sell/', methods=['POST'])
 @login_required
 def cancelSetSell():
     try:
-        userId = request.form.getlist('userId')[0]
+        userId = current_user.id
         stockSymbol = request.form.getlist('stockSymbol')[0]
     except:
         print "something went wrong parsing the data."
         return "something went wrong parsing the data."
-    result = doCancelSetSell(userId, stockSymbol)
+    result = doCancelSetSell(userId, stockSymbol, getRandomRequestLineNum())
     return render_template('result.html', result=result)
 
 # Dumplog methods
-def doDumplog(userId, lineNum=0):
+def doDumplog(userId, lineNum):
     data = {"command": "DUMPLOG", "lineNum": lineNum, "userId": userId}
     return sendAndReceive(data)
 
-@app.route('/api/dumplog/', methods=['POST'])
+@app.route('/dumplog/', methods=['POST'])
 @login_required
 def apiDumpLog():
-    lineNum = int(request.form['lineNum'].decode('utf-8'))
     fileName = request.form['fileName']
-    return doDumplog(fileName, lineNum)
+    return doDumplog(fileName, getRandomRequestLineNum())
 
 # Display Summary methods
-def doDisplaySummary(userId, lineNum=0):
+def doDisplaySummary(userId, lineNum):
     data = {"command": "DISPLAY_SUMMARY", "userId": userId, "lineNum": lineNum}
     return sendAndReceive(data)
-
-@app.route('/api/display-summary/<string:userId>/', methods=['GET'])
-@login_required
-def apiDisplaySummary(userId):
-    lineNum = int(request.form['lineNum'].decode('utf-8'))
-    return doDisplaySummary(userId, lineNum)
 
 @app.route('/display-summary/', methods=['GET'])
 @login_required
 def displaySummary():
     try:
-        userId = request.form.getlist('userId')[0]
+        userId = current_user.id
     except:
         print "something went wrong parsing the data."
         return "something went wrong parsing the data."
-    result = doDisplaySummary(userId)
+    result = doDisplaySummary(userId, getRandomRequestLineNum())
     return render_template('result.html', result=result)
 
 
