@@ -98,15 +98,12 @@ db.create_all()
 db_adapter = SQLAlchemyAdapter(db, User) # Register the User Model
 user_manager = UserManager(db_adapter, app) # Initialize Flask-User
 
-# Home
-@app.route('/', methods=['GET'])
-def index():
-    return render_template('index.html')
 
-@app.route('/members')
+#Home
+@app.route('/', methods=['GET'])
 @login_required
-def membersPage():
-    return render_template('result.html', result="You are a member")
+def index():
+    return render_template('result.html', result=current_user)
 
 # Add methods
 def doAdd(userId, cash, lineNum=0):
@@ -123,6 +120,7 @@ def apiAdd(userId):
     return doAdd(userId, cash, lineNum)
 
 @app.route('/add/', methods=['POST'])
+@login_required
 def add():
     try:
         userId = request.form.getlist('userId')[0]
@@ -145,6 +143,7 @@ def apiQuote(userId, stockSymbol):
     return doQuote(userId, stockSymbol, lineNum)
 
 @app.route('/quote/', methods=['GET', 'POST'])
+@login_required
 def quote():
     try:
         print request
@@ -174,6 +173,7 @@ def apiBuy(userId, stockSymbol):
     return doBuy(userId, stockSymbol, cash, lineNum)
 
 @app.route('/buy/', methods=['POST'])
+@login_required
 def buy():
     try:
         userId = request.form.getlist('userId')[0]
@@ -196,6 +196,7 @@ def apiCommitBuy(userId):
     return doCommitBuy(userId, lineNum)
 
 @app.route('/commit-buy/', methods=['POST'])
+@login_required
 def commitBuy():
     try:
         userId = request.form.getlist('userId')[0]
@@ -216,6 +217,7 @@ def apiCancelBuy(userId):
     return doCancelBuy(userId, lineNum)
 
 @app.route('/cancel-buy/', methods=['POST'])
+@login_required
 def cancelBuy():
     try:
         userId = request.form.getlist('userId')[0]
@@ -240,6 +242,7 @@ def apiSell(userId, stockSymbol):
     return doSell(userId, stockSymbol, cash, lineNum)
 
 @app.route('/sell/', methods=['POST'])
+@login_required
 def sell():
     try:
         userId = request.form.getlist('userId')[0]
@@ -262,6 +265,7 @@ def apiCommitSell(userId):
     return doCommitSell(userId, lineNum)
 
 @app.route('/commit-sell/', methods=['POST'])
+@login_required
 def commitSell():
     try:
         userId = request.form.getlist('userId')[0]
@@ -282,6 +286,7 @@ def apiCancelSell(userId):
     return doCommitSell(userId, lineNum)
 
 @app.route('/cancel-sell/', methods=['POST'])
+@login_required
 def cancelSell():
     try:
         userId = request.form.getlist('userId')[0]
@@ -306,6 +311,7 @@ def apiSetBuyAmount(userId, stockSymbol):
     return doSetBuyAmount(userId, stockSymbol, cash, lineNum)
 
 @app.route('/set-buy-amount/', methods=['POST'])
+@login_required
 def setBuyAmount():
     try:
         userId = request.form.getlist('userId')[0]
@@ -328,6 +334,7 @@ def apiCancelSetBuy(userId, stockSymbol):
     return doCancelSetBuy(userId, stockSymbol, lineNum)
 
 @app.route('/cancel-set-buy/', methods=['POST'])
+@login_required
 def cancelSetBuy():
     try:
         userId = request.form.getlist('userId')[0]
@@ -353,6 +360,7 @@ def apiSetBuyTrigger(userId, stockSymbol):
     return doSetBuyTrigger(userId, stockSymbol, cash, lineNum)
 
 @app.route('/set-buy-trigger/', methods=['POST'])
+@login_required
 def setBuyTrigger():
     try:
         userId = request.form.getlist('userId')[0]
@@ -379,6 +387,7 @@ def apiSetSellAmount(userId, stockSymbol):
     return doSetSellAmount(userId, stockSymbol, cash, lineNum)
 
 @app.route('/set-sell-amount/', methods=['POST'])
+@login_required
 def setSellAmount():
     try:
         userId = request.form.getlist('userId')[0]
@@ -405,6 +414,7 @@ def apiSetSellTrigger(userId, stockSymbol):
     return doSetSellTrigger(userId, stockSymbol, cash, lineNum)
 
 @app.route('/set-sell-trigger/', methods=['POST'])
+@login_required
 def setSellTrigger():
     try:
         userId = request.form.getlist('userId')[0]
@@ -427,6 +437,7 @@ def apiCancelSetSell(userId, stockSymbol):
     return doCancelSetSell(userId, stockSymbol, lineNum)
 
 @app.route('/cancel-set-sell/', methods=['POST'])
+@login_required
 def cancelSetSell():
     try:
         userId = request.form.getlist('userId')[0]
@@ -443,6 +454,7 @@ def doDumplog(userId, lineNum=0):
     return sendAndReceive(data)
 
 @app.route('/api/dumplog/', methods=['POST'])
+@login_required
 def apiDumpLog():
     lineNum = int(request.form['lineNum'].decode('utf-8'))
     fileName = request.form['fileName']
@@ -454,11 +466,13 @@ def doDisplaySummary(userId, lineNum=0):
     return sendAndReceive(data)
 
 @app.route('/api/display-summary/<string:userId>/', methods=['GET'])
+@login_required
 def apiDisplaySummary(userId):
     lineNum = int(request.form['lineNum'].decode('utf-8'))
     return doDisplaySummary(userId, lineNum)
 
 @app.route('/display-summary/', methods=['GET'])
+@login_required
 def displaySummary():
     try:
         userId = request.form.getlist('userId')[0]
