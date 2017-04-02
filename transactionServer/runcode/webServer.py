@@ -3,7 +3,7 @@ import time
 import json
 import pika
 import random
-from flask import Flask, request, render_template, url_for
+from flask import Flask, request, render_template, url_for, redirect
 from flask_mail import Mail
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import logout_user
