@@ -277,6 +277,7 @@ userMap = {}
 
 
 def send(command, args, lineNum):
+    print "gonna send:", command, args, lineNum
     DUMPFLAG = False
     # print "--------------------"
     # print "command", command
