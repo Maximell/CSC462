@@ -54,7 +54,7 @@ class RabbitMQAyscClient(RabbitMQBase):
         self.channel = None
         self.closing = False
         self.stopping = False
-        self.PUBLISH_INTERVAL = 0
+        self.PUBLISH_INTERVAL = 2
         self.requestQueue = requestQueue
         self.EXCHANGE = queueName
         print "set up Publisher"
@@ -383,7 +383,7 @@ def send(command, args, lineNum):
             except:
                 args["cash"] = -1
 
-        print "sending to queue:", args
+        # print "sending to queue:", args
         # push into rabbitK
         requestQueue.put((client ,args , properties ))
         if DUMPFLAG:
