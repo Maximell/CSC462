@@ -387,7 +387,7 @@ def handleCommandDumplog(args):
         requestBody = auditFunctions.createWriteUserLogs(
             int(time.time() * 1000),
             args["lineNum"],
-            args["fileName"],
+            args["filename"],
             args["forUser"],
             args["command"]
         )
