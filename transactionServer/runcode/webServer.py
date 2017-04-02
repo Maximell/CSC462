@@ -103,7 +103,7 @@ user_manager = UserManager(db_adapter, app) # Initialize Flask-User
 @app.route('/', methods=['GET'])
 @login_required
 def index():
-    return render_template('result.html', result=current_user)
+    return render_template('index.html')
 
 # Add methods
 def doAdd(userId, cash, lineNum=0):
