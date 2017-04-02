@@ -388,14 +388,14 @@ def send(command, args, lineNum):
             except:
                 args["cash"] = -1
 
-        # print "sending:", args
+        print "sending to queue:", args
         # push into rabbitK
         requestQueue.put((client ,args , properties ))
         if DUMPFLAG:
             # time.sleep()
             print requestQueue.qsize()
             print workerMap
-            # quit()
+            quit()
     except Exception as e:
         print e
         print "Couldn't Send() or put()"
