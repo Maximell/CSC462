@@ -234,8 +234,9 @@ class RabbitMQAyscClient(RabbitMQBase):
                         break
                 # print "schedule next msg"
                 self.schedule_next_message()
-            except:
-                pass
+            except Exception as e:
+                print e
+                print "had troubles sending into rabbit"
                 # notEmpty = False
                 # print "failed in send"
 
@@ -292,108 +293,112 @@ userMap = {}
 
 
 def send(command, args, lineNum):
-    DUMPFLAG = False
-    # print "--------------------"
-    # print "command", command
-    # print "args", args
-    # print "line", lineNum
-    user = args[0]
-    properties = pika.BasicProperties(priority=1)
+    try:
+        DUMPFLAG = False
+        # print "--------------------"
+        # print "command", command
+        # print "args", args
+        # print "line", lineNum
+        user = args[0]
+        properties = pika.BasicProperties(priority=1)
 
-    # get or put into userMap
-    if user in userMap:
-        client = userMap[user]
-        for x in workerMap:
-            # update the ammount in the current Worker
-            if x[0] == client:
-                x[1][1] += 1
-                break
+        # get or put into userMap
+        if user in userMap:
+            client = userMap[user]
+            for x in workerMap:
+                # update the ammount in the current Worker
+                if x[0] == client:
+                    x[1][1] += 1
+                    break
 
-        # print("In dict already")
-    else:
-        # just need a number in the workerMap
-        minUser = workerMap[0][1][0]
-        index = 0
-        sendto = None
-        # find the worker with the fewest users
-        for x in range(0, len(workerMap)):
-            currentWorker = workerMap[x]
-            currentAmount = currentWorker[1][1]
-
-            if currentWorker[1][0] <= minUser:
-                sendto = currentWorker
-                index = x
-                # print "found fewest users"
-                minUser = currentWorker[1][0]
-                minAmount = currentAmount
-        # find the worker with fewest users and commands.
-        for x in range(0 , len(workerMap)):
-            currentWorker = workerMap[x]
-            # if user amount is greater than minUser skip
-            if currentWorker[1][0] > minUser:
-                continue
-            else:
-                # SAme amount of user so check amount
-                if currentWorker[1][1] < minAmount:
-                    index = x
-                    minAmount = currentWorker[1][1]
-                    # print "found fewest Commands"
-                    sendto = currentWorker
-        if sendto != None:
-            # print("adding User to map")
-            userMap[user] = sendto[0]
-            client = sendto[0]
-            workerMap[index][1][1] += 1
-            workerMap[index][1][0] += 1
+            # print("In dict already")
         else:
-            print("problem setting user map")
+            # just need a number in the workerMap
+            minUser = workerMap[0][1][0]
+            index = 0
+            sendto = None
+            # find the worker with the fewest users
+            for x in range(0, len(workerMap)):
+                currentWorker = workerMap[x]
+                currentAmount = currentWorker[1][1]
 
-    # setup args to push into rabbit
-    if len(args) > 2:
-        args = {
-            'userId': args[0],
-            'stockSymbol': args[1],
-            'cash': args[2]
-        }
-    elif len(args) == 2 and command in ['ADD']:
-        args = {
-            'userId': args[0],
-            'cash': args[1]
-        }
-    elif len(args) == 2:
-        args = {
-            'userId': args[0],
-            'stockSymbol': args[1]
-        }
-    elif len(args) == 1 and command in ['DUMPLOG']:
-        args = {
-            'userId': "./testLOG"
-        }
-        properties = pika.BasicProperties(priority=3)
-        DUMPFLAG = True
-        # return  # dont bother sending a dumplog
-    elif len(args) == 1:
-        args = {
-            'userId': args[0]
-        }
+                if currentWorker[1][0] <= minUser:
+                    sendto = currentWorker
+                    index = x
+                    # print "found fewest users"
+                    minUser = currentWorker[1][0]
+                    minAmount = currentAmount
+            # find the worker with fewest users and commands.
+            for x in range(0 , len(workerMap)):
+                currentWorker = workerMap[x]
+                # if user amount is greater than minUser skip
+                if currentWorker[1][0] > minUser:
+                    continue
+                else:
+                    # SAme amount of user so check amount
+                    if currentWorker[1][1] < minAmount:
+                        index = x
+                        minAmount = currentWorker[1][1]
+                        # print "found fewest Commands"
+                        sendto = currentWorker
+            if sendto != None:
+                # print("adding User to map")
+                userMap[user] = sendto[0]
+                client = sendto[0]
+                workerMap[index][1][1] += 1
+                workerMap[index][1][0] += 1
+            else:
+                print("problem setting user map")
 
-    args["command"] = command
-    args["lineNum"] = lineNum
+        # setup args to push into rabbit
+        if len(args) > 2:
+            args = {
+                'userId': args[0],
+                'stockSymbol': args[1],
+                'cash': args[2]
+            }
+        elif len(args) == 2 and command in ['ADD']:
+            args = {
+                'userId': args[0],
+                'cash': args[1]
+            }
+        elif len(args) == 2:
+            args = {
+                'userId': args[0],
+                'stockSymbol': args[1]
+            }
+        elif len(args) == 1 and command in ['DUMPLOG']:
+            args = {
+                'userId': "./testLOG"
+            }
+            properties = pika.BasicProperties(priority=3)
+            DUMPFLAG = True
+            # return  # dont bother sending a dumplog
+        elif len(args) == 1:
+            args = {
+                'userId': args[0]
+            }
 
-    if args.get("cash"):
-        try:
-            float(args["cash"])
-        except:
-            args["cash"] = -1
+        args["command"] = command
+        args["lineNum"] = lineNum
 
-    # print "sending:", args
-    # push into rabbitK
-    requestQueue.put((client ,args , properties ))
-    if DUMPFLAG:
-        # time.sleep()
-        print requestQueue.qsize()
-        print workerMap
-        # quit()
+        if args.get("cash"):
+            try:
+                float(args["cash"])
+            except:
+                args["cash"] = -1
+
+        # print "sending:", args
+        # push into rabbitK
+        requestQueue.put((client ,args , properties ))
+        if DUMPFLAG:
+            # time.sleep()
+            print requestQueue.qsize()
+            print workerMap
+            # quit()
+    except Exception as e:
+        print e
+        print "Couldn't Send() or put()"
 
 
 def main():
