@@ -209,7 +209,7 @@ class RabbitMQAyscClient(RabbitMQBase):
         noDump = True
         while(noDump):
             try:
-                payload  = self.requestQueue.get()
+                payload  = self.requestQueue.get(False)
                 if payload:
                     worderId = payload[0]
                     requestBody = payload[1]
