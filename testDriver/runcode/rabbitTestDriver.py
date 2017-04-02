@@ -1,6 +1,7 @@
 import sys
 import time
 from pprint import pprint
+import os
 import json
 import pika
 import multiprocessing
@@ -242,7 +243,8 @@ class RabbitMQAyscClient(RabbitMQBase):
         print workerMap
         # sleep for five seconds before shutdown
         time.sleep(5)
-        quit()
+        os.system("echo killall python...")
+        os.system("killall python")
 
 
     def close(self):
@@ -390,7 +392,6 @@ def send(command, args, lineNum):
             # time.sleep()
             print requestQueue.qsize()
             print workerMap
-            quit()
     except Exception as e:
         print e
         print "Couldn't Send() or put()"
@@ -442,6 +443,9 @@ if __name__ == '__main__':
         print "created publisher"
 
         main()
+        print "Done loading Queue"
+        while(True):
+            time.sleep(10)
         # pprint(workerMap)
         # pprint(userMap.items())
         # print('completed')
