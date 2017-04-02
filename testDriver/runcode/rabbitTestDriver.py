@@ -210,7 +210,8 @@ class RabbitMQAyscClient(RabbitMQBase):
         noDump = True
         while(noDump):
             try:
-                payload  = self.requestQueue.get(False)
+                print "getting request"
+                payload  = self.requestQueue.get()
                 if payload:
                     worderId = payload[0]
                     requestBody = payload[1]
@@ -393,6 +394,7 @@ def send(command, args, lineNum):
             # time.sleep()
             print requestQueue.qsize()
             print workerMap
+            return
     except Exception as e:
         print e
         print "Couldn't Send() or put()"
@@ -447,6 +449,7 @@ if __name__ == '__main__':
         print "Done loading Queue"
         while(True):
             time.sleep(10)
+            print "main thread done"
         # pprint(workerMap)
         # pprint(userMap.items())
         # print('completed')
