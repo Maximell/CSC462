@@ -1,2 +1,2 @@
 [1] ADD,thisIsUserId,63511.53
-[2] DUMPLOG,./testLOG-admin
+[2] DUMPLOG,thisIsUserId,./testLOG-forSpecificUser
