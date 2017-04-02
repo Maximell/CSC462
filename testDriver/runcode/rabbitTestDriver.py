@@ -188,7 +188,8 @@ class RabbitMQAyscClient(RabbitMQBase):
 
         """
         print "schedule next msg"
-
+        # if self.stopping:
+        #     return
         # LOGGER.info('Scheduling next message for %0.1f seconds',
         #             self.PUBLISH_INTERVAL)
         self.connection.add_timeout(self.PUBLISH_INTERVAL,
@@ -216,7 +217,7 @@ class RabbitMQAyscClient(RabbitMQBase):
                     priority = payload[2]
 
                     print "sending", requestBody, "to", worderId, "with priority", priority
-
+                    print "queue size:",   self.requestQueue.qsize()
                     self.channel.basic_publish(
                         exchange=self.EXCHANGE,
                         routing_key=worderId,
@@ -229,7 +230,7 @@ class RabbitMQAyscClient(RabbitMQBase):
                         noDump = False
                         break
                 # print "schedule next msg"
-                self.schedule_next_message()
+                # self.schedule_next_message()
             except Exception as e:
                 print e
                 print "had troubles sending into rabbit"
