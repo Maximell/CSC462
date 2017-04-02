@@ -18,8 +18,8 @@ if __name__ == '__main__':
         os.system("python -u mqDatabaseServer.py > databaseOutput.txt &")
     except:
         print "Database Server failed to start"
-    try:
-        print "starting webserver"
-        os.system("python -u webServer.py > webserverOutput.txt &")
-    except:
-        print "Web server failed to start"
+    #try:
+    #    print "starting webserver"
+    #    os.system("python -u webServer.py > webserverOutput.txt &")
+    #except:
+    #    print "Web server failed to start"
