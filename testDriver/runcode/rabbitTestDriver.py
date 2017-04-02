@@ -55,7 +55,7 @@ class RabbitMQAyscClient(RabbitMQBase):
         self.channel = None
         self.closing = False
         self.stopping = False
-        self.PUBLISH_INTERVAL = 2
+        self.PUBLISH_INTERVAL = 1
         self.requestQueue = requestQueue
         self.EXCHANGE = queueName
         print "set up Publisher"
@@ -188,8 +188,7 @@ class RabbitMQAyscClient(RabbitMQBase):
 
         """
         print "schedule next msg"
-        if self.stopping:
-            return
+
         # LOGGER.info('Scheduling next message for %0.1f seconds',
         #             self.PUBLISH_INTERVAL)
         self.connection.add_timeout(self.PUBLISH_INTERVAL,
@@ -223,6 +222,7 @@ class RabbitMQAyscClient(RabbitMQBase):
                         routing_key=worderId,
                         properties=priority,
                         body=json.dumps(requestBody),
+
 
                     )
                     if requestBody["command"] == "DUMPLOG":
