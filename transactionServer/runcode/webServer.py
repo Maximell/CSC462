@@ -61,7 +61,7 @@ class ConfigClass(object):
     MAIL_DEFAULT_SENDER = os.getenv('MAIL_DEFAULT_SENDER', '"group2App" <noreply@seng462group2App.com>')
     MAIL_SERVER = os.getenv('MAIL_SERVER', 'smtp.gmail.com')
     MAIL_PORT = int(os.getenv('MAIL_PORT', '465'))
-    MAIL_USE_SSL = int(os.getenv('MAIL_USE_SSL', False))
+    MAIL_USE_SSL = int(os.getenv('MAIL_USE_SSL', True))
 
     # Flask-User settings
     USER_APP_NAME = "AppName"
