@@ -155,7 +155,7 @@ def doBuy(userId, stockSymbol, cash, lineNum):
 @login_required
 def buy():
     try:
-        userId = current_user.id
+        userId = current_user.username
         stockSymbol = request.form.getlist('stockSymbol')[0]
         cash = float(request.form.getlist('cash')[0])
     except:
@@ -173,7 +173,7 @@ def doCommitBuy(userId, lineNum):
 @login_required
 def commitBuy():
     try:
-        userId = current_user.id
+        userId = current_user.username
     except:
         print "something went wrong parsing the data."
         return "something went wrong parsing the data."
@@ -189,7 +189,7 @@ def doCancelBuy(userId, lineNum):
 @login_required
 def cancelBuy():
     try:
-        userId = current_user.id
+        userId = current_user.username
     except:
         print "something went wrong parsing the data."
         return "something went wrong parsing the data."
@@ -205,7 +205,7 @@ def doSell(userId, stockSymbol, cash, lineNum):
 @login_required
 def sell():
     try:
-        userId = current_user.id
+        userId = current_user.username
         stockSymbol = request.form.getlist('stockSymbol')[0]
         cash = float(request.form.getlist('cash')[0])
     except:
@@ -223,7 +223,7 @@ def doCommitSell(userId, lineNum=0):
 @login_required
 def commitSell():
     try:
-        userId = current_user.id
+        userId = current_user.username
     except:
         print "something went wrong parsing the data."
         return "something went wrong parsing the data."
@@ -239,7 +239,7 @@ def doCancelSell(userId, lineNum):
 @login_required
 def cancelSell():
     try:
-        userId = current_user.id
+        userId = current_user.username
     except:
         print "something went wrong parsing the data."
         return "something went wrong parsing the data."
@@ -255,7 +255,7 @@ def doSetBuyAmount(userId, stockSymbol, cash, lineNum):
 @login_required
 def setBuyAmount():
     try:
-        userId = current_user.id
+        userId = current_user.username
         stockSymbol = request.form.getlist('stockSymbol')[0]
         cash = float(request.form.getlist('cash')[0])
     except:
@@ -273,7 +273,7 @@ def doCancelSetBuy(userId, stockSymbol, lineNum):
 @login_required
 def cancelSetBuy():
     try:
-        userId = current_user.id
+        userId = current_user.username
         stockSymbol = request.form.getlist('stockSymbol')[0]
     except:
         print "something went wrong parsing the data."
@@ -290,7 +290,7 @@ def doSetBuyTrigger(userId, stockSymbol, cash, lineNum):
 @login_required
 def setBuyTrigger():
     try:
-        userId = current_user.id
+        userId = current_user.username
         stockSymbol = request.form.getlist('stockSymbol')[0]
         cash = float(request.form.getlist('cash')[0])
     except:
@@ -308,7 +308,7 @@ def doSetSellAmount(userId, stockSymbol, cash, lineNum):
 @login_required
 def setSellAmount():
     try:
-        userId = current_user.id
+        userId = current_user.username
         stockSymbol = request.form.getlist('stockSymbol')[0]
         cash = float(request.form.getlist('cash')[0])
     except:
@@ -326,7 +326,7 @@ def doSetSellTrigger(userId, stockSymbol, cash, lineNum):
 @login_required
 def setSellTrigger():
     try:
-        userId = current_user.id
+        userId = current_user.username
         stockSymbol = request.form.getlist('stockSymbol')[0]
         cash = float(request.form.getlist('cash')[0])
     except:
@@ -344,7 +344,7 @@ def doCancelSetSell(userId, stockSymbol, lineNum):
 @login_required
 def cancelSetSell():
     try:
-        userId = current_user.id
+        userId = current_user.username
         stockSymbol = request.form.getlist('stockSymbol')[0]
     except:
         print "something went wrong parsing the data."
@@ -372,7 +372,7 @@ def doDisplaySummary(userId, lineNum):
 @login_required
 def displaySummary():
     try:
-        userId = current_user.id
+        userId = current_user.username
     except:
         print "something went wrong parsing the data."
         return "something went wrong parsing the data."
