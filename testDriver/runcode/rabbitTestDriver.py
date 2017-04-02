@@ -220,7 +220,7 @@ class RabbitMQAyscClient(RabbitMQBase):
                     requestBody = payload[1]
                     priority = payload[2]
 
-                    # print "sending", requestBody, "to", worderId, "with priority", priority
+                    print "sending", requestBody, "to", worderId, "with priority", priority
 
                     self.channel.basic_publish(
                         exchange=self.EXCHANGE,
@@ -241,8 +241,8 @@ class RabbitMQAyscClient(RabbitMQBase):
 
         # exit after dumplog has been sent
         print "sentDumplog"
-        print payload
-        print worderId
+        # print payload
+        # print worderId
         print workerMap
         # sleep for five seconds before shutdown
         time.sleep(5)
@@ -393,7 +393,7 @@ def send(command, args, lineNum):
         # time.sleep()
         print requestQueue.qsize()
         print workerMap
-        quit()
+        # quit()
 
 
 def main():
