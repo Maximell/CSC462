@@ -13,16 +13,16 @@
 {% block content %}
 <p>Welcome {{ current_user.username }}</p>
 <p>Commands:</p>
+<div class="panel panel-default">
+    <p>add</p>
+    <form action="/add/" method="POST">
+        <p>cash</p>
+        <input type="text" name="cash">
+        <br>
+        <input class="btn btn-primary btn-submit" type="submit" value="Submit">
+    </form>
+</div>
 <ul>
-    <li>
-        <a>add</a>
-        <form action="/add/" method="POST">
-            <p>cash</p>
-            <input type="text" name="cash">
-            <br>
-            <input class="btn btn-primary btn-submit" type="submit" value="Submit">
-        </form>
-    </li>
     <li>
         <a>quote</a>
         <form action="/quote/" method="POST">
