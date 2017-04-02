@@ -335,14 +335,14 @@ def send(command, args, lineNum):
 
     # setup args to push into rabbit
     if command == "DUMPLOG":
-        if len(args) == 1:
+        if len(args) == 2:
             args = {
-                'userId': "",
+                'userId': args[1],
                 'filename': args[0]
             }
         else:
             args = {
-                'userId': "",
+                'userId': args[2],
                 'filename': args[1],
                 'forUser': args[0]
             }
@@ -413,7 +413,7 @@ def main():
                         workerQueue = worker[0]
                 for user in userMap:
                     if workerQueue == userMap[user]:
-                        args[0] = user
+                        args.append(user)
 
             send(command, args, lineNumber)
 
