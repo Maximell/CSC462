@@ -1,3 +1,4 @@
+setuptools==33.1.1
 pyOpenSSL
 flask
 flask-login
@@ -5,5 +6,5 @@ flask-mail
 flask-WTF
 passlib
 pycrypto
-py-bcript
+Flask-SQLAlchemy
 flask-user
