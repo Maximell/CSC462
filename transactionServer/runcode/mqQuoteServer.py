@@ -202,7 +202,7 @@ def on_request(ch, method, props, payload):
     # Need to figure out which transaction server to send back to.
     # transactionClient = RabbitMQClient(transactionServerID)
     # transactionClient.send(payload)
-    print "adding payload to Queue",payload
+    print "adding payload to Queue",payload, transactionServerID
     transQueue.put((payload , transactionServerID))
 
 

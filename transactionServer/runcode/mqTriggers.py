@@ -237,12 +237,12 @@ class BuyTriggerThread(Thread):
                         quoteQueues[i].put(
                             createQuoteRequest(someonesUserId, symbol, transactionNum, args)
                         )
-
+                        print "sending quote request to ",quoteQueues[i] , symbol
                         while quote is None:
                             # .1 is a guess? better interval to sleep?
                             time.sleep(0.1)
                             quote = quotesCache.getQuote(symbol)
-
+                        print "got quote back",quote
                     quoteValue = quote["value"]
                     for userId in triggers.buyTriggers[symbol]:
                         trigger = triggers.buyTriggers[symbol][userId]
@@ -298,11 +298,13 @@ class SellTriggerThread(Thread):
                         quoteQueues[i].put(
                             createQuoteRequest(userId, symbol, transactionNum, args)
                         )
+                        print "sending quote request to ",quoteQueues[i] , symbol
 
                         while quote is None:
                             # .1 is a guess? better interval to sleep?
                             time.sleep(.1)
                             quote = quotesCache.getQuote(symbol)
+                        print "got quote back",quote
 
                     quoteValue = quote["value"]
                     for userId in triggers.sellTriggers[symbol]:
