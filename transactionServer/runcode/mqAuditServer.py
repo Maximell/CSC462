@@ -105,13 +105,14 @@ class auditFunctions:
         }
 
     @classmethod
-    def createWriteLogs(cls, timeStamp, server, transactionNum, userId, command):
+    def createWriteLogs(cls, timeStamp, server, transactionNum, userId, command, filename):
         return {
             'function': cls.WRITE_LOGS,
             'timeStamp': timeStamp,
             'transactionNum': transactionNum,
             'userId': userId,
-            'command': command
+            'command': command,
+            'fileName': filename
         }
 
     @classmethod
@@ -440,7 +441,7 @@ def handleDebugMessage(payload):
 def handleWriteLogs(payload):
     print "---dumplog---"
     print payload
-    return auditServer.writeLogs("./testLOG")
+    return auditServer.writeLogs(payload['fileName'])
 
 def handleWriteUserLogs(payload):
     print "---user dumplog---"

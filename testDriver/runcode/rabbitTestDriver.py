@@ -334,7 +334,22 @@ def send(command, args, lineNum):
             print("problem setting user map")
 
     # setup args to push into rabbit
-    if len(args) > 2:
+    if command == "DUMPLOG":
+        if len(args) == 1:
+            args = {
+                'userId': "",
+                'filename': args[0]
+            }
+        else:
+            args = {
+                'userId': "",
+                'filename': args[1],
+                'forUser': args[0]
+            }
+        properties = pika.BasicProperties(priority=3)
+        DUMPFLAG = True
+        # return
+    elif len(args) > 2:
         args = {
             'userId': args[0],
             'stockSymbol': args[1],
@@ -350,13 +365,6 @@ def send(command, args, lineNum):
             'userId': args[0],
             'stockSymbol': args[1]
         }
-    elif len(args) == 1 and command in ['DUMPLOG']:
-        args = {
-            'userId': "./testLOG"
-        }
-        properties = pika.BasicProperties(priority=3)
-        DUMPFLAG = True
-        # return  # dont bother sending a dumplog
     elif len(args) == 1:
         args = {
             'userId': args[0]
