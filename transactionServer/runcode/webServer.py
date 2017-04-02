@@ -56,7 +56,12 @@ class ConfigClass(object):
     SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', 'sqlite:///basic_app.sqlite')
 
     # Flask-Mail settings
-    # TODO if we want emails
+    MAIL_USERNAME = os.getenv('MAIL_USERNAME', 'seng462group22017@gmail.com')
+    MAIL_PASSWORD = os.getenv('MAIL_PASSWORD', 'group2Password')
+    MAIL_DEFAULT_SENDER = os.getenv('MAIL_DEFAULT_SENDER', '"group2App" <noreply@seng462group2App.com>')
+    MAIL_SERVER = os.getenv('MAIL_SERVER', 'smtp.gmail.com')
+    MAIL_PORT = int(os.getenv('MAIL_PORT', '465'))
+    MAIL_USE_SSL = int(os.getenv('MAIL_USE_SSL', False))
 
     # Flask-User settings
     USER_APP_NAME = "AppName"
@@ -67,7 +72,7 @@ app.config.from_object(__name__+'.ConfigClass')
 
 # Initialize Flask extensions
 db = SQLAlchemy(app)
-# mail = Mail(app) TODO if we want to do emails
+mail = Mail(app)
 
 # Define the User data model.
 class User(db.Model, UserMixin):
