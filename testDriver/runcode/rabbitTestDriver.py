@@ -277,12 +277,11 @@ userMap = {}
 
 
 def send(command, args, lineNum):
-    print "gonna send:", command, args, lineNum
     DUMPFLAG = False
-    # print "--------------------"
-    # print "command", command
-    # print "args", args
-    # print "line", lineNum
+    print "--------------------"
+    print "command", command
+    print "args", args
+    print "line", lineNum
     user = args[0]
     properties = pika.BasicProperties(priority=1)
 
