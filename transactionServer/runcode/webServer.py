@@ -6,7 +6,7 @@ import random
 from flask import Flask, request, render_template, url_for
 from flask_mail import Mail
 from flask_sqlalchemy import SQLAlchemy
-from flask_user import login_required, current_user, logout_user, UserManager, UserMixin, SQLAlchemyAdapter
+from flask_user import login_required, current_user, UserManager, UserMixin, SQLAlchemyAdapter
 from rabbitMQSetups import RabbitMQClient, RabbitMQReceiver
 
 def sendToQueue(data):
