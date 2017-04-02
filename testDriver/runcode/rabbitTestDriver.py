@@ -54,7 +54,7 @@ class RabbitMQAyscClient(RabbitMQBase):
         self.channel = None
         self.closing = False
         self.stopping = False
-        self.PUBLISH_INTERVAL = 1
+        self.PUBLISH_INTERVAL = 0
         self.requestQueue = requestQueue
         self.EXCHANGE = queueName
         print "set up Publisher"
@@ -186,7 +186,7 @@ class RabbitMQAyscClient(RabbitMQBase):
         message to be delivered in PUBLISH_INTERVAL seconds.
 
         """
-        print "scheduale next msg"
+        print "schedule next msg"
         if self.stopping:
             return
         # LOGGER.info('Scheduling next message for %0.1f seconds',
