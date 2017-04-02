@@ -44,11 +44,12 @@ pssh -i -H root@142.104.91.130:44421 -x "cd $gitpath;" git reset --hard
 pssh -i -H root@142.104.91.131:44421 -x "cd $gitpath;" git reset --hard
 pssh -i -H root@142.104.91.143:44421 -x "cd $gitpath;" git reset --hard
 
-echo deleteing runcode folders
-pssh -i -h workersHostFile.txt -x "cd $workingDirectoryPath;" rm -rf ../runcode
-pssh -i -H root@142.104.91.130:44421 -x "cd $workingDirectoryPath;" rm -rf ../runcode
-pssh -i -H root@142.104.91.131:44421 -x "cd $workingDirectoryPath;" rm -rf ../runcode
-pssh -i -H root@142.104.91.143:44421 -x "cd $workingDirectoryPath;" rm -rf ../runcode
+echo not deleting runcode because we want to keep the db
+#echo deleteing runcode folders
+#pssh -i -h workersHostFile.txt -x "cd $workingDirectoryPath;" rm -rf ../runcode
+#pssh -i -H root@142.104.91.130:44421 -x "cd $workingDirectoryPath;" rm -rf ../runcode
+#pssh -i -H root@142.104.91.131:44421 -x "cd $workingDirectoryPath;" rm -rf ../runcode
+#pssh -i -H root@142.104.91.143:44421 -x "cd $workingDirectoryPath;" rm -rf ../runcode
 
 echo fetching
 pssh -i -h workersHostFile.txt -x "cd $gitpath;" git fetch
