@@ -411,8 +411,8 @@ def handleCommandDumplog(args):
             args["forUser"],
             args["command"]
         )
-        # TODO: check that you can add a priority to .put
-        auditQueue.put(requestBody, 3)
+        # TODO: not being sent with priority 3 because i didnt know how
+        auditQueue.put(requestBody)
 
     else:
         requestBody = auditFunctions.createWriteLogs(
@@ -423,7 +423,8 @@ def handleCommandDumplog(args):
             args["command"],
             args["filename"]
         )
-        auditQueue.put(requestBody, 3)
+        # TODO: not being sent with priority 3 because i didnt know how
+        auditQueue.put(requestBody)
     return "DUMPLOG SENT TO AUDIT"
 
 def handleDisplaySummary(args):
