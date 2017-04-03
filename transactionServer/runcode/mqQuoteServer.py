@@ -29,30 +29,37 @@ class poolHandler(Thread):
     def run(self):
         # print "starting thread for poolhandler"
         while(True):
-            #         look between pool of requests
-            #          and the cache size.
-            for sym in quoteServer.pool:
-                print "things in pool:",sym
-                print "pool size:",len(quoteServer.pool)
-                quote = quoteServer.quoteCache.get(sym)
-                print "cache = ", quote
-                if quote is not None:
-                    for payload in quoteServer.pool[sym]:
-                        print "found a match for: ", sym
-                        # if payload sym in cache
-                        payload["quote"] = quote["value"]
-                        payload["cryptoKey"] = quote["cryptoKey"]
-                        payload["quoteRetrieved"] = quote["retrieved"]
+#         look between pool of requests
+#          and the cache size.
+            print "handler still going"
+            if quoteServer.poolchange:
+                print "pool size:", len(quoteServer.pool)
+                # if len(quoteServer.pool) == 0:
+                #     quoteServer.poolchange = False
+                print "something changed"
+                for sym in quoteServer.pool:
+                    print "things in pool:",sym
+                    print "pool size:",len(quoteServer.pool)
+                    quote = quoteServer.quoteCache.get(sym)
+                    print "cache = ", quote
+                    if quote is not None:
+                        for payload in quoteServer.pool[sym]:
+                            print "found a match for: ", sym
+                            # if payload sym in cache
+                            payload["quote"] = quote["value"]
+                            payload["cryptoKey"] = quote["cryptoKey"]
+                            payload["quoteRetrieved"] = quote["retrieved"]
 
-                        print "sending back form handler:", payload
-                        transactionServerID = payload["trans"]
-                        # Need to figure out which transaction server to send back to.
-                        # P2Q_rabbit.put((2, payload))
-                        # self.is_alive = False
-                        transactionClient = RabbitMQClient(transactionServerID)
-                        transactionClient.send(payload)
-                        transactionClient.close()
-                        quoteServer.pool.pop(sym , None)
+                            print "sending back form handler:", payload
+                            transactionServerID = payload["trans"]
+                            # Need to figure out which transaction server to send back to.
+                            # P2Q_rabbit.put((2, payload))
+                            # self.is_alive = False
+                            transactionClient = RabbitMQClient(transactionServerID)
+                            transactionClient.send(payload)
+                            transactionClient.close()
+                            quoteServer.pool.pop(sym , None)
+
 
 
 class getQuoteThread(Thread):
@@ -110,7 +117,7 @@ class Quotes():
         self.pool = {}
         self.threadCount = 0
         self.maxthread = 300
-        self.poolchange = False
+        self.poolchange = True
 
     def getQuote(self, symbol , user , transactionNum):
         cache = self.quoteCache.get(symbol)
