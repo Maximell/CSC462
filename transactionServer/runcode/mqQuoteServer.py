@@ -189,7 +189,9 @@ class RabbitQuoteClient():
                         requestBody = payload
                         priority = 2
                     #     set up queue on the fly
-                    self.on_connection_open()
+                    args = {'x-max-priority': 3, 'x-message-ttl': 600000}
+                    print "setting up queue",  self.queueName
+                    self.channel.queue_declare( self.queueName, arguments=args)
 
                     print "sending", requestBody, "to", self.queueName, "with priority", priority
                     properties = pika.BasicProperties(
