@@ -216,7 +216,7 @@ class RabbitQuoteClient():
 
         )
         # print "schedule next msg"
-        self.schedule_next_message()
+        self.send
 
 
 def close(self):
