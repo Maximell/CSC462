@@ -68,6 +68,12 @@ pssh -i -H root@142.104.91.130:44421 -x "cd $workingDirectoryPath;" python start
 pssh -i -H root@142.104.91.140:44421 -x "cd $workingDirectoryPath;" python startQuoteServer.py
 pssh -i -H root@142.104.91.141:44421 -x "cd $workingDirectoryPath;" python startQuoteServer.py
 
+echo starting webserver
+pssh -i -h workersHostFile.txt -t 30 -x "cd $workingDirectoryPath;" python webServer.py > webserverOutput.txt &
+echo done starting webserver
+echo worker configuration complete
+
+
 echo done starting quote
 echo starting audit server on b131:
 pssh -i -H root@142.104.91.131:44421 -x "cd $workingDirectoryPath;" python startAuditServer.py
