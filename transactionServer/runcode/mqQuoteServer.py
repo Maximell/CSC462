@@ -423,7 +423,7 @@ if __name__ == '__main__':
 
     print "create publisher"
     transQueue = multiprocessing.Queue()
-    trans_producer_process = Process(target=RabbitQuoteClient, args=(transQueue))
+    trans_producer_process = Process(target=RabbitQuoteClient, args=((transQueue)))
     trans_producer_process.start()
     print "created publisher"
 
