@@ -233,9 +233,14 @@ class RabbitMQAyscClient(RabbitMQBase):
                     if len(payload) == 2:
                         requestBody = payload[0]
                         self.queueName = payload[1]
+                        priority = 2
+                    elif len(payload) == 3:
+                        requestBody = payload[0]
+                        self.queueName = payload[1]
+                        priority = payload[2]
                     else:
                         requestBody = payload
-                    priority = 2
+                        priority = 2
 
                     print "sending", requestBody, "to", self.queueName, "with priority", priority
                     properties = pika.BasicProperties(

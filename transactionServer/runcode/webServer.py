@@ -8,10 +8,14 @@ from flask_mail import Mail
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import logout_user
 from flask_user import login_required, current_user, UserManager, UserMixin, SQLAlchemyAdapter
-from rabbitMQSetups import RabbitMQClient, RabbitMQReceiver
+from rabbitMQSetups import RabbitMQClient, RabbitMQReceiver, RabbitMQAyscClient, RabbitMQAyscReciever
+import multiprocessing
+from multiprocessing import Process
+
 
 def sendToQueue(data):
-    transactionClient.send(data, priority=1)
+    requestQueue.put(data, RabbitMQAyscClient.TRANSACTION , priority=1)
+
 
 def sendAndReceive(data, host='142.104.91.142',port=44429, queueName=None):
     # if the queueName is None, set it to a default
@@ -243,7 +247,7 @@ def cancelSell():
     except:
         print "something went wrong parsing the data."
         return "something went wrong parsing the data."
-    result = doCommitSell(userId, getRandomRequestLineNum())
+    result = doCancelSell(userId, getRandomRequestLineNum())
     return render_template('result.html', result=result)
 
 # Set Buy Amount methods
@@ -381,5 +385,10 @@ def displaySummary():
 
 
 if __name__ == '__main__':
-    transactionClient = RabbitMQClient(RabbitMQClient.TRANSACTION)
+    requestQueue = multiprocessing.Queue()
+    producer_process = Process(target=RabbitMQAyscClient,
+                               args=(RabbitMQAyscClient.TRANSACTION, requestQueue))
+    producer_process.start()
+
+    # transactionClient = RabbitMQClient(RabbitMQClient.TRANSACTION)
     app.run(host="0.0.0.0",port=44424)
