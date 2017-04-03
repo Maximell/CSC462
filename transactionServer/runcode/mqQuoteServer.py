@@ -51,6 +51,7 @@ class poolHandler(Thread):
                             # self.is_alive = False
                             transactionClient = RabbitMQClient(transactionServerID)
                             transactionClient.send(payload)
+                            transactionClient.close()
 
 
                         quoteServer.pool[sym] = []
@@ -97,6 +98,7 @@ class getQuoteThread(Thread):
         quoteServer.quoteCache[self.symbol] = newQuote
         del quoteServer.inflight[quoteServer.inflight.index(self.symbol)]
         quoteServer.threadCount -= 1
+
         # print "thread terminating"
         # self.cacheLock.release()
 
@@ -176,7 +178,7 @@ def on_request(ch, method, props, payload):
 
     quote = quoteServer.getQuote(symbol, userId, lineNum)
     # quote = {"value": 10, "cryptoKey": 'abc', "retrieved": int(time.time())}
-    # print "return from quote cache: ", quote
+    print "return from quote cache: ", quote
 #     go in pool
     if quote is None:
         quoteServer.addRequestToPool(payload)
