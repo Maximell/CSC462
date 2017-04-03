@@ -33,7 +33,12 @@ def sendAndReceive(data, host='142.104.91.142',port=44429, queueName=None):
     consumer.start()
     result = None
     print "waiting for result"
+    startTime = time.time()
     while result is None:
+        currentTime = time.time()
+        if startTime + 10 < currentTime:
+            result = "timed_out... Resend Command"
+            break
         try:
             # time.sleep(0.01)
             result = P2Q_rabbit.get()
@@ -41,6 +46,7 @@ def sendAndReceive(data, host='142.104.91.142',port=44429, queueName=None):
                 result = P1Q_rabbit.get()
             elif result is None:
                 result = P3Q_rabbit.get()
+
         except Exception as e:
             pass
     print result
