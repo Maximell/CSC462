@@ -263,6 +263,8 @@ class RabbitMQAyscClient(RabbitMQBase):
                 # print "failed in send"
 
 
+    def close(self):
+        self.connection.close()
 
 # ^ all for aysc connection and reliability
 # ==================================================================
