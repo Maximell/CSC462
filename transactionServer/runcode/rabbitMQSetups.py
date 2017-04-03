@@ -230,6 +230,7 @@ class RabbitMQAyscClient(RabbitMQBase):
             try:
                 payload  = self.requestQueue.get(False)
                 if payload:
+                    print "payload size =", len(payload)
                     if len(payload) == 2:
                         requestBody = payload[0]
                         self.queueName = payload[1]
