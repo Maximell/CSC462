@@ -425,6 +425,7 @@ def delegate(ch , method, prop, args):
         )
         print "error sent to webserver"
         returnClient.close()
+        return
     else:
         try:
             # send command to audit, if it is from web server
@@ -470,23 +471,26 @@ def delegate(ch , method, prop, args):
                 # if it is not complete (needs to go to another service) it should return None
                 response = function(args)
                 print "response from call:", response
-
-                if response is not None:
+                if response.get('lineNum') <= 0:
                     print "return response to webserver: ", response
                     returnClient = RabbitMQClient(queueName=RabbitMQClient.WEB+str(response["lineNum"]))
+                    print "created the return client"
                     returnClient.send(
                         create_response(200, response)
                     )
+                    print "sent the message back"
                     returnClient.close()
+                    print "closed the return client"
                 return
             else:
                 print "couldn't figure out command...", args
-                returnClient = RabbitMQClient(queueName=RabbitMQClient.WEB+str(args['lineNum']))
-                returnClient.send(
-                    create_response(404, "function not found" + str(args))
-                )
-                returnClient.close()
-
+                if args.get('lineNum') <= 0:
+                    returnClient = RabbitMQClient(queueName=RabbitMQClient.WEB+str(args['lineNum']))
+                    returnClient.send(
+                         create_response(404, "function not found" + str(args))
+                    )
+                    returnClient.close()
+                return
         except (RuntimeError, TypeError, ArithmeticError, KeyError) as error:
             print "before error print here"
             errorPrint(args, error)
@@ -499,12 +503,13 @@ def delegate(ch , method, prop, args):
                 str(error)
             )
             auditQueue.put(requestBody)
-            returnClient = RabbitMQClient(queueName=RabbitMQClient.WEB+str(args['lineNum']))
-            returnClient.send(
-                create_response(500, args)
-            )
-            returnClient.close()
-
+            if args.get('lineNum') <= 0:
+                returnClient = RabbitMQClient(queueName=RabbitMQClient.WEB+str(args['lineNum']))
+                returnClient.send(
+                    create_response(500, args)
+                )
+                returnClient.close()
+            return
 
 
 if __name__ == '__main__':
