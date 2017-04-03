@@ -47,9 +47,15 @@ class poolHandler(Thread):
                         print "sending back form handler:", payload
                         transactionServerID = payload["trans"]
                         # Need to figure out which transaction server to send back to.
-                        transactionClient = RabbitMQClient(transactionServerID)
-                        transactionClient.send(payload)
+                        # transactionClient = RabbitMQClient(transactionServerID)
+                        # transactionClient.send(payload)
                         # transactionClient.close()
+                        # requestQueue = multiprocessing.Queue()
+                        # trans_producer_process = Process(target=RabbitMQAyscClient,
+                        #                                  args=(transactionServerID, requestQueue))
+                        # trans_producer_process.start()
+                        # requestQueue.put(payload)
+                        transQueue.put((payload , transactionServerID))
                         # print "popping sym" ,  quoteServer.pool
                         quoteServer.pool.pop(sym , None)
                         # print "popped", quoteServer.pool
