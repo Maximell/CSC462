@@ -190,7 +190,7 @@ def on_request(ch, method, props, payload):
     lineNum = payload["lineNum"]
     transactionServerID = payload["trans"]
 
-    quote = quoteServer.getQuote(symbol, userId, lineNum)
+    quote = quoteServer.getQuote(symbol, userId, lineNum , transactionServerID)
     # quote = {"value": 10, "cryptoKey": 'abc', "retrieved": int(time.time())}
     print "return from quote cache: ", quote
 #     go in pool
