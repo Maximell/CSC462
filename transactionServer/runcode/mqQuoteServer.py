@@ -243,8 +243,9 @@ class poolHandler(Thread):
                         payload["cryptoKey"] = quote["cryptoKey"]
                         payload["quoteRetrieved"] = quote["retrieved"]
 
-                        print "sending back form handler:", payload, "to",transactionServerID
                         transactionServerID = payload["trans"]
+                        print "sending back form handler:", payload, "to",transactionServerID
+
                         # Need to figure out which transaction server to send back to.
                         # transactionClient = RabbitMQClient(transactionServerID)
                         # transactionClient.send(payload)
