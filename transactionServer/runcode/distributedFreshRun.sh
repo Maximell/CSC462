@@ -115,7 +115,7 @@ pssh -i -h workersHostFile.txt -x "cd $workingDirectoryPath;" python startWorker
 echo sleeping for 5 before starting webserver
 sleep 5
 echo starting webserver
-pssh -i -h workersHostFile.txt -t 30 -x "cd $workingDirectoryPath;" python webServer.py > webserverOutput.txt &
+pssh -i -h workersHostFile.txt -t 3000000 -x "cd $workingDirectoryPath;" python webServer.py > webserverOutput.txt &
 echo done starting webserver
 echo worker configuration complete
 
