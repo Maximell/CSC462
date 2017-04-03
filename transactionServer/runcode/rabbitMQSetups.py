@@ -235,9 +235,10 @@ class RabbitMQAyscClient(RabbitMQBase):
                         self.queueName = payload[1]
                         priority = 2
                     elif len(payload) == 3:
+                        print "got args",payload
                         requestBody = payload[0]
                         self.queueName = payload[1]
-                        priority = payload[2]
+                        priority = int(payload[2])
                     else:
                         requestBody = payload
                         priority = 2

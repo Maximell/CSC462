@@ -14,7 +14,8 @@ from multiprocessing import Process
 
 
 def sendToQueue(data):
-    requestQueue.put(data, RabbitMQAyscClient.TRANSACTION , 1)
+    print "sending the data",data
+    requestQueue.put((data, RabbitMQAyscClient.TRANSACTION , 1))
     # transactionClient.send(data)
 
 
