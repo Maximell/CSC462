@@ -32,7 +32,7 @@ class poolHandler(Thread):
         #          and the cache size.
         while(True):
            for sym in quoteServer.pool:
-                # print "things in pool:",sym
+                print "things in pool:",sym
                 # print "pool size:",len(quoteServer.pool)
                 quote = quoteServer.quoteCache.get(sym)
                 # print "cache = ", quote
