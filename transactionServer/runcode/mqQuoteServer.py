@@ -27,7 +27,6 @@ class RabbitQuoteClient():
         self.requestQueue = requestQueue
         self.EXCHANGE = "transActionMessages"
         print "set up quoteClient finished"
-
         self.connection.ioloop.start()
 
 
@@ -168,7 +167,7 @@ class RabbitQuoteClient():
         self.connection.close()
 
 
-    def send(self , blank_connection):
+    def send(self , blank_connection=None):
         print "try sending"
         notEmpty = True
         while(notEmpty):
