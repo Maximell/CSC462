@@ -26,7 +26,7 @@ def sendAndReceive(data, host='142.104.91.142',port=44429, queueName=None):
         except KeyError as error:
             print error
     # # send a request to the transactionServer
-    # sendToQueue(data)
+    sendToQueue(data)
     # # open a connection to rabbitMq
     # connection = pika.BlockingConnection(pika.ConnectionParameters(host=host, port=port))
     # channel = connection.channel()
