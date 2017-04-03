@@ -47,10 +47,10 @@ class poolHandler(Thread):
                             # print "sending back form handler:", payload
                             transactionServerID = payload["trans"]
                             # Need to figure out which transaction server to send back to.
-                            P2Q_rabbit.put(( 2,payload ))
+                            # P2Q_rabbit.put((2, payload))
                             # self.is_alive = False
-                            # transactionClient = RabbitMQClient(transactionServerID)
-                            # transactionClient.send(payload)
+                            transactionClient = RabbitMQClient(transactionServerID)
+                            transactionClient.send(payload)
 
                         quoteServer.pool[sym] = []
 
@@ -165,9 +165,9 @@ def on_request(ch, method, props, payload):
     # expected body: {symbol, userId, transactionNum}
     print "received payload", payload
 
-    if payload.get("quoteRetrieved"):
-        transQueue.put((payload, payload["trans"]))
-        return
+    # if payload.get("quoteRetrieved"):
+    #     transQueue.put((payload, payload["trans"]))
+    #     return
 
     symbol = payload["stockSymbol"]
     userId = payload["userId"]
