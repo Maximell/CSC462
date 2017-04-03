@@ -73,7 +73,7 @@ class RabbitQuoteClient():
         # There is now a new connection, needs a new ioloop to run
         self.connection.ioloop.start()
 
-    def on_connection_open(self , blank_connection):
+    def on_connection_open(self , blank_connection= None):
         print "on open connection"
         self.add_on_connection_close_callback()
         self.open_channel()
@@ -132,7 +132,7 @@ class RabbitQuoteClient():
     def setup_queue(self, queueName):
         args = {'x-max-priority': 3, 'x-message-ttl': 600000}
         print "setting up queue", queueName
-        self.channel.queue_declare(self.on_queue_declareok, queueName , arguments=args)
+        self.on_connection_open()
 
     def on_queue_declareok(self, method_frame):
         print "queue all good"
@@ -159,7 +159,7 @@ class RabbitQuoteClient():
             return
 
         self.connection.add_timeout(self.PUBLISH_INTERVAL,
-                                     self.send)
+                                     self.sendMessage)
 
 
     def close_connection(self):
@@ -192,7 +192,8 @@ class RabbitQuoteClient():
                     print "setting up queue",  self.queueName
                     self.request = requestBody
                     self.priority = priority
-                    self.channel.queue_declare(self.sendMessage ,self.queueName, arguments=args)
+                    # self.channel.queue_declare(self.sendMessage ,self.queueName, arguments=args)
+                    self.on_connection_open()
 
 
 
@@ -437,10 +438,10 @@ if __name__ == '__main__':
 
     # print "create publisher"
     auditQueue = multiprocessing.Queue()
-    # audit_producer_process = Process(target=RabbitMQAyscClient,
-    #                            args=(  RabbitMQAyscClient.AUDIT , auditQueue ))
-    # audit_producer_process.start()
-    # print "created publisher"
+    audit_producer_process = Process(target=RabbitMQAyscClient,
+                               args=(  RabbitMQAyscClient.AUDIT , auditQueue ))
+    audit_producer_process.start()
+    print "created publisher"
 
 
     P1Q_rabbit = multiprocessing.Queue()
