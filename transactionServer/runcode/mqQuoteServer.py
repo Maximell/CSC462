@@ -24,7 +24,6 @@ class poolHandler(Thread):
     def __init__(self):
         Thread.__init__(self)
         self.daemon = True
-        self.curCacheSize = len(quoteServer.quoteCache)
         self.start()
 
     def run(self):
@@ -32,8 +31,9 @@ class poolHandler(Thread):
         while(True):
 #         look between pool of requests
 #          and the cache size.
-            if len(quoteServer.quoteCache) != self.curCacheSize:
-                self.curCacheSize = len(quoteServer.quoteCache)
+            if quoteServer.poolchange:
+                if len(quoteServer.pool) == 0:
+                    quoteServer.poolchange = False
                 for sym in quoteServer.pool:
                     print "things in pool:",sym
                     quote = quoteServer.quoteCache.get(sym)
@@ -46,7 +46,7 @@ class poolHandler(Thread):
                             payload["cryptoKey"] = quote["cryptoKey"]
                             payload["quoteRetrieved"] = quote["retrieved"]
 
-                            # print "sending back form handler:", payload
+                            print "sending back form handler:", payload
                             transactionServerID = payload["trans"]
                             # Need to figure out which transaction server to send back to.
                             # P2Q_rabbit.put((2, payload))
@@ -114,6 +114,7 @@ class Quotes():
         self.pool = {}
         self.threadCount = 0
         self.maxthread = 300
+        self.poolchange = False
 
     def getQuote(self, symbol , user , transactionNum):
         cache = self.quoteCache.get(symbol)
@@ -166,6 +167,7 @@ class Quotes():
         if self.pool.get(symbol) is None:
             self.pool[symbol] = []
         self.pool[symbol].append(payload)
+        self.poolchange =True
 
 
 def on_request(ch, method, props, payload):
