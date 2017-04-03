@@ -44,7 +44,7 @@ class poolHandler(Thread):
                         payload["cryptoKey"] = quote["cryptoKey"]
                         payload["quoteRetrieved"] = quote["retrieved"]
 
-                        print "sending back form handler:", payload
+                        print "sending back form handler:", payload, "to",transactionServerID
                         transactionServerID = payload["trans"]
                         # Need to figure out which transaction server to send back to.
                         # transactionClient = RabbitMQClient(transactionServerID)
@@ -55,7 +55,7 @@ class poolHandler(Thread):
                         #                                  args=(transactionServerID, requestQueue))
                         # trans_producer_process.start()
                         # requestQueue.put(payload)
-                        transQueue.put((payload , transactionServerID))
+                        # transQueue.put((payload , transactionServerID))
                         # print "popping sym" ,  quoteServer.pool
                         quoteServer.pool.pop(sym , None)
                         # print "popped", quoteServer.pool
@@ -64,7 +64,7 @@ class poolHandler(Thread):
 
 
 class getQuoteThread(Thread):
-    def __init__(self , symbol , user , transactionNum):
+    def __init__(self , symbol , user , transactionNum , transactionServerID):
         Thread.__init__(self)
         self.cacheLock = threading.Lock()
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -73,6 +73,7 @@ class getQuoteThread(Thread):
         self.symbol = symbol
         self.userId = user
         self.transactionNum = transactionNum
+        self.transServer = transactionServerID
         # self.portNum  = portNum
         self.start()
 
@@ -99,6 +100,7 @@ class getQuoteThread(Thread):
         )
         # print "built request: ",requestBody
         auditQueue.put(requestBody)
+        transQueue.put((payload, transactionServerID))
 
         # self.cacheLock.acquire()
         quoteServer.quoteCache[self.symbol] = newQuote
@@ -119,7 +121,7 @@ class Quotes():
         self.threadCount = 0
         self.maxthread = 300
 
-    def getQuote(self, symbol , user , transactionNum):
+    def getQuote(self, symbol , user , transactionNum , transactionServerID):
         cache = self.quoteCache.get(symbol)
         print "checking quote cache: ", cache,  symbol
         # print "current cache = ",self.quoteCache
@@ -127,10 +129,10 @@ class Quotes():
             if self._cacheIsActive(cache):
                 print "cache value is active"
                 return cache
-        self.hitQuoteServerAndCache(symbol, user, transactionNum)
+        self.hitQuoteServerAndCache(symbol, user, transactionNum , transactionServerID)
         return
 
-    def hitQuoteServerAndCache(self, symbol, user, transactionNum):
+    def hitQuoteServerAndCache(self, symbol, user, transactionNum , transactionServerID):
         # run new quote thread
         # poolHandler()
         if symbol in self.inflight:
@@ -138,7 +140,7 @@ class Quotes():
         # loop while there are no threads left
         while(quoteServer.maxthread <= quoteServer.threadCount):
             pass
-        getQuoteThread(symbol , user , transactionNum)
+        getQuoteThread(symbol , user , transactionNum , transactionServerID)
         print "making new thread"
         quoteServer.threadCount += 1
         print "current thread count = ",quoteServer.threadCount
@@ -186,6 +188,7 @@ def on_request(ch, method, props, payload):
     symbol = payload["stockSymbol"]
     userId = payload["userId"]
     lineNum = payload["lineNum"]
+    transactionServerID = payload["trans"]
 
     quote = quoteServer.getQuote(symbol, userId, lineNum)
     # quote = {"value": 10, "cryptoKey": 'abc', "retrieved": int(time.time())}
