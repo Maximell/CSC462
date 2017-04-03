@@ -27,21 +27,7 @@ def sendAndReceive(data, host='142.104.91.142',port=44429, queueName=None):
             print error
     # # send a request to the transactionServer
     sendToQueue(data)
-    # # open a connection to rabbitMq
-    # connection = pika.BlockingConnection(pika.ConnectionParameters(host=host, port=port))
-    # channel = connection.channel()
-    # # declare a queue
-    # args = {'x-max-priority': 3, 'x-message-ttl': 600000}
-    # channel.queue_declare(queue=queueName, arguments=args)
-    # print("waiting for transaction return on queue: ", queueName)
-    # # wait for a response from the transactionServer in that queue
-    # result = None
-    # while result is None:
-    #     try:
-    #         time.sleep(0.01)
-    #         method, props, result = channel.basic_get(queue=queueName, no_ack=True)
-    #     except Exception as e:
-    #         print e
+
 
     consumer = Process(target=RabbitMQAyscReciever , args=(queueName , P1Q_rabbit, P2Q_rabbit, P3Q_rabbit))
     consumer.start()
@@ -57,7 +43,6 @@ def sendAndReceive(data, host='142.104.91.142',port=44429, queueName=None):
                 result = P3Q_rabbit.get()
         except Exception as e:
             pass
-            # print e
     print result
     consumer.terminate()
 
@@ -218,7 +203,7 @@ def cancelBuy():
     except:
         print "something went wrong parsing the data."
         return "something went wrong parsing the data."
-    result = doCommitBuy(userId, getRandomRequestLineNum())
+    result = doCancelBuy(userId, getRandomRequestLineNum())
     return render_template('result.html', result=result)
 
 # Sell methods
