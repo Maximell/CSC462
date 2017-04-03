@@ -16,22 +16,22 @@ workerMap = [["http://142.104.91.144:44424" , 0] ,["http://142.104.91.145:44424"
 userMap = {}
 
 urls = {
-    'ADD': '/add/%s/',
-    'BUY': '/buy/%s/%s/',
-    'QUOTE': '/quote/%s/%s/',
-    'COMMIT_BUY': '/commit-buy/%s/',
-    'CANCEL_BUY': '/cancel-buy/%s/',
-    'SELL': '/sell/%s/%s/',
-    'COMMIT_SELL': '/commit-sell/%s/',
-    'CANCEL_SELL': '/cancel-sell/%s/',
-    'SET_BUY_AMOUNT': '/set-buy-amount/%s/%s/',
-    'CANCEL_SET_BUY': '/cancel-set-buy/%s/%s/',
-    'SET_BUY_TRIGGER': '/set-buy-trigger/%s/%s/',
-    'SET_SELL_AMOUNT': '/set-sell-amount/%s/%s/',
-    'SET_SELL_TRIGGER': '/set-sell-trigger/%s/%s/',
-    'CANCEL_SET_SELL': '/cancel-set-sell/%s/%s/',
-    'DUMPLOG': '/dumplog/',
-    'DISPLAY_SUMMARY': '/display-summary/%s/'
+    'ADD': '/api/add/%s/',
+    'BUY': '/api/buy/%s/%s/',
+    'QUOTE': '/api/quote/%s/%s/',
+    'COMMIT_BUY': '/api/commit-buy/%s/',
+    'CANCEL_BUY': '/api/cancel-buy/%s/',
+    'SELL': '/api/sell/%s/%s/',
+    'COMMIT_SELL': '/api/commit-sell/%s/',
+    'CANCEL_SELL': '/api/cancel-sell/%s/',
+    'SET_BUY_AMOUNT': '/api/set-buy-amount/%s/%s/',
+    'CANCEL_SET_BUY': '/api/cancel-set-buy/%s/%s/',
+    'SET_BUY_TRIGGER': '/api/set-buy-trigger/%s/%s/',
+    'SET_SELL_AMOUNT': '/api/set-sell-amount/%s/%s/',
+    'SET_SELL_TRIGGER': '/api/set-sell-trigger/%s/%s/',
+    'CANCEL_SET_SELL': '/api/cancel-set-sell/%s/%s/',
+    'DUMPLOG': '/api/dumplog/',
+    'DISPLAY_SUMMARY': '/api/display-summary/%s/'
 }
 
 async def send(command, args, lineNum):
@@ -107,7 +107,9 @@ async def send(command, args, lineNum):
         r = requests.get( url, data=data , verify=False)
     else:
         r = requests.post( url, data=data , verify=False)
-    # print(r.status_code)
+    print(r.status_code)
+    print(r.json())
+
 
 async def sendRequests(userCommandList):
     for command in userCommandList:

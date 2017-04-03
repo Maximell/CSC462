@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    {% block head %}
+        {% block styles %}
+            <link rel="stylesheet" href="{{ url_for('static',filename='css/flat-ui.css') }}">
+            <link rel="stylesheet" href="{{ url_for('static',filename='css/custom.css') }}">
+        {% endblock %}
+        {% block javascript %}
+            <script src="{{ url_for('static', filename='js/jquery-3.2.0.js') }}"></script>
+        {% endblock %}
+        <title>
+            {% block title %}Seng462 Project{% endblock %}
+        </title>
+    {% endblock %}
+</head>
+<body>
+    <div class="container">
+        <div class="heading"><h1>{% block heading %}Base Template{% endblock %}</h1></div>
+        <div class="content">
+            {% block content %}Put content here{% endblock %}
+        </div>
+        <div class="footer">
+            {% block footer %}Footer{% endblock %}
+        </div>
+    </div>
+</body>
+</html>

@@ -2,11 +2,22 @@ import json
 import pika
 from uuid import getnode as get_mac
 
+quoteMacMap = {
+    '193595670795008': "1",
+    '193599966811136': "2",
+    '193600282694676': "3"
+}
 
 # Names for RabbitMQ queues
 class RabbitMQBase:
     # Host Server group
-    QUOTE = 'quoteIn'
+    # TODO: remove 'quote' once triggers is moved over as well
+    QUOTE_BASE = 'quoteIn'
+
+    QUOTE1 = 'quoteIn1'
+    QUOTE2 = 'quoteIn2'
+    QUOTE3 = 'quoteIn3'
+
     AUDIT = 'AuditIn'
     WEB = 'webIn'
 
@@ -21,25 +32,37 @@ class RabbitMQBase:
 # quoteClient.send({a: requestBody})
 class RabbitMQClient(RabbitMQBase):
     def __init__(self, queueName):
-        self.queueName = queueName
-        self.connection = pika.BlockingConnection(pika.ConnectionParameters('142.104.91.142', 44429))
-        self.channel = self.connection.channel()
+        try:
+            self.queueName = queueName
+            self.connection = pika.BlockingConnection(pika.ConnectionParameters('142.104.91.142', 44429))
+            self.channel = self.connection.channel()
 
-        args = {'x-max-priority': 3 , 'x-message-ttl': 600000 }
-        self.channel.queue_declare(queue=self.queueName, arguments=args)
+            args = {'x-max-priority': 3 , 'x-message-ttl': 600000}
+            self.channel.queue_declare(queue=self.queueName, arguments=args)
+        except Exception as e:
+            print "Error occurred initializing RabbitMQClient: ", e
 
     def send(self, requestBody , priority=2):
         # print "sending", requestBody, "to", self.queueName, "with priority", priority
-        proporties = pika.BasicProperties(
-            priority=priority
-        )
-        self.channel.basic_publish(
-            exchange='',
-            routing_key=self.queueName,
-            properties=proporties,
-            body=json.dumps(requestBody),
+        try:
+            print "creating basic properties"
+            properties = pika.BasicProperties(
+                priority=priority
+            )
+            print "done creating basic properties. Doing basic publish."
+            self.channel.basic_publish(
+                exchange='',
+                routing_key=self.queueName,
+                properties=properties,
+                body=json.dumps(requestBody),
+            )
+            print "basic publish done"
+        except Exception as e:
+            print "Error occurred sending rabbitMQMessage: ", e
 
-        )
+    def close(self):
+        self.connection.close(reply_code=200, reply_text='Normal shutdown')
+
 
 # This is for the aysnc rabbitMQ Publisher
 class RabbitMQAyscClient(RabbitMQBase):
@@ -160,7 +183,7 @@ class RabbitMQAyscClient(RabbitMQBase):
 
     def setup_queue(self, queueName):
         args = {'x-max-priority': 3, 'x-message-ttl': 600000}
-        print "setting up queue"
+        print "setting up queue", queueName
         self.channel.queue_declare(self.on_queue_declareok, queueName , arguments=args)
 
     def on_queue_declareok(self, method_frame):
@@ -183,7 +206,7 @@ class RabbitMQAyscClient(RabbitMQBase):
         message to be delivered in PUBLISH_INTERVAL seconds.
 
         """
-        print "scheduale next msg"
+        print "schedule next msg"
         if self.stopping:
             return
 
@@ -207,12 +230,19 @@ class RabbitMQAyscClient(RabbitMQBase):
             try:
                 payload  = self.requestQueue.get(False)
                 if payload:
+                    print "payload size =", len(payload)
                     if len(payload) == 2:
                         requestBody = payload[0]
                         self.queueName = payload[1]
+                        priority = 2
+                    elif len(payload) == 3:
+                        print "got args",payload
+                        requestBody = payload[0]
+                        self.queueName = payload[1]
+                        priority = int(payload[2])
                     else:
                         requestBody = payload
-                    priority = 2
+                        priority = 2
 
                     print "sending", requestBody, "to", self.queueName, "with priority", priority
                     properties = pika.BasicProperties(
@@ -226,7 +256,7 @@ class RabbitMQAyscClient(RabbitMQBase):
                         body=json.dumps(requestBody),
 
                     )
-                    print "schedule next msg"
+                    # print "schedule next msg"
                     self.schedule_next_message()
             except:
                 pass
@@ -241,9 +271,9 @@ class RabbitMQAyscClient(RabbitMQBase):
 # ==================================================================
 
 
-# This is for the aysnc rabbitMQ
+# This is for the aysnc rabbitMQ Consumer
 class RabbitMQAyscReciever(RabbitMQBase):
-    def __init__(self, queueName , rabbitPQueue1 , rabbitPQueue2 , rabbitPQueue3 ):
+    def __init__(self, queueName , rabbitPQueue1 , rabbitPQueue2=None , rabbitPQueue3=None ):
         self.queueName = queueName
         self.param = pika.ConnectionParameters('142.104.91.142',44429)
         self.connection = pika.SelectConnection(self.param, self.on_connection_open, stop_ioloop_on_close=False)
@@ -262,7 +292,7 @@ class RabbitMQAyscReciever(RabbitMQBase):
         self.nacked = 0
         self.message_number = 0
         self.consumer_tag = None
-        print "set up Publisher"
+        print "set up Consumer"
 
         self.connection.ioloop.start()
 
@@ -288,8 +318,8 @@ class RabbitMQAyscReciever(RabbitMQBase):
         :param pika.connection.Connection connection: The closed connection obj
         :param int reply_code: The server provided reply_code if given
         :param str reply_text: The server provided reply_text if given
-
         """
+
         print "on Closed connection"
         self._channel = None
         if self.closing:
@@ -372,7 +402,7 @@ class RabbitMQAyscReciever(RabbitMQBase):
 
     def setup_queue(self, queueName):
         args = {'x-max-priority': 3, 'x-message-ttl': 600000}
-        print "setting up queue"
+        print "setting up queue",queueName
         self.channel.queue_declare(self.on_queue_declareok, queueName , arguments=args)
 
     def on_queue_declareok(self, method_frame):
@@ -386,7 +416,7 @@ class RabbitMQAyscReciever(RabbitMQBase):
         self.start_consuming()
 
     def start_consuming(self):
-        print "start Publishing"
+        print "start Consuming"
         # self.enable_delivery_confirmations()
         self.add_on_cancel_callback()
         self.consumer_tag = self.channel.basic_consume(self.on_message,
@@ -458,7 +488,7 @@ class RabbitMQReceiver(RabbitMQBase):
         connection = pika.BlockingConnection(pika.ConnectionParameters('142.104.91.142',44429))
         channel = connection.channel()
 
-        args = {'x-max-priority': 3  , 'x-message-ttl': 600000}
+        args = {'x-max-priority': 3, 'x-message-ttl': 600000}
         channel.queue_declare(queue=queueName, arguments=args)
 
         channel.basic_consume(callback, queue=queueName, no_ack=True , exclusive=True)

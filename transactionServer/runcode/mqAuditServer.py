@@ -487,12 +487,14 @@ if __name__ == '__main__':
     consumer_process = Process(target=RabbitMQAyscReciever,
                                args=(RabbitMQAyscReciever.AUDIT, P1Q_rabbit, P2Q_rabbit, P3Q_rabbit))
     consumer_process.start()
-    print "Created multiprocess Consummer"
+
     seenDumpLog = False
     countDown = None
     DumpLog = None
     DumpLogProps = None
     DumplogNotMade = True
+
+
 
     while (DumplogNotMade):
         try:
@@ -507,9 +509,10 @@ if __name__ == '__main__':
                     countDown = time.time()
                     DumpLog = payload
                     DumpLogProps = props
-                    break
+                    continue
 
-                on_request(None, None, props, payload)
+                Thread(target=on_request(None,None,props , payload)).setDaemon(True)
+                # on_request(None, None, props, payload)
                 countDown = time.time()
                 continue
         except:
@@ -523,7 +526,7 @@ if __name__ == '__main__':
                     print "Making Dumplog"
                     on_request(None, None, DumpLogProps, DumpLog)
                     DumplogNotMade = False
-                    break
+                    continue
 
             msg = P3Q_rabbit.get(False)
             if msg:

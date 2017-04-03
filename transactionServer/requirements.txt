@@ -1,1 +1,10 @@
+setuptools==33.1.1
 pyOpenSSL
+flask
+flask-login
+flask-mail
+flask-WTF
+passlib
+pycrypto
+Flask-SQLAlchemy
+flask-user

@@ -12,6 +12,7 @@ import multiprocessing
 from multiprocessing import Process
 
 
+
 # class rabbitConsumer():
 #     def __init__(self, queueName,Q2):
 #         self.rabbitPQueue2 = Q2
@@ -38,6 +39,7 @@ class databaseFunctions:
     RELEASE_PORTFOLIO = 13
     BUY_TRIGGER = 14
     SELL_TRIGGER = 15
+    SUMMARY = 16
 
     # @classmethod makes it so you dont have to instantiate the class. just call databaseFunctions.createAddRequest()
 
@@ -198,6 +200,11 @@ class databaseFunctions:
             'portfolioReleaseAmount': portfolioReleaseAmount,
             'symbol': symbol
         }
+
+    @classmethod
+    def createSummaryRequest(cls, userId, args):
+        args.update({'function': cls.SUMMARY, "userId": userId})
+        return args
 
     @classmethod
     def listOptions(cls):
@@ -653,8 +660,8 @@ def handleTriggerBuy(payload):
         user = databaseServer.releaseCash(userId, cashReleaseAmount)
         if user:
             databaseServer.addToPortfolio(userId, symbol, portfolioAmount)
-            return create_response(200, user)
-    return create_response(400, "not enough money reserved")
+
+    return DONT_RETURN_TO_TRANSACTION
 
 def handleTriggerSell(payload):
     symbol = payload["symbol"]
@@ -668,8 +675,17 @@ def handleTriggerSell(payload):
         user = databaseServer.releasePortfolioReserves(userId, symbol, portfolioReleaseAmount)
         if user:
             databaseServer.addCash(userId, portfolioCommitAmount * costPer)
-            return create_response(200, user)
-    return create_response(400, "not enough portfolio reserved")
+
+    return DONT_RETURN_TO_TRANSACTION
+
+def handleSummary(payload):
+    userId = payload["userId"]
+
+    user = databaseServer.getOrAddUser(userId)
+    payload['response'] = 200
+    payload['user'] = user
+
+    return payload
 
 
 def on_request(ch, method, props, payload):
@@ -689,13 +705,15 @@ def on_request(ch, method, props, payload):
     except:
         print "error in", payload["function"]
 
-    response['command'] = payload['command']
-    # transactionClient.send(response)
-    print "adding response to queue", response
-    requestQueue.put(response)
+    if response != DONT_RETURN_TO_TRANSACTION:
+        response['command'] = payload['command']
+        # transactionClient.send(response)
+        print "adding response to queue", response
+        requestQueue.put(response)
 
 
 if __name__ == '__main__':
+    DONT_RETURN_TO_TRANSACTION = "dontReturn"
     databaseServer = database()
 
     handleFunctionSwitch = {
@@ -714,12 +732,13 @@ if __name__ == '__main__':
         databaseFunctions.RELEASE_PORTFOLIO: handleReleasePortfolio,
         databaseFunctions.BUY_TRIGGER: handleTriggerBuy,
         databaseFunctions.SELL_TRIGGER: handleTriggerSell,
+        databaseFunctions.SUMMARY: handleSummary,
     }
     # Object to send back to Transaction client
     print "create publisher"
     requestQueue = multiprocessing.Queue()
     producer_process = Process(target=RabbitMQAyscClient,
-                               args=(RabbitMQAyscClient.TRANSACTION , requestQueue))
+                               args=( RabbitMQAyscClient.TRANSACTION , requestQueue ))
     producer_process.start()
     # transactionClient = RabbitMQClient(RabbitMQClient.TRANSACTION)
     print "created publisher"

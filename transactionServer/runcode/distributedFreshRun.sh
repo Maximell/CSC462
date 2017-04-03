@@ -3,11 +3,12 @@
 # this command needs to be run from machine 142, as that is where the private-key is held.
 # quote server is running from root@142.104.91.130:44421
 # Audit server and testdriver are on root@142.104.91.131:44421
-# there are 4 'types' of servers:
-#   test driver (run on 142)
-#   'workers' that contain a transactionserver, triggerserver, and db
-#   audit server (also runs on 142)
-#   quote server (also runs on 142
+
+#   the rabbit server is on 142)
+#   15 'workers' that contain a transactionserver, triggerserver, and db
+#   audit server (runs on 131)
+#   3 quote servers (run on 140 ,141, 130)
+#   the test driver runs off 143
 
 echo this should be run ./distributedFreshRun.sh branch testFile
 
@@ -22,6 +23,9 @@ echo killing current python processes
 killall python
 pssh -i -h workersHostFile.txt killall python
 pssh -i -H root@142.104.91.130:44421 killall python
+pssh -i -H root@142.104.91.140:44421 killall python
+pssh -i -H root@142.104.91.141:44421 killall python
+
 pssh -i -H root@142.104.91.131:44421 killall python
 pssh -i -H root@142.104.91.143:44421 killall python
 
@@ -41,18 +45,29 @@ gitpath="Desktop/seng462/CSC462/"
 echo reset branch
 pssh -i -h workersHostFile.txt -x "cd $gitpath;" git reset --hard
 pssh -i -H root@142.104.91.130:44421 -x "cd $gitpath;" git reset --hard
+pssh -i -H root@142.104.91.140:44421 -x "cd $gitpath;" git reset --hard
+pssh -i -H root@142.104.91.141:44421 -x "cd $gitpath;" git reset --hard
+
 pssh -i -H root@142.104.91.131:44421 -x "cd $gitpath;" git reset --hard
 pssh -i -H root@142.104.91.143:44421 -x "cd $gitpath;" git reset --hard
+
 
 echo deleteing runcode folders
 pssh -i -h workersHostFile.txt -x "cd $workingDirectoryPath;" rm -rf ../runcode
 pssh -i -H root@142.104.91.130:44421 -x "cd $workingDirectoryPath;" rm -rf ../runcode
+pssh -i -H root@142.104.91.140:44421 -x "cd $workingDirectoryPath;" rm -rf ../runcode
+pssh -i -H root@142.104.91.141:44421 -x "cd $workingDirectoryPath;" rm -rf ../runcode
+
+
 pssh -i -H root@142.104.91.131:44421 -x "cd $workingDirectoryPath;" rm -rf ../runcode
 pssh -i -H root@142.104.91.143:44421 -x "cd $workingDirectoryPath;" rm -rf ../runcode
 
 echo fetching
 pssh -i -h workersHostFile.txt -x "cd $gitpath;" git fetch
 pssh -i -H root@142.104.91.130:44421 -x "cd $gitpath;" git fetch
+pssh -i -H root@142.104.91.140:44421 -x "cd $gitpath;" git fetch
+pssh -i -H root@142.104.91.141:44421 -x "cd $gitpath;" git fetch
+
 pssh -i -H root@142.104.91.131:44421 -x "cd $gitpath;" git fetch
 pssh -i -H root@142.104.91.143:44421 -x "cd $gitpath;" git fetch
 
@@ -61,37 +76,60 @@ echo attempting to configure workers
 echo switching branches to $1
 pssh -i -h workersHostFile.txt -x "cd $gitpath;" git checkout $1
 pssh -i -H root@142.104.91.130:44421 -x "cd $gitpath;" git checkout $1
+pssh -i -H root@142.104.91.140:44421 -x "cd $gitpath;" git checkout $1
+pssh -i -H root@142.104.91.141:44421 -x "cd $gitpath;" git checkout $1
+
 pssh -i -H root@142.104.91.131:44421 -x "cd $gitpath;" git checkout $1
 pssh -i -H root@142.104.91.143:44421 -x "cd $gitpath;" git checkout $1
 
 echo getting latest code
 pssh -i -h workersHostFile.txt -x "cd $gitpath;" git pull
 pssh -i -H root@142.104.91.130:44421 -x "cd $gitpath;" git pull
+pssh -i -H root@142.104.91.140:44421 -x "cd $gitpath;" git pull
+pssh -i -H root@142.104.91.141:44421 -x "cd $gitpath;" git pull
+
+
 pssh -i -H root@142.104.91.131:44421 -x "cd $gitpath;" git pull
 pssh -i -H root@142.104.91.143:44421 -x "cd $gitpath;" git pull
 
-
-
 echo configuring iptables
 pssh -i -h workersHostFile.txt iptables -I INPUT -p tcp --dport 44424 -j ACCEPT
+echo done configuring iptables
 
 echo reset branch again
 pssh -i -h workersHostFile.txt -x "cd $gitpath;" git reset --hard
 pssh -i -H root@142.104.91.130:44421 -x "cd $gitpath;" git reset --hard
+pssh -i -H root@142.104.91.140:44421 -x "cd $gitpath;" git reset --hard
+pssh -i -H root@142.104.91.141:44421 -x "cd $gitpath;" git reset --hard
+
+
 pssh -i -H root@142.104.91.131:44421 -x "cd $gitpath;" git reset --hard
 pssh -i -H root@142.104.91.143:44421 -x "cd $gitpath;" git reset --hard
 
-echo done configuring iptables
+echo installing requirements on workers
+pssh -i -h workersHostFile.txt -x "cd $gitpath;" pip install -r transactionServer/requirements.txt
+echo done installing requirements on workers
+
 echo starting workers
-pssh -i -h workersHostFile.txt -x "cd $workingDirectoryPath;" python runScript.py
+pssh -i -h workersHostFile.txt -x "cd $workingDirectoryPath;" python startWorker.py
+echo sleeping for 5 before starting webserver
+sleep 5
+echo starting webserver
+pssh -i -h workersHostFile.txt -t 3000000 -x "cd $workingDirectoryPath;" python webServer.py > webserverOutput.txt &
+echo done starting webserver
 echo worker configuration complete
+
 echo starting quote server
 pssh -i -H root@142.104.91.130:44421 -x "cd $workingDirectoryPath;" python startQuoteServer.py
+pssh -i -H root@142.104.91.140:44421 -x "cd $workingDirectoryPath;" python startQuoteServer.py
+pssh -i -H root@142.104.91.141:44421 -x "cd $workingDirectoryPath;" python startQuoteServer.py
+
 echo done starting quote
+
 echo starting audit server on b131:
 pssh -i -H root@142.104.91.131:44421 -x "cd $workingDirectoryPath;" python startAuditServer.py
 echo audit server started
-#waiting to make sure everything has started
+
 echo waiting for 10 seconds to make sure everything has started
 sleep 10
 echo done waiting
@@ -101,6 +139,9 @@ if [ $2 ]; then
     pwd
     echo running testdriver from 143
     pssh -i -t 1000000000000 -H root@142.104.91.143:44421  -x  "cd $workingDirectoryPath;" python runWorkLoad.py $2
+    #try running it on B142
+    #python runWorkLoad.py $2
+
 else
     echo This script must be run with the workload file as a parameter
 fi
