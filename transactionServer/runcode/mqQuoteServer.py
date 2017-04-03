@@ -31,15 +31,14 @@ class poolHandler(Thread):
         #         look between pool of requests
         #          and the cache size.
         while(True):
-           print "handler alive"
            for sym in quoteServer.pool:
-                print "things in pool:",sym
-                print "pool size:",len(quoteServer.pool)
+                # print "things in pool:",sym
+                # print "pool size:",len(quoteServer.pool)
                 quote = quoteServer.quoteCache.get(sym)
-                print "cache = ", quote
+                # print "cache = ", quote
                 if quote is not None:
                     for payload in quoteServer.pool[sym]:
-                        print "found a match for: ", sym
+                        # print "found a match for: ", sym
                         # if payload sym in cache
                         payload["quote"] = quote["value"]
                         payload["cryptoKey"] = quote["cryptoKey"]
@@ -51,9 +50,9 @@ class poolHandler(Thread):
                         transactionClient = RabbitMQClient(transactionServerID)
                         transactionClient.send(payload)
                         transactionClient.close()
-                        print "popping sym" ,  quoteServer.pool
+                        # print "popping sym" ,  quoteServer.pool
                         quoteServer.pool.pop(sym , None)
-                        print "popped", quoteServer.pool
+                        # print "popped", quoteServer.pool
                     poolHandler()
 
 
