@@ -428,12 +428,12 @@ if __name__ == '__main__':
     trans_producer_process.start()
     print "created publisher"
 
-    print "create publisher"
+    # print "create publisher"
     auditQueue = multiprocessing.Queue()
-    audit_producer_process = Process(target=RabbitMQAyscClient,
-                               args=(  RabbitMQAyscClient.AUDIT , auditQueue ))
-    audit_producer_process.start()
-    print "created publisher"
+    # audit_producer_process = Process(target=RabbitMQAyscClient,
+    #                            args=(  RabbitMQAyscClient.AUDIT , auditQueue ))
+    # audit_producer_process.start()
+    # print "created publisher"
 
 
     P1Q_rabbit = multiprocessing.Queue()
