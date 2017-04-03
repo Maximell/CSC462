@@ -192,7 +192,7 @@ class RabbitQuoteClient():
                     print "setting up queue",  self.queueName
                     self.request = requestBody
                     self.priority = priority
-                    self.channel.queue_declare(self.sendMessage() ,self.queueName, arguments=args)
+                    self.channel.queue_declare(self.sendMessage ,self.queueName, arguments=args)
 
 
 
@@ -237,13 +237,14 @@ class poolHandler(Thread):
         #         look between pool of requests
         #          and the cache size.
         while(True):
-           for sym in quoteServer.pool:
+           for sym in quoteServer.pool.keys():
                 # print "things in pool:",sym
                 # print "pool size:",len(quoteServer.pool)
                 quote = quoteServer.quoteCache.get(sym)
                 # print "cache = ", quote
                 if quote is not None:
-                    for payload in quoteServer.pool[sym]:
+                    for payloadKey in quoteServer.pool[sym].keys():
+                        payload = quoteServer.pool[sym][payloadKey]
                         # print "found a match for: ", sym
                         # if payload sym in cache
                         payload["quote"] = quote["value"]
