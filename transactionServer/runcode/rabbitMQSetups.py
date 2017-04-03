@@ -75,7 +75,7 @@ class RabbitMQAyscClient(RabbitMQBase):
         self.stopping = False
         self.PUBLISH_INTERVAL = 1
         self.requestQueue = requestQueue
-        self.EXCHANGE = queueName
+        self.EXCHANGE = ""
         print "set up Publisher"
 
         self.connection.ioloop.start()
@@ -286,7 +286,7 @@ class RabbitMQAyscReciever(RabbitMQBase):
         self.rabbitPQueue2 = rabbitPQueue2
         self.rabbitPQueue3 = rabbitPQueue3
 
-        self.EXCHANGE = queueName
+        self.EXCHANGE = ""
         self.deliveries = []
         self.acked = 0
         self.nacked = 0
