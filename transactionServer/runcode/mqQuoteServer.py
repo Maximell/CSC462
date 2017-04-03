@@ -14,7 +14,7 @@ import multiprocessing
 from multiprocessing import Process
 from uuid import getnode as get_mac
 
-class RabbitQuoteClient():
+class RabbitQuoteClient(RabbitMQBase):
     def __init__(self,  requestQueue ):
         print "start making quoteClient"
         self.queueName = None
