@@ -243,8 +243,8 @@ class poolHandler(Thread):
                 quote = quoteServer.quoteCache.get(sym)
                 # print "cache = ", quote
                 if quote is not None:
-                    for payloadKey in quoteServer.pool[sym].keys():
-                        payload = quoteServer.pool[sym][payloadKey]
+                    for payload in quoteServer.pool[sym]:
+                        # payload = quoteServer.pool[sym][payloadKey]
                         # print "found a match for: ", sym
                         # if payload sym in cache
                         payload["quote"] = quote["value"]

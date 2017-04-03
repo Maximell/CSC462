@@ -402,7 +402,7 @@ class RabbitMQAyscReciever(RabbitMQBase):
 
     def setup_queue(self, queueName):
         args = {'x-max-priority': 3, 'x-message-ttl': 600000}
-        print "setting up queue"
+        print "setting up queue",queueName
         self.channel.queue_declare(self.on_queue_declareok, queueName , arguments=args)
 
     def on_queue_declareok(self, method_frame):
