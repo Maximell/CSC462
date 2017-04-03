@@ -100,7 +100,7 @@ class getQuoteThread(Thread):
         )
         # print "built request: ",requestBody
         auditQueue.put(requestBody)
-        transQueue.put((payload, transactionServerID))
+        transQueue.put((payload, self.transServer))
 
         # self.cacheLock.acquire()
         quoteServer.quoteCache[self.symbol] = newQuote
