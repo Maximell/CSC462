@@ -115,6 +115,11 @@ db.create_all()
 db_adapter = SQLAlchemyAdapter(db, User) # Register the User Model
 user_manager = UserManager(db_adapter, app) # Initialize Flask-User
 
+def negativeCash(cash):
+    return cash < 0
+
+def checkQuoteSymbol(symbol):
+    return symbol.isalpha() and len(symbol) == 3
 
 #Home
 @app.route('/', methods=['GET'])
@@ -139,6 +144,8 @@ def add():
     try:
         userId = current_user.username
         cash = float(request.form.getlist("cash")[0])
+        if negativeCash(cash):
+            return "cannot add negative cash"
     except:
         print "something went wrong parsing the data."
         return "something went wrong parsing the data."
@@ -156,6 +163,8 @@ def quote():
     try:
         userId = current_user.username
         stockSymbol = request.form.getlist('stockSymbol')[0]
+        if not checkQuoteSymbol(stockSymbol):
+            return "Stock symbol must be 3 letters"
     except:
         print "something went wrong parsing the data."
         return "something went wrong parsing the data."
@@ -174,6 +183,10 @@ def buy():
         userId = current_user.username
         stockSymbol = request.form.getlist('stockSymbol')[0]
         cash = float(request.form.getlist('cash')[0])
+        if not checkQuoteSymbol(stockSymbol):
+            return "Stock symbol must be 3 letters"
+        if negativeCash(cash):
+            return "cannot use negative cash"
     except:
         print "something went wrong parsing the data."
         return "something went wrong parsing the data."
@@ -224,6 +237,10 @@ def sell():
         userId = current_user.username
         stockSymbol = request.form.getlist('stockSymbol')[0]
         cash = float(request.form.getlist('cash')[0])
+        if not checkQuoteSymbol(stockSymbol):
+            return "Stock symbol must be 3 letters"
+        if negativeCash(cash):
+            return "cannot use negative cash"
     except:
         print "something went wrong parsing the data."
         return "something went wrong parsing the data."
@@ -274,6 +291,10 @@ def setBuyAmount():
         userId = current_user.username
         stockSymbol = request.form.getlist('stockSymbol')[0]
         cash = float(request.form.getlist('cash')[0])
+        if not checkQuoteSymbol(stockSymbol):
+            return "Stock symbol must be 3 letters"
+        if negativeCash(cash):
+            return "cannot use negative cash"
     except:
         print "something went wrong parsing the data."
         return "something went wrong parsing the data."
@@ -291,6 +312,8 @@ def cancelSetBuy():
     try:
         userId = current_user.username
         stockSymbol = request.form.getlist('stockSymbol')[0]
+        if not checkQuoteSymbol(stockSymbol):
+            return "Stock symbol must be 3 letters"
     except:
         print "something went wrong parsing the data."
         return "something went wrong parsing the data."
@@ -309,6 +332,10 @@ def setBuyTrigger():
         userId = current_user.username
         stockSymbol = request.form.getlist('stockSymbol')[0]
         cash = float(request.form.getlist('cash')[0])
+        if not checkQuoteSymbol(stockSymbol):
+            return "Stock symbol must be 3 letters"
+        if negativeCash(cash):
+            return "cannot use negative cash"
     except:
         print "something went wrong parsing the data."
         return "something went wrong parsing the data."
@@ -327,6 +354,10 @@ def setSellAmount():
         userId = current_user.username
         stockSymbol = request.form.getlist('stockSymbol')[0]
         cash = float(request.form.getlist('cash')[0])
+        if not checkQuoteSymbol(stockSymbol):
+            return "Stock symbol must be 3 letters"
+        if negativeCash(cash):
+            return "cannot use negative cash"
     except:
         print "something went wrong parsing the data."
         return "something went wrong parsing the data."
@@ -345,6 +376,10 @@ def setSellTrigger():
         userId = current_user.username
         stockSymbol = request.form.getlist('stockSymbol')[0]
         cash = float(request.form.getlist('cash')[0])
+        if not checkQuoteSymbol(stockSymbol):
+            return "Stock symbol must be 3 letters"
+        if negativeCash(cash):
+            return "cannot use negative cash"
     except:
         print "something went wrong parsing the data."
         return "something went wrong parsing the data."
@@ -362,6 +397,8 @@ def cancelSetSell():
     try:
         userId = current_user.username
         stockSymbol = request.form.getlist('stockSymbol')[0]
+        if not checkQuoteSymbol(stockSymbol):
+            return "Stock symbol must be 3 letters"
     except:
         print "something went wrong parsing the data."
         return "something went wrong parsing the data."
