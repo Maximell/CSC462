@@ -267,7 +267,8 @@ class poolHandler(Thread):
                         # print "popping sym" ,  quoteServer.pool
                         quoteServer.pool.pop(sym , None)
                         # print "popped", quoteServer.pool
-                    poolHandler()
+                    print "not starting another handler"
+                    # poolHandler()
 
 
 
