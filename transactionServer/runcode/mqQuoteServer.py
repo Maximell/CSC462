@@ -48,6 +48,7 @@ class poolHandler(Thread):
                             transactionServerID = payload["trans"]
                             # Need to figure out which transaction server to send back to.
                             P2Q_rabbit.put(((payload , 2)))
+                            self.is_alive = False
                             # transactionClient = RabbitMQClient(transactionServerID)
                             # transactionClient.send(payload)
 
