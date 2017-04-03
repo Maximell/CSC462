@@ -124,7 +124,7 @@ class RabbitQuoteClient():
         """
         print "exchange all good"
         # LOGGER.info('Exchange declared')
-        self.schedule_next_message()
+        self.setup_queue(self.queueName)
 
     def setup_queue(self, queueName):
         args = {'x-max-priority': 3, 'x-message-ttl': 600000}
@@ -189,7 +189,7 @@ class RabbitQuoteClient():
                         requestBody = payload
                         priority = 2
                     #     set up queue on the fly
-                    self.setup_queue(self.queueName)
+                    self.on_connection_open()
 
                     print "sending", requestBody, "to", self.queueName, "with priority", priority
                     properties = pika.BasicProperties(
