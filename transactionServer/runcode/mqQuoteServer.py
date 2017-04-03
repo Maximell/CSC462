@@ -112,7 +112,6 @@ class Quotes():
         self.pool = {}
         self.threadCount = 0
         self.maxthread = 300
-        self.poolchange = True
 
     def getQuote(self, symbol , user , transactionNum):
         cache = self.quoteCache.get(symbol)
@@ -127,7 +126,7 @@ class Quotes():
 
     def hitQuoteServerAndCache(self, symbol, user, transactionNum):
         # run new quote thread
-        poolHandler()
+        # poolHandler()
         if symbol in self.inflight:
             return
         # loop while there are no threads left
@@ -166,6 +165,7 @@ class Quotes():
         if self.pool.get(symbol) is None:
             self.pool[symbol] = []
         self.pool[symbol].append(payload)
+        print "pool is now/:", self.pool
 
 
 
@@ -206,7 +206,7 @@ if __name__ == '__main__':
     mac = str(get_mac())
     print "starting QuoteServer " + quoteMacMap[mac]
     quoteServer = Quotes()
-
+    poolHandler()
 
     print "create publisher"
     transQueue = multiprocessing.Queue()
