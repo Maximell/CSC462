@@ -31,6 +31,7 @@ class poolHandler(Thread):
         #         look between pool of requests
         #          and the cache size.
         while(True):
+           print "handler alive"
            for sym in quoteServer.pool:
                 print "things in pool:",sym
                 print "pool size:",len(quoteServer.pool)
@@ -47,8 +48,6 @@ class poolHandler(Thread):
                         print "sending back form handler:", payload
                         transactionServerID = payload["trans"]
                         # Need to figure out which transaction server to send back to.
-                        # P2Q_rabbit.put((2, payload))
-                        # self.is_alive = False
                         transactionClient = RabbitMQClient(transactionServerID)
                         transactionClient.send(payload)
                         transactionClient.close()
@@ -128,7 +127,7 @@ class Quotes():
 
     def hitQuoteServerAndCache(self, symbol, user, transactionNum):
         # run new quote thread
-        self.poolchange = True
+        poolHandler()
         if symbol in self.inflight:
             return
         # loop while there are no threads left
@@ -161,7 +160,7 @@ class Quotes():
         print self.quoteCache
 
     def addRequestToPool(self, payload):
-        poolHandler()
+
         symbol = payload["stockSymbol"]
         print "adding to pool", symbol
         if self.pool.get(symbol) is None:
