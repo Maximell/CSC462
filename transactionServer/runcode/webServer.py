@@ -50,13 +50,14 @@ def sendAndReceive(data, host='142.104.91.142',port=44429, queueName=None):
     while result is None:
         try:
             # time.sleep(0.01)
-            result = P2Q_rabbit.get(False)
+            result = P2Q_rabbit.get()
             if result is None:
-                result = P1Q_rabbit.get(False)
+                result = P1Q_rabbit.get()
             elif result is None:
-                result = P3Q_rabbit.get(False)
+                result = P3Q_rabbit.get()
         except Exception as e:
-            print e
+            pass
+            # print e
     print result
     consumer.terminate()
 
