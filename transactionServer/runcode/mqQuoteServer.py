@@ -19,7 +19,7 @@ class RabbitQuoteClient():
         print "start making quoteClient"
         self.queueName = None
         self.param = pika.ConnectionParameters('142.104.91.142',44429)
-        self.connection = pika.SelectConnection(self.param,self.send,stop_ioloop_on_close=False)
+        self.connection = pika.SelectConnection(self.param,self.send)
         self.channel = None
         self.closing = False
         self.stopping = False
