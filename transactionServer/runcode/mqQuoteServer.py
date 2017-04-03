@@ -14,12 +14,12 @@ import multiprocessing
 from multiprocessing import Process
 from uuid import getnode as get_mac
 
-class RabbitQuoteClient(RabbitMQBase):
+class RabbitQuoteClient():
     def __init__(self,  requestQueue ):
         print "start making quoteClient"
         self.queueName = None
         self.param = pika.ConnectionParameters('142.104.91.142',44429)
-        self.connection = pika.SelectConnection(self.param,self.on_connection_open,stop_ioloop_on_close=False)
+        self.connection = pika.SelectConnection(self.param,self.send,stop_ioloop_on_close=False)
         self.channel = None
         self.closing = False
         self.stopping = False
@@ -64,7 +64,7 @@ class RabbitQuoteClient(RabbitMQBase):
         self.connection.ioloop.stop()
 
         # Create a new connection
-        self.connection = pika.SelectConnection(self.param,self.on_connection_open,stop_ioloop_on_close=False)
+        self.connection = pika.SelectConnection(self.param,self.send,stop_ioloop_on_close=False)
 
         # There is now a new connection, needs a new ioloop to run
         self.connection.ioloop.start()
@@ -423,7 +423,7 @@ if __name__ == '__main__':
 
     print "create publisher"
     transQueue = multiprocessing.Queue()
-    trans_producer_process = Process(target=RabbitQuoteClient, args=(RabbitQuoteClient, transQueue))
+    trans_producer_process = Process(target=RabbitQuoteClient, args=(transQueue))
     trans_producer_process.start()
     print "created publisher"
 
