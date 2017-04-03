@@ -420,7 +420,7 @@ def handleDisplaySummary(args):
         args["commandSummary"] = localDisplaySummary.getDisplaySummary(userId)
         return args
     elif (buyTriggers is not None) and (sellTriggers is not None):
-        databaseFunctions.put(
+        databaseQueue.put(
             databaseFunctions.createSummaryRequest(userId, args)
         )
     else:
