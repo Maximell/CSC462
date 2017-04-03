@@ -49,16 +49,9 @@ class poolHandler(Thread):
                             # Need to figure out which transaction server to send back to.
                             # P2Q_rabbit.put((2, payload))
                             # self.is_alive = False
-                            # transactionClient = RabbitMQClient(transactionServerID)
-                            # transactionClient.send(payload)
-                            requestQueue = multiprocessing.Queue()
-                            producer_process = Process(target=RabbitMQAyscClient,
-                                                       args=(transactionServerID, requestQueue))
-                            producer_process.start()
-                            requestQueue.put(payload, transactionServerID)
-                            while(requestQueue.empty() == False):
-                                pass
-                            producer_process.terminate()
+                            transactionClient = RabbitMQClient(transactionServerID)
+                            transactionClient.send(payload)
+
 
                         quoteServer.pool[sym] = []
 
