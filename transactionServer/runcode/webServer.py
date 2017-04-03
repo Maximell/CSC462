@@ -44,16 +44,18 @@ def sendAndReceive(data, host='142.104.91.142',port=44429, queueName=None):
     #         print e
     consumer = RabbitMQAyscReciever(queueName , P1Q_rabbit, P2Q_rabbit, P3Q_rabbit)
     result = None
+    print "waiting for result"
     while result is None:
         try:
             # time.sleep(0.01)
-            result = P2Q_rabbit.get()
+            result = P2Q_rabbit.get(False)
             if result is None:
-                result = P1Q_rabbit.get()
+                result = P1Q_rabbit.get(False)
             elif result is None:
-                result = P3Q_rabbit.get()
+                result = P3Q_rabbit.get(False)
         except Exception as e:
             print e
+    print result
 
 
     print "from the trans server: ", result
