@@ -42,7 +42,9 @@ def sendAndReceive(data, host='142.104.91.142',port=44429, queueName=None):
     #         method, props, result = channel.basic_get(queue=queueName, no_ack=True)
     #     except Exception as e:
     #         print e
-    consumer = RabbitMQAyscReciever(queueName , P1Q_rabbit, P2Q_rabbit, P3Q_rabbit)
+
+    consumer = Process(target=RabbitMQAyscReciever , args=(queueName , P1Q_rabbit, P2Q_rabbit, P3Q_rabbit))
+    consumer.start()
     result = None
     print "waiting for result"
     while result is None:
@@ -56,13 +58,13 @@ def sendAndReceive(data, host='142.104.91.142',port=44429, queueName=None):
         except Exception as e:
             print e
     print result
-
+    consumer.terminate()
 
     print "from the trans server: ", result
     # close the channel
     # channel.close()
-    consumer.close_connection()
-    consumer.closing = True
+
+    # consumer.closing = True
     return result
 
 def getRandomRequestLineNum(start=-100000, stop=-1, step=1):
