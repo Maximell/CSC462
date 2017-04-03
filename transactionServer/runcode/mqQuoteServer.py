@@ -34,8 +34,8 @@ class poolHandler(Thread):
             print "handler still going"
             if quoteServer.poolchange:
                 print "pool size:", len(quoteServer.pool)
-                # if len(quoteServer.pool) == 0:
-                #     quoteServer.poolchange = False
+                if len(quoteServer.pool) == 0:
+                    quoteServer.poolchange = False
                 print "something changed"
                 for sym in quoteServer.pool:
                     print "things in pool:",sym
@@ -58,7 +58,9 @@ class poolHandler(Thread):
                             transactionClient = RabbitMQClient(transactionServerID)
                             transactionClient.send(payload)
                             transactionClient.close()
+                            print "popping sym" ,  quoteServer.pool
                             quoteServer.pool.pop(sym , None)
+                            print "popped", quoteServer.pool
 
 
 
