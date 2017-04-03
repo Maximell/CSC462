@@ -254,7 +254,7 @@ class poolHandler(Thread):
                         #                                  args=(transactionServerID, requestQueue))
                         # trans_producer_process.start()
                         # requestQueue.put(payload)
-                        # transQueue.put((payload , transactionServerID))
+                        transQueue.put((payload , transactionServerID))
                         # print "popping sym" ,  quoteServer.pool
                         quoteServer.pool.pop(sym , None)
                         # print "popped", quoteServer.pool
@@ -299,14 +299,14 @@ class getQuoteThread(Thread):
         )
         # print "built request: ",requestBody
         auditQueue.put(requestBody)
-        transQueue.put((payload, self.transServer))
+        # transQueue.put((payload, self.transServer))
 
         # self.cacheLock.acquire()
         quoteServer.quoteCache[self.symbol] = newQuote
         del quoteServer.inflight[quoteServer.inflight.index(self.symbol)]
         quoteServer.threadCount -= 1
 
-        # print "thread terminating"
+        print "thread terminating"
         # self.cacheLock.release()
 
 
