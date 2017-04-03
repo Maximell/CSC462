@@ -14,8 +14,8 @@ from multiprocessing import Process
 
 
 def sendToQueue(data):
-    # requestQueue.put(data, RabbitMQAyscClient.TRANSACTION , priority=1)
-    transactionClient.send(data)
+    requestQueue.put(data, RabbitMQAyscClient.TRANSACTION , 1)
+    # transactionClient.send(data)
 
 
 def sendAndReceive(data, host='142.104.91.142',port=44429, queueName=None):
@@ -386,10 +386,10 @@ def displaySummary():
 
 
 if __name__ == '__main__':
-    # requestQueue = multiprocessing.Queue()
-    # producer_process = Process(target=RabbitMQAyscClient,
-    #                            args=(RabbitMQAyscClient.TRANSACTION, requestQueue))
-    # producer_process.start()
+    requestQueue = multiprocessing.Queue()
+    producer_process = Process(target=RabbitMQAyscClient,
+                               args=(RabbitMQAyscClient.TRANSACTION, requestQueue))
+    producer_process.start()
 
-    transactionClient = RabbitMQClient(RabbitMQClient.TRANSACTION)
+    # transactionClient = RabbitMQClient(RabbitMQClient.TRANSACTION)
     app.run(host="0.0.0.0",port=44424)
