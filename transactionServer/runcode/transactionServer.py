@@ -88,6 +88,8 @@ def handleCommandQuote(args):
     )
 
     if quote is not None:
+        # if it comes from cache, it didnt have the quote there
+        args["quote"] = quote
         print "Quote return: ", args
         return args
     else:
