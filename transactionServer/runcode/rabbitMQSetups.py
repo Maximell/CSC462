@@ -206,7 +206,7 @@ class RabbitMQAyscClient(RabbitMQBase):
         message to be delivered in PUBLISH_INTERVAL seconds.
 
         """
-        print "scheduale next msg"
+        print "schedule next msg"
         if self.stopping:
             return
 
@@ -249,7 +249,7 @@ class RabbitMQAyscClient(RabbitMQBase):
                         body=json.dumps(requestBody),
 
                     )
-                    print "schedule next msg"
+                    # print "schedule next msg"
                     self.schedule_next_message()
             except:
                 pass

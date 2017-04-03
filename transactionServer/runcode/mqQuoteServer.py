@@ -6,7 +6,7 @@ from random import randint
 import pika
 from threading import Thread
 import threading
-from rabbitMQSetups import  RabbitMQAyscClient, RabbitMQAyscReciever, quoteMacMap
+from rabbitMQSetups import RabbitMQClient, RabbitMQAyscClient, RabbitMQAyscReciever, quoteMacMap
 from mqAuditServer import auditFunctions
 import Queue
 
@@ -47,8 +47,8 @@ class poolHandler(Thread):
                             # print "sending back form handler:", payload
                             transactionServerID = payload["trans"]
                             # Need to figure out which transaction server to send back to.
-                            transQueue.put((payload , transactionServerID))
-
+                            transactionClient = RabbitMQClient(transactionServerID)
+                            transactionClient.send(payload)
                         quoteServer.pool[sym] = []
 
 
@@ -196,7 +196,7 @@ if __name__ == '__main__':
     print "create publisher"
     transQueue = multiprocessing.Queue()
     trans_producer_process = Process(target=RabbitMQAyscClient,
-                               args=("DummyQueueforQuotes" , transQueue))
+                               args=(RabbitMQAyscClient.TRANSACTION , transQueue))
     trans_producer_process.start()
     print "created publisher"
 
