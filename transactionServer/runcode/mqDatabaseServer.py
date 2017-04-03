@@ -39,6 +39,7 @@ class databaseFunctions:
     RELEASE_PORTFOLIO = 13
     BUY_TRIGGER = 14
     SELL_TRIGGER = 15
+    SUMMARY = 16
 
     # @classmethod makes it so you dont have to instantiate the class. just call databaseFunctions.createAddRequest()
 
@@ -199,6 +200,11 @@ class databaseFunctions:
             'portfolioReleaseAmount': portfolioReleaseAmount,
             'symbol': symbol
         }
+
+    @classmethod
+    def createSummaryRequest(cls, userId, args):
+        args.update({'function': cls.SUMMARY, "userId": userId})
+        return args
 
     @classmethod
     def listOptions(cls):
@@ -672,6 +678,15 @@ def handleTriggerSell(payload):
 
     return DONT_RETURN_TO_TRANSACTION
 
+def handleSummary(payload):
+    userId = payload["userId"]
+
+    user = databaseServer.getOrAddUser(userId)
+    payload['response'] = 200
+    payload['user'] = user
+
+    return payload
+
 
 def on_request(ch, method, props, payload):
     print "payload: ", payload
@@ -717,6 +732,7 @@ if __name__ == '__main__':
         databaseFunctions.RELEASE_PORTFOLIO: handleReleasePortfolio,
         databaseFunctions.BUY_TRIGGER: handleTriggerBuy,
         databaseFunctions.SELL_TRIGGER: handleTriggerSell,
+        databaseFunctions.SUMMARY: handleSummary,
     }
     # Object to send back to Transaction client
     print "create publisher"
