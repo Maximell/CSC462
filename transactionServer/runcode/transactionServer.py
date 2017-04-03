@@ -499,13 +499,12 @@ def delegate(ch , method, prop, args):
                 str(error)
             )
             auditQueue.put(requestBody)
-            return
-            # returnClient = RabbitMQClient(queueName=RabbitMQClient.WEB+str(args['lineNum']))
-            # returnClient.send(
-            #     create_response(500, args)
-            # )
-            # returnClient.close()
-            #
+            returnClient = RabbitMQClient(queueName=RabbitMQClient.WEB+str(args['lineNum']))
+            returnClient.send(
+                create_response(500, args)
+            )
+            returnClient.close()
+
 
 
 if __name__ == '__main__':

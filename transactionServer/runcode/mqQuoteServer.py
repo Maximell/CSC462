@@ -13,18 +13,7 @@ import Queue
 import multiprocessing
 from multiprocessing import Process
 from uuid import getnode as get_mac
-#
-# class rabbitConsumer():
-#     def __init__(self, queueName,Q2):
-#         self.rabbitPQueue2 = Q2
-#         print "initialize queues"
-#         self.connection = RabbitMQReceiver(self.consume, queueName)
-#         print "connectionb done"
-#
-#     def consume(self, ch, method, props, body):
-#         payload = json.loads(body)
-#         print "Received :", payload
-#         self.rabbitPQueue2.put((2, payload))
+
 
 
 def createQuoteRequest(userId, stockSymbol, lineNum, args):
@@ -193,9 +182,7 @@ def on_request(ch, method, props, payload):
 
     # print "sending back from cache:", payload
     transactionServerID = payload["trans"]
-    # Need to figure out which transaction server to send back to.
-    # transactionClient = RabbitMQClient(transactionServerID)
-    # transactionClient.send(payload)
+    # Need to figure out which transaction or trigger server to send back to.
     print "adding payload to Queue",payload, transactionServerID
     transQueue.put((payload , transactionServerID))
 
@@ -209,7 +196,7 @@ if __name__ == '__main__':
     print "create publisher"
     transQueue = multiprocessing.Queue()
     trans_producer_process = Process(target=RabbitMQAyscClient,
-                               args=("DummyQueue" , transQueue))
+                               args=("DummyQueueforQuotes" , transQueue))
     trans_producer_process.start()
     print "created publisher"
 
@@ -219,10 +206,6 @@ if __name__ == '__main__':
                                args=(  RabbitMQAyscClient.AUDIT , auditQueue ))
     audit_producer_process.start()
     print "created publisher"
-    # for triggers next
-    # requestQueue = multiprocessing.Queue()
-    # producer_process = Process(target=RabbitMQAyscClient,
-    #                            args=(RabbitMQAyscClient.TRIGGERS, requestQueue))
 
 
     P1Q_rabbit = multiprocessing.Queue()

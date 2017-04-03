@@ -61,7 +61,7 @@ pssh -i -h workersHostFile.txt iptables -I INPUT -p tcp --dport 44424 -j ACCEPT
 
 echo done configuring iptables
 echo starting workers
-pssh -i -h workersHostFile.txt -x "cd $workingDirectoryPath;" python runScript.py
+pssh -i -h workersHostFile.txt -x "cd $workingDirectoryPath;"  python startWorker.py
 echo worker configuration complete
 echo starting quote server
 pssh -i -H root@142.104.91.130:44421 -x "cd $workingDirectoryPath;" python startQuoteServer.py
