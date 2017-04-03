@@ -34,6 +34,7 @@ class poolHandler(Thread):
             if quoteServer.poolchange:
                 if len(quoteServer.pool) == 0:
                     quoteServer.poolchange = False
+                print "something changed"
                 for sym in quoteServer.pool:
                     print "things in pool:",sym
                     quote = quoteServer.quoteCache.get(sym)
@@ -119,18 +120,18 @@ class Quotes():
 
     def getQuote(self, symbol , user , transactionNum):
         cache = self.quoteCache.get(symbol)
-        # print "checking quote cache: ", cache,  symbol
+        print "checking quote cache: ", cache,  symbol
         # print "current cache = ",self.quoteCache
         if cache:
             if self._cacheIsActive(cache):
-                # print "cache value is active"
+                print "cache value is active"
                 return cache
         self.hitQuoteServerAndCache(symbol, user, transactionNum)
         return
 
     def hitQuoteServerAndCache(self, symbol, user, transactionNum):
         # run new quote thread
-
+        self.poolchange = True
         if symbol in self.inflight:
             return
         # loop while there are no threads left
@@ -163,12 +164,13 @@ class Quotes():
         print self.quoteCache
 
     def addRequestToPool(self, payload):
+        self.poolchange = True
         symbol = payload["stockSymbol"]
         print "adding to pool", symbol
         if self.pool.get(symbol) is None:
             self.pool[symbol] = []
         self.pool[symbol].append(payload)
-        self.poolchange =True
+
 
 
 def on_request(ch, method, props, payload):
