@@ -10,27 +10,6 @@ from threading import Thread
 import multiprocessing
 from multiprocessing import Process
 
-#
-# class rabbitConsumer():
-#     def __init__(self, queueName,Q1, Q2, Q3):
-#         self.rabbitPQueue1 = Q1
-#         self.rabbitPQueue2 = Q2
-#         self.rabbitPQueue3 = Q3
-#         self.connection = RabbitMQReceiver(self.consume, queueName)
-#
-#     def consume(self, ch, method, props, body):
-#         payload = json.loads(body)
-#         print "Received :", payload
-#         print "priority = ",props.priority
-#
-#
-#         if props.priority == 1:
-#             self.rabbitPQueue1.put((1,  payload))
-#         elif props.priority == 2:
-#             self.rabbitPQueue2.put((2, payload))
-#         else:
-#             self.rabbitPQueue3.put((3,  payload))
-
 
 
 # quote shape: symbol: {value: string, retrieved: epoch time, user: string, cryptoKey: string}
@@ -438,15 +417,14 @@ def delegate(ch , method, prop, args):
             error
         )
         auditQueue.put(requestBody)
-        return
 
-        # returnClient = RabbitMQClient(queueName=RabbitMQClient.WEB + str(args['lineNum']))
-        # print "sending error back to webserver on queue: ", RabbitMQClient.WEB + str(args['lineNum'])
-        # # returnClient.send(
-        # #     create_response(args.get("response"), args)
-        # # )
-        # print "error sent to webserver"
-        # returnClient.close()
+        returnClient = RabbitMQClient(queueName=RabbitMQClient.WEB + str(args['lineNum']))
+        print "sending error back to webserver on queue: ", RabbitMQClient.WEB + str(args['lineNum'])
+        returnClient.send(
+            create_response(args.get("response"), args)
+        )
+        print "error sent to webserver"
+        returnClient.close()
     else:
         try:
             # send command to audit, if it is from web server
@@ -492,23 +470,23 @@ def delegate(ch , method, prop, args):
                 # if it is not complete (needs to go to another service) it should return None
                 response = function(args)
                 print "response from call:", response
+
+                if response is not None:
+                    print "return response to webserver: ", response
+                    returnClient = RabbitMQClient(queueName=RabbitMQClient.WEB+str(response["lineNum"]))
+                    returnClient.send(
+                        create_response(200, response)
+                    )
+                    returnClient.close()
                 return
             else:
-                return
-                # if response is not None:
-                #     print "return response to webserver: ", response
-                #     returnClient = RabbitMQClient(queueName=RabbitMQClient.WEB+str(response["lineNum"]))
-                #     returnClient.send(
-                #         create_response(200, response)
-                #     )
-                #     returnClient.close()
-            # else:
-            #     print "couldn't figure out command...", args
-            #     returnClient = RabbitMQClient(queueName=RabbitMQClient.WEB+str(args['lineNum']))
-            #     # returnClient.send(
-            #     #     create_response(404, "function not found" + str(args))
-            #     # )
-            #     returnClient.close()
+                print "couldn't figure out command...", args
+                returnClient = RabbitMQClient(queueName=RabbitMQClient.WEB+str(args['lineNum']))
+                returnClient.send(
+                    create_response(404, "function not found" + str(args))
+                )
+                returnClient.close()
+
         except (RuntimeError, TypeError, ArithmeticError, KeyError) as error:
             print "before error print here"
             errorPrint(args, error)

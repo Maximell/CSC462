@@ -60,6 +60,10 @@ class RabbitMQClient(RabbitMQBase):
         except Exception as e:
             print "Error occurred sending rabbitMQMessage: ", e
 
+    def close(self):
+        self.connection.close()
+
+
 # This is for the aysnc rabbitMQ Publisher
 class RabbitMQAyscClient(RabbitMQBase):
     def __init__(self, queueName , requestQueue ):
@@ -253,8 +257,6 @@ class RabbitMQAyscClient(RabbitMQBase):
                 # print "failed in send"
 
 
-    def close(self):
-        self.connection.close()
 
 # ^ all for aysc connection and reliability
 # ==================================================================
