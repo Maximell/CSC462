@@ -49,7 +49,7 @@ class poolHandler(Thread):
                         # Need to figure out which transaction server to send back to.
                         transactionClient = RabbitMQClient(transactionServerID)
                         transactionClient.send(payload)
-                        transactionClient.close()
+                        # transactionClient.close()
                         # print "popping sym" ,  quoteServer.pool
                         quoteServer.pool.pop(sym , None)
                         # print "popped", quoteServer.pool
@@ -202,7 +202,7 @@ def on_request(ch, method, props, payload):
     # transQueue.put((payload , transactionServerID))
     transactionClient = RabbitMQClient(transactionServerID)
     transactionClient.send(payload)
-    transactionClient.close()
+    # transactionClient.close()
 
 
 if __name__ == '__main__':

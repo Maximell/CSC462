@@ -61,7 +61,7 @@ class RabbitMQClient(RabbitMQBase):
             print "Error occurred sending rabbitMQMessage: ", e
 
     def close(self):
-        self.connection.close()
+        self.connection.close(reply_code=200, reply_text='Normal shutdown')
 
 
 # This is for the aysnc rabbitMQ Publisher
@@ -75,7 +75,7 @@ class RabbitMQAyscClient(RabbitMQBase):
         self.stopping = False
         self.PUBLISH_INTERVAL = 1
         self.requestQueue = requestQueue
-        self.EXCHANGE = ""
+        self.EXCHANGE = queueName
         print "set up Publisher"
 
         self.connection.ioloop.start()
@@ -286,7 +286,7 @@ class RabbitMQAyscReciever(RabbitMQBase):
         self.rabbitPQueue2 = rabbitPQueue2
         self.rabbitPQueue3 = rabbitPQueue3
 
-        self.EXCHANGE = ""
+        self.EXCHANGE = queueName
         self.deliveries = []
         self.acked = 0
         self.nacked = 0
