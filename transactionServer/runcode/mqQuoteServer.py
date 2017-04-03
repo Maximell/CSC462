@@ -19,7 +19,7 @@ class RabbitQuoteClient():
         print "start making quoteClient"
         self.queueName = None
         self.param = pika.ConnectionParameters('142.104.91.142',44429)
-        self.connection = pika.SelectConnection(self.param,self.send)
+        self.connection = pika.SelectConnection(self.param,self.send,stop_ioloop_on_close=False)
         self.channel = None
         self.closing = False
         self.stopping = False
@@ -168,7 +168,7 @@ class RabbitQuoteClient():
         self.connection.close()
 
 
-    def send(self):
+    def send(self , blank_connection):
         print "try sending"
         notEmpty = True
         while(notEmpty):
