@@ -32,11 +32,13 @@ class poolHandler(Thread):
 #         look between pool of requests
 #          and the cache size.
             if quoteServer.poolchange:
+                print "pool size:", len(quoteServer.pool)
                 if len(quoteServer.pool) == 0:
                     quoteServer.poolchange = False
                 print "something changed"
                 for sym in quoteServer.pool:
                     print "things in pool:",sym
+                    print "pool size:",len(quoteServer.pool)
                     quote = quoteServer.quoteCache.get(sym)
                     print "cache = ", quote
                     if quote is not None:
