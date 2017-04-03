@@ -22,6 +22,10 @@ class RabbitQuoteClient():
         self.connection = pika.SelectConnection(self.param,self.send,stop_ioloop_on_close=False)
         self.channel = None
         self.closing = False
+
+        self.request = None
+        self.priority = None
+
         self.stopping = False
         self.PUBLISH_INTERVAL = 1
         self.requestQueue = requestQueue
@@ -179,40 +183,42 @@ class RabbitQuoteClient():
                         requestBody = payload[0]
                         self.queueName = payload[1]
                         priority = 2
-                    elif len(payload) == 3:
-                        print "got args",payload
-                        requestBody = payload[0]
-                        self.queueName = payload[1]
-                        priority = int(payload[2])
+
                     else:
                         requestBody = payload
                         priority = 2
                     #     set up queue on the fly
                     args = {'x-max-priority': 3, 'x-message-ttl': 600000}
                     print "setting up queue",  self.queueName
-                    self.channel.queue_declare( self.queueName, arguments=args)
+                    self.request = requestBody
+                    self.priority = priority
+                    self.channel.queue_declare(self.sendMessage() ,self.queueName, arguments=args)
 
-                    print "sending", requestBody, "to", self.queueName, "with priority", priority
-                    properties = pika.BasicProperties(
-                        content_type='application/json',
-                        priority=priority,
-                    )
-                    self.channel.basic_publish(
-                        exchange=self.EXCHANGE,
-                        routing_key=self.queueName,
-                        properties=properties,
-                        body=json.dumps(requestBody),
 
-                    )
-                    # print "schedule next msg"
-                    self.schedule_next_message()
+
             except:
                 pass
                 # notEmpty = False
                 # print "failed in send"
 
+    def sendMessage(self ):
+        print "sending", self.request, "to", self.queueName, "with priority", self.priority
+        properties = pika.BasicProperties(
+            content_type='application/json',
+            priority=self.priority,
+        )
+        self.channel.basic_publish(
+            exchange=self.EXCHANGE,
+            routing_key=self.queueName,
+            properties=properties,
+            body=json.dumps(self.request),
 
-    def close(self):
+        )
+        # print "schedule next msg"
+        self.schedule_next_message()
+
+
+def close(self):
         self.connection.close()
 
 
