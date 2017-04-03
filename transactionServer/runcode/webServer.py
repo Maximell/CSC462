@@ -28,25 +28,35 @@ def sendAndReceive(data, host='142.104.91.142',port=44429, queueName=None):
             print error
     # send a request to the transactionServer
     sendToQueue(data)
-    # open a connection to rabbitMq
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host=host, port=port))
-    channel = connection.channel()
-    # declare a queue
-    args = {'x-max-priority': 3, 'x-message-ttl': 600000}
-    channel.queue_declare(queue=queueName, arguments=args)
-    print("waiting for transaction return on queue: ", queueName)
-    # wait for a response from the transactionServer in that queue
+    # # open a connection to rabbitMq
+    # connection = pika.BlockingConnection(pika.ConnectionParameters(host=host, port=port))
+    # channel = connection.channel()
+    # # declare a queue
+    # args = {'x-max-priority': 3, 'x-message-ttl': 600000}
+    # channel.queue_declare(queue=queueName, arguments=args)
+    # print("waiting for transaction return on queue: ", queueName)
+    # # wait for a response from the transactionServer in that queue
+    # result = None
+    # while result is None:
+    #     try:
+    #         time.sleep(0.01)
+    #         method, props, result = channel.basic_get(queue=queueName)
+    #     except Exception as e:
+    #         print e
+    consumer = RabbitMQAyscReciever(queueName , P1Q_rabbit, P2Q_rabbit, P3Q_rabbit)
     result = None
     while result is None:
         try:
-            time.sleep(0.01)
-            method, props, result = channel.basic_get(queue=queueName)
+                # time.sleep(0.01)
+                result = P2Q_rabbit.get(False)
         except Exception as e:
-            print e
+                print e
+
 
     print "from the trans server: ", result
     # close the channel
-    channel.close()
+    # channel.close()
+    consumer.close_connection()
     return result
 
 def getRandomRequestLineNum(start=-100000, stop=-1, step=1):
@@ -391,6 +401,11 @@ if __name__ == '__main__':
     producer_process = Process(target=RabbitMQAyscClient,
                                args=(RabbitMQAyscClient.TRANSACTION, requestQueue))
     producer_process.start()
+
+    P1Q_rabbit = multiprocessing.Queue()
+    P2Q_rabbit = multiprocessing.Queue()
+    P3Q_rabbit = multiprocessing.Queue()
+
 
     # transactionClient = RabbitMQClient(RabbitMQClient.TRANSACTION)
     app.run(host="0.0.0.0",port=44424)
