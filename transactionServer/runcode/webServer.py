@@ -16,47 +16,52 @@ from multiprocessing import Process
 def sendToQueue(data):
     print "sending the data",data
     requestQueue.put((data, RabbitMQAyscClient.TRANSACTION , 1))
-    # transactionClient.send(data)
 
 
 def sendAndReceive(data, host='142.104.91.142',port=44429, queueName=None):
     # if the queueName is None, set it to a default
     if queueName is None:
         try:
-            queueName = RabbitMQReceiver.WEB + str(data["lineNum"])
+            queueName = RabbitMQAyscReciever.WEB + str(data["lineNum"])
         except KeyError as error:
             print error
-    # send a request to the transactionServer
-    sendToQueue(data)
-    # open a connection to rabbitMq
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host=host, port=port))
-    channel = connection.channel()
-    # declare a queue
-    args = {'x-max-priority': 3, 'x-message-ttl': 600000}
-    channel.queue_declare(queue=queueName, arguments=args)
-    print("waiting for transaction return on queue: ", queueName)
-    # wait for a response from the transactionServer in that queue
-    result = None
-    while result is None:
-        try:
-            time.sleep(0.01)
-            method, props, result = channel.basic_get(queue=queueName)
-        except Exception as e:
-            print e
-    # consumer = RabbitMQAyscReciever(queueName , P1Q_rabbit, P2Q_rabbit, P3Q_rabbit)
+    # # send a request to the transactionServer
+    # sendToQueue(data)
+    # # open a connection to rabbitMq
+    # connection = pika.BlockingConnection(pika.ConnectionParameters(host=host, port=port))
+    # channel = connection.channel()
+    # # declare a queue
+    # args = {'x-max-priority': 3, 'x-message-ttl': 600000}
+    # channel.queue_declare(queue=queueName, arguments=args)
+    # print("waiting for transaction return on queue: ", queueName)
+    # # wait for a response from the transactionServer in that queue
     # result = None
     # while result is None:
     #     try:
-    #             # time.sleep(0.01)
-    #             result = P2Q_rabbit.get(False)
+    #         time.sleep(0.01)
+    #         method, props, result = channel.basic_get(queue=queueName, no_ack=True)
     #     except Exception as e:
-    #             print e
+    #         print e
+    consumer = RabbitMQAyscReciever(queueName , P1Q_rabbit, P2Q_rabbit, P3Q_rabbit)
+    result = None
+    while result is None:
+        try:
+                # time.sleep(0.01)
+                result = P2Q_rabbit.get()
+                if result == None:
+                    result = P1Q_rabbit.get()
+                elif result ==None:
+                    result = P3Q_rabbit.get()
+
+        except Exception as e:
+                print e
 
 
     print "from the trans server: ", result
     # close the channel
-    channel.close()
-    # consumer.close_connection()
+    # channel.close()
+    consumer.close_connection()
+    consumer.closing = True
     return result
 
 def getRandomRequestLineNum(start=-100000, stop=-1, step=1):
