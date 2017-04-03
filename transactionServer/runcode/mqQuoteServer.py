@@ -14,7 +14,7 @@ import multiprocessing
 from multiprocessing import Process
 from uuid import getnode as get_mac
 
-class RabbitQuoteClient(RabbitMQBase):
+class RabbitQuoteClient():
     def __init__(self,  requestQueue ):
         self.queueName = None
         self.param = pika.ConnectionParameters('142.104.91.142',44429)
@@ -421,7 +421,7 @@ if __name__ == '__main__':
     print "create publisher"
     transQueue = multiprocessing.Queue()
     trans_producer_process = Process(target=RabbitQuoteClient,
-                               args=( transQueue))
+                               args=(transQueue))
     trans_producer_process.start()
     print "created publisher"
 
