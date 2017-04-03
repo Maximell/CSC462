@@ -199,7 +199,10 @@ def on_request(ch, method, props, payload):
     transactionServerID = payload["trans"]
     # Need to figure out which transaction or trigger server to send back to.
     print "adding payload to Queue",payload, transactionServerID
-    transQueue.put((payload , transactionServerID))
+    # transQueue.put((payload , transactionServerID))
+    transactionClient = RabbitMQClient(transactionServerID)
+    transactionClient.send(payload)
+    transactionClient.close()
 
 
 if __name__ == '__main__':

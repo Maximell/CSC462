@@ -183,7 +183,7 @@ class RabbitMQAyscClient(RabbitMQBase):
 
     def setup_queue(self, queueName):
         args = {'x-max-priority': 3, 'x-message-ttl': 600000}
-        print "setting up queue"
+        print "setting up queue", queueName
         self.channel.queue_declare(self.on_queue_declareok, queueName , arguments=args)
 
     def on_queue_declareok(self, method_frame):
@@ -318,8 +318,8 @@ class RabbitMQAyscReciever(RabbitMQBase):
         :param pika.connection.Connection connection: The closed connection obj
         :param int reply_code: The server provided reply_code if given
         :param str reply_text: The server provided reply_text if given
-
         """
+
         print "on Closed connection"
         self._channel = None
         if self.closing:
