@@ -199,7 +199,7 @@ class RabbitMultiClient(RabbitMQBase):
                 if payload:
                     worderId = payload[0]
                     requestBody = payload[1]
-                    priority = payload[2]
+                    priority = 2
 
                     print "sending", requestBody, "to", worderId, "with priority", priority
                     print "queue size:",   self.requestQueue.qsize()
