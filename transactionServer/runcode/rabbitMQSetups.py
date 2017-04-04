@@ -334,24 +334,20 @@ class RabbitMQAyscReciever(RabbitMQBase):
         closed. See the on_connection_closed method.
 
         """
-        print "reconnecting"
-        self.deliveries = []
-        self.acked = 0
-        self.nacked = 0
-        self.message_number = 0
         self.connection.ioloop.stop()
 
-        if not self.closing:
+        # if not self.closing:
             # This is the old connection IOLoop instance, stop its ioloop
 
-            # Create a new connection
-            self.connection = self.connect()
+        # Create a new connection
+        self.connection = self.connect()
 
-            # There is now a new connection, needs a new ioloop to run
-            self.connection.ioloop.start()
+        # There is now a new connection, needs a new ioloop to run
+        self.connection.ioloop.start()
 
     def open_channel(self):
         print "open Channel"
+
         self.connection.channel(on_open_callback=self.on_channel_open)
 
     def on_channel_open(self , channel):
