@@ -86,9 +86,10 @@ class RabbitQuoteClient():
             print "failed"
             print e
 
-    def on_channel_open(self):
+    def on_channel_open(self ):
         print "on open channel for quotes"
-        self.channel = self.connection.channel()
+        # This may be wrong
+        self.channel = self.connection.channel(self.sendMessage)
         self.add_on_channel_close_callback()
         self.setup_exchange(self.queueName)
 
@@ -412,7 +413,7 @@ def on_request(ch, method, props, payload):
     if quote is None:
         quoteServer.addRequestToPool(payload)
         return
-
+# ***
     # print "quote: ", quote
 
     payload["quote"] = quote["value"]
@@ -440,6 +441,13 @@ if __name__ == '__main__':
     trans_producer_process = Process(target=RabbitQuoteClient, args=([transQueue]))
     trans_producer_process.start()
     print "created publisher"
+    # print "create publisher"
+    # transQueue = multiprocessing.Queue()
+    # trans_producer_process = Process(target=RabbitMQAyscClient,
+    #                            args=(  RabbitMQAyscClient.TRANSACTION , transQueue ))
+    # trans_producer_process.start()
+    # print "created publisher"
+
 
     # print "create publisher"
     auditQueue = multiprocessing.Queue()
