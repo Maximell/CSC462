@@ -129,8 +129,7 @@ class RabbitMultiClient(RabbitMQBase):
     def setup_exchange(self, exchange_name):
         # print "setup exchange"
         for queue in self.queueNames:
-            self.channel.exchange_declare(self.on_exchange_declareok,
-                                       queue,)
+            self.channel.exchange_declare(self.on_exchange_declareok,queue,)
 
     def on_exchange_declareok(self, unused_frame):
 
@@ -195,7 +194,7 @@ class RabbitMultiClient(RabbitMQBase):
         while(noDump):
             try:
                 print "getting request"
-                payload  = self.requestQueue.get()
+                payload  = self.requestQueue.get(False)
                 if payload:
                     worderId = payload[0]
                     requestBody = payload[1]
