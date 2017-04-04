@@ -20,7 +20,7 @@ class RabbitQuoteClient():
         self.queueName = None
         self.param = pika.ConnectionParameters('142.104.91.142',44429)
         self.connection = pika.SelectConnection(self.param,self.send,stop_ioloop_on_close=False)
-        self.channel = None
+        self.channel = self.connection.channel()
         self.closing = False
 
         self.request = None
@@ -79,8 +79,12 @@ class RabbitQuoteClient():
         self.open_channel()
 
     def open_channel(self):
-        print "open Channel for quotes"
-        self.connection.channel(on_open_callback=self.on_channel_open)
+        try:
+            print "open Channel for quotes"
+            self.connection.channel(on_open_callback=self.on_channel_open)
+        except Exception as e:
+            print "failed"
+            print e
 
     def on_channel_open(self):
         print "on open channel for quotes"

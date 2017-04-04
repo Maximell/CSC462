@@ -37,7 +37,7 @@ def sendAndReceive(data, host='142.104.91.142',port=44429, queueName=None):
     while result is None:
         currentTime = time.time()
         if startTime + 10 < currentTime:
-            result = "timed_out... Resend Command"
+            result = "401_timed_out... Resend Command"
             break
         try:
             # time.sleep(0.01)
@@ -134,7 +134,7 @@ user_manager = UserManager(db_adapter, app) # Initialize Flask-User
 if not User.query.filter(User.username=='admin').first():
     adminUser = User(username='admin',
                      email='seng462group22017@gmail.com',
-                     active=True,
+                     is_active=True,
                      password=user_manager.hash_password('group2Password'),
                      first_name="admin_first_name",
                      last_name="admin_last_name"
