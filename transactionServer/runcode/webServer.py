@@ -134,8 +134,10 @@ user_manager = UserManager(db_adapter, app) # Initialize Flask-User
 if not User.query.filter(User.username=='admin').first():
     adminUser = User(username='admin',
                      email='seng462group22017@gmail.com',
-                     is_enabled=True,
-                     password=user_manager.hash_password('group2Password')
+                     active=True,
+                     password=user_manager.hash_password('group2Password'),
+                     first_name="admin_first_name",
+                     last_name="admin_last_name"
                  )
     adminRole = Role(name='admin')
 
