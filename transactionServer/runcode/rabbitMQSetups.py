@@ -68,7 +68,7 @@ class RabbitMQClient(RabbitMQBase):
 class RabbitMQAyscClient(RabbitMQBase):
     def __init__(self, queueName , requestQueue ):
         self.queueName = queueName
-        self.param = pika.ConnectionParameters('142.104.91.142',44429)
+        self.param = pika.ConnectionParameters('142.104.91.142',44429,heartbeat_interval=10)
         self.connection = pika.SelectConnection(self.param,self.on_connection_open,stop_ioloop_on_close=False)
         self.channel = None
         self.closing = False
@@ -275,7 +275,7 @@ class RabbitMQAyscClient(RabbitMQBase):
 class RabbitMQAyscReciever(RabbitMQBase):
     def __init__(self, queueName , rabbitPQueue1 , rabbitPQueue2=None , rabbitPQueue3=None ):
         self.queueName = queueName
-        self.param = pika.ConnectionParameters('142.104.91.142',44429)
+        self.param = pika.ConnectionParameters('142.104.91.142',44429,heartbeat_interval=10)
         self.connection = pika.SelectConnection(self.param, self.on_connection_open, stop_ioloop_on_close=False)
         self.channel = None
         self.closing = False
@@ -307,7 +307,7 @@ class RabbitMQAyscReciever(RabbitMQBase):
     def add_on_connection_close_callback(self):
         print "on closed connection do callback"
         self.connection.add_on_close_callback(self.on_connection_closed)
-        self.connection.heartbeat(45)
+
     def on_connection_closed(self, connection, reply_code, reply_text):
 
 
