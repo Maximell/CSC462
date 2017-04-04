@@ -131,11 +131,9 @@ class RabbitMultiClient(RabbitMQBase):
     def setup_exchange(self, exchange_name):
         print "setup exchange for Quote"
         for queue in self.queueNames:
-            self.queueName = queue
-            print queue
-            self.channel.exchange_declare(self.on_exchange_declareok,queue,)
+            self.channel.exchange_declare(self.on_exchange_declareok(queue , None),queue,)
 
-    def on_exchange_declareok(self, unused_frame):
+    def on_exchange_declareok(self, queue, unused_frame):
 
         """Invoked by pika when RabbitMQ has finished the Exchange.Declare RPC
         command.
@@ -145,18 +143,18 @@ class RabbitMultiClient(RabbitMQBase):
         print "exchange all good for Quote"
         # LOGGER.info('Exchange declared')
         # for queue in self.queueNames:
-        self.setup_queue(self.queueName)
+        self.setup_queue(queue)
 
-    def setup_queue(self, queueName):
+    def setup_queue(self, queue):
         args = {'x-max-priority': 3, 'x-message-ttl': 600000}
-        print "setting up queue: queueName", queueName
+        print "setting up queue: queueName", queue
         # for queue in self.queueNames:
-        self.channel.queue_declare(self.on_queue_declareok, queueName , arguments=args)
+        self.channel.queue_declare(self.on_queue_declareok(queue , None), queue , arguments=args)
 
-    def on_queue_declareok(self, method_frame):
+    def on_queue_declareok(self, queue,method_frame):
         print "queue all good for quote"
         # for queue in self.queueNames:
-        self.channel.queue_bind(self.on_bindok, self.queueName, self.EXCHANGE)
+        self.channel.queue_bind(self.on_bindok, queue, self.EXCHANGE)
 
     def on_bindok(self, unused_frame):
         print "bind all good for quote"
