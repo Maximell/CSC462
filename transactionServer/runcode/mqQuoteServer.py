@@ -63,13 +63,14 @@ class RabbitMultiClient(RabbitMQBase):
         RabbitMQ if it disconnects.
         """
         print "on Closed connection"
-        self._channel = None
+        # self.channel = None
         if self.closing:
-            self.connection.ioloop.stop()
-        else:
-            # LOGGER.warning('Connection closed, reopening in 5 seconds: (%s) %s',
-            #                reply_code, reply_text)
-            self.connection.add_timeout(5, self.reconnect)
+            print "closing connection as self.closing is True"
+        #     self.connection.ioloop.stop()
+        # else:
+        #     # LOGGER.warning('Connection closed, reopening in 5 seconds: (%s) %s',
+        #     #                reply_code, reply_text)
+        self.connection.add_timeout(5, self.reconnect)
 
     def reconnect(self):
         """Will be invoked by the IOLoop timer if the connection is
@@ -106,7 +107,7 @@ class RabbitMultiClient(RabbitMQBase):
         """This method tells pika to call the on_channel_closed method if
         RabbitMQ unexpectedly closes the channel.
         """
-        print "callback after channel closed"
+        print "add callback for after channel is closed"
         self.channel.add_on_close_callback(self.on_channel_closed)
 
     def on_channel_closed(self, channel, reply_code, reply_text):
@@ -123,11 +124,12 @@ class RabbitMultiClient(RabbitMQBase):
         """
         print "channel closed"
         # LOGGER.warning('Channel was closed: (%s) %s', reply_code, reply_text)
-        if not self.closing:
-            self.connection.close()
+        # if not self.closing:
+        #     self.connection.close()
+        self.reconnect()
 
     def setup_exchange(self, exchange_name):
-        # print "setup exchange"
+        print "setup exchange"
         for queue in self.queueNames:
             self.channel.exchange_declare(self.on_exchange_declareok,queue,)
 
@@ -161,7 +163,7 @@ class RabbitMultiClient(RabbitMQBase):
         self.start_publishing()
 
     def start_publishing(self):
-        # print "start Publishing"
+        print "start Publishing"
         # self.enable_delivery_confirmations()
         self.schedule_next_message()
 
@@ -194,7 +196,7 @@ class RabbitMultiClient(RabbitMQBase):
         while(noDump):
             try:
                 print "getting request"
-                payload  = self.requestQueue.get(False)
+                payload  = self.requestQueue.get()
                 if payload:
                     worderId = payload[0]
                     requestBody = payload[1]
@@ -209,10 +211,11 @@ class RabbitMultiClient(RabbitMQBase):
                         body=json.dumps(requestBody),
                     )
                    # print "schedule next msg"
-                # self.schedule_next_message()
+                #
             except Exception as e:
                 print e
                 print "had troubles sending into rabbit"
+                self.schedule_next_message()
                 # notEmpty = False
                 # print "failed in send"
 
@@ -260,7 +263,7 @@ class RabbitQuoteClient():
 
         """This method is invoked by pika when the connection to RabbitMQ is
         closed unexpectedly. Since it is unexpected, we will reconnect to
-        RabbitMQ if it disconnects.
+        RabbitMQ if it disconnects.back
 
         :param pika.connection.Connection connection: The closed connection obj
         :param int reply_code: The server provided reply_code if given
