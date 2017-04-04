@@ -425,7 +425,7 @@ def handleCommandDumplog(args):
         )
         # TODO: not being sent with priority 3 because i didnt know how
         auditQueue.put(requestBody)
-    return "DUMPLOG SENT TO AUDIT"
+    return "Dumplog sent to audit, will be found on server with name" + args["filename"]
 
 def handleDisplaySummary(args):
     userId = args["userId"]

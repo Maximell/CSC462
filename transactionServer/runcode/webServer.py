@@ -156,7 +156,7 @@ def negativeCash(cash):
     return cash < 0
 
 def checkQuoteSymbol(symbol):
-    return symbol.isalpha() and len(symbol) == 3
+    return symbol.isalpha() and len(symbol) <= 3
 
 
 #Home
@@ -449,15 +449,35 @@ def cancelSetSell():
     return render_template('result.html', result=result)
 
 # Dumplog methods
-def doDumplog(userId, lineNum):
-    data = {"command": "DUMPLOG", "lineNum": lineNum, "userId": userId}
+def doDumplog(userId, filename, lineNum):
+    data = {"command": "DUMPLOG", "lineNum": lineNum, "userId": userId, "filename": filename}
     return sendAndReceive(data)
 
 @app.route('/dumplog/', methods=['POST'])
 @login_required
 def apiDumpLog():
-    fileName = request.form['fileName']
-    return doDumplog(fileName, getRandomRequestLineNum())
+    try:
+        userId = current_user.username
+        fileName = request.form['fileName']
+        return doDumplog(userId, fileName, getRandomRequestLineNum())
+    except:
+        return "something went wrong parsing the data."
+
+
+def doUserDumplog(userId, forUser, filename, lineNum):
+    data = {"command": "DUMPLOG", "lineNum": lineNum, "userId": userId, "filename": filename, "forUser": forUser}
+    return sendAndReceive(data)
+
+@app.route('/user-dumplog/', methods=['POST'])
+@login_required
+def apiUserDumpLog():
+    try:
+        userId = current_user.username
+        fileName = request.form['fileName']
+        return doUserDumplog(userId, userId, fileName, getRandomRequestLineNum())
+    except:
+        return "something went wrong parsing the data."
+
 
 # Display Summary methods
 def doDisplaySummary(userId, lineNum):
