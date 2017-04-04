@@ -154,13 +154,13 @@ class RabbitMultiClient(RabbitMQBase):
     def on_queue_declareok(self, method_frame):
         # print "queue all good"
         for queue in self.queueNames:
-            self.channel.queue_bind(self.on_bindok, queue,
-                                 self.EXCHANGE, )
+            self.channel.queue_bind(self.on_bindok, queue, self.EXCHANGE, queue)
 
     def on_bindok(self, unused_frame):
         # print "bind all good"
         # Queue bound
         self.start_publishing()
+        print "Finished Publishing"
 
     def start_publishing(self):
         print "start Publishing"
@@ -170,7 +170,6 @@ class RabbitMultiClient(RabbitMQBase):
     def schedule_next_message(self):
         """If we are not closing our connection to RabbitMQ, schedule another
         message to be delivered in PUBLISH_INTERVAL seconds.
-
         """
         # print "schedule next msg"
         # if self.stopping:
