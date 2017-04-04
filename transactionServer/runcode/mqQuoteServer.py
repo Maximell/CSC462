@@ -127,7 +127,7 @@ class RabbitMultiClient(RabbitMQBase):
             self.connection.close()
 
     def setup_exchange(self, exchange_name):
-        print "setup exchange"
+        # print "setup exchange"
         for queue in self.queueNames:
             self.channel.exchange_declare(self.on_exchange_declareok,
                                        queue,)
@@ -139,30 +139,30 @@ class RabbitMultiClient(RabbitMQBase):
         :param pika.Frame.Method unused_frame: Exchange.DeclareOk response frame
 
         """
-        print "exchange all good"
+        # print "exchange all good"
         # LOGGER.info('Exchange declared')
         for queue in self.queueNames:
             self.setup_queue(queue)
 
     def setup_queue(self, queueName):
         args = {'x-max-priority': 3, 'x-message-ttl': 600000}
-        print "setting up queue"
+        # print "setting up queue"
         for queue in self.queueNames:
             self.channel.queue_declare(self.on_queue_declareok, queue , arguments=args)
 
     def on_queue_declareok(self, method_frame):
-        print "queue all good"
+        # print "queue all good"
         for queue in self.queueNames:
             self.channel.queue_bind(self.on_bindok, queue,
                                  self.EXCHANGE, )
 
     def on_bindok(self, unused_frame):
-        print "bind all good"
+        # print "bind all good"
         # Queue bound
         self.start_publishing()
 
     def start_publishing(self):
-        print "start Publishing"
+        # print "start Publishing"
         # self.enable_delivery_confirmations()
         self.schedule_next_message()
 
@@ -171,7 +171,7 @@ class RabbitMultiClient(RabbitMQBase):
         message to be delivered in PUBLISH_INTERVAL seconds.
 
         """
-        print "schedule next msg"
+        # print "schedule next msg"
         # if self.stopping:
         #     return
         # LOGGER.info('Scheduling next message for %0.1f seconds',
