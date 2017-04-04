@@ -204,10 +204,14 @@ class RabbitMultiClient(RabbitMQBase):
 
                     print "sending", requestBody, "to", worderId, "with priority", priority
                     print "queue size:",   self.requestQueue.qsize()
+                    properties = pika.BasicProperties(
+                        content_type='application/json',
+                        priority=priority,
+                    )
                     self.channel.basic_publish(
                         exchange=self.EXCHANGE,
                         routing_key= worderId,
-                        properties=priority,
+                        properties=properties,
                         body=json.dumps(requestBody),
                     )
                    # print "schedule next msg"
