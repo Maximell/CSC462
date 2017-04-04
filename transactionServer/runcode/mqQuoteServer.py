@@ -14,26 +14,42 @@ import multiprocessing
 from multiprocessing import Process
 from uuid import getnode as get_mac
 
-class RabbitQuoteClient():
-    def __init__(self,  requestQueue ):
-        print "start making quoteClient"
+
+class RabbitMultiClient(RabbitMQBase):
+    def __init__(self,   queueName , requestQueue ):
+        self.queueNames = 	  ["transactionIn193596476298033"
+                                ,"transactionIn193596744799041"
+                                ,"transactionIn193597013300049"
+                                ,"transactionIn193597281801057"
+                                ,"transactionIn193597550302065"
+                                ,"transactionIn193597818803073"
+                                ,"transactionIn193598087304081"
+                                ,"transactionIn193601473895188"
+                                ,"transactionIn193601742334740"
+                                ,"transactionIn193605068330289"
+                                ,"transactionIn193809078333764"
+                                ,"transactionIn193821963432263"
+                                ,"transactionIn193826241687624"
+                                ,"transactionIn193830553497929"
+                                ,"transactionIn193860618727760"
+                                ,"transactionIn8796760983851" ]  #b132
         self.queueName = None
-        self.param = pika.ConnectionParameters('142.104.91.142',44429)
-        self.connection = pika.SelectConnection(self.param,self.send,stop_ioloop_on_close=False)
+        self.param = pika.ConnectionParameters('142.104.91.142',44429,heartbeat_interval=0)
+        self.connection = pika.SelectConnection(self.param,self.on_connection_open,stop_ioloop_on_close=False)
         self.channel = None
         self.closing = False
-
-        self.request = None
-        self.priority = None
-
         self.stopping = False
         self.PUBLISH_INTERVAL = 1
         self.requestQueue = requestQueue
-        self.EXCHANGE = "transActionMessages"
-        print "set up quoteClient finished"
+        self.EXCHANGE = queueName
+        print "set up Publisher"
+
         self.connection.ioloop.start()
 
-
+    def on_connection_open(self , blank_connection):
+        print "on open connection"
+        self.add_on_connection_close_callback()
+        self.open_channel()
 
     def add_on_connection_close_callback(self):
         print "on closed connection do callback"
@@ -45,38 +61,30 @@ class RabbitQuoteClient():
         """This method is invoked by pika when the connection to RabbitMQ is
         closed unexpectedly. Since it is unexpected, we will reconnect to
         RabbitMQ if it disconnects.
-
-        :param pika.connection.Connection connection: The closed connection obj
-        :param int reply_code: The server provided reply_code if given
-        :param str reply_text: The server provided reply_text if given
-
         """
         print "on Closed connection"
-        self._channel = None
+        # self.channel = None
         if self.closing:
-            self.connection.ioloop.stop()
-        else:
-            # LOGGER.warning('Connection closed, reopening in 5 seconds: (%s) %s',
-            #                reply_code, reply_text)
-            self.connection.add_timeout(5, self.reconnect)
+            print "closing connection as self.closing is True"
+        #     self.connection.ioloop.stop()
+        # else:
+        #     # LOGGER.warning('Connection closed, reopening in 5 seconds: (%s) %s',
+        #     #                reply_code, reply_text)
+        self.connection.add_timeout(5, self.reconnect)
 
     def reconnect(self):
         """Will be invoked by the IOLoop timer if the connection is
         closed. See the on_connection_closed method.
         """
+
         # This is the old connection IOLoop instance, stop its ioloop
         self.connection.ioloop.stop()
 
         # Create a new connection
-        self.connection = pika.SelectConnection(self.param,self.send,stop_ioloop_on_close=False)
+        self.connection = pika.SelectConnection(self.param,self.on_connection_open,stop_ioloop_on_close=False)
 
         # There is now a new connection, needs a new ioloop to run
         self.connection.ioloop.start()
-
-    def on_connection_open(self , blank_connection= None):
-        print "on open connection"
-        self.add_on_connection_close_callback()
-        self.open_channel()
 
     def open_channel(self):
         print "open Channel"
@@ -93,7 +101,7 @@ class RabbitQuoteClient():
         """This method tells pika to call the on_channel_closed method if
         RabbitMQ unexpectedly closes the channel.
         """
-        print "callback after channel closed"
+        print "add callback for after channel is closed"
         self.channel.add_on_close_callback(self.on_channel_closed)
 
     def on_channel_closed(self, channel, reply_code, reply_text):
@@ -108,58 +116,64 @@ class RabbitQuoteClient():
         :param str reply_text: The text reason the channel was closed
 
         """
-        print "channel closed"
+        print "channel closed for Quote"
         # LOGGER.warning('Channel was closed: (%s) %s', reply_code, reply_text)
-        if not self.closing:
-            self.connection.close()
+        # if not self.closing:
+        #     self.connection.close()
+        self.reconnect()
 
     def setup_exchange(self, exchange_name):
-        print "setup exchange"
-        self.channel.exchange_declare(self.on_exchange_declareok,
-                                       exchange_name)
+        print "setup exchange for Quote"
+        for queue in self.queueNames:
+            self.channel.exchange_declare(self.on_exchange_declareok(queue , None),queue,)
 
-    def on_exchange_declareok(self, unused_frame):
+    def on_exchange_declareok(self, queue, unused_frame):
 
         """Invoked by pika when RabbitMQ has finished the Exchange.Declare RPC
         command.
         :param pika.Frame.Method unused_frame: Exchange.DeclareOk response frame
 
         """
-        print "exchange all good"
+        print "exchange all good for Quote"
         # LOGGER.info('Exchange declared')
-        self.setup_queue(self.queueName)
+        # for queue in self.queueNames:
+        self.setup_queue(queue)
 
-    def setup_queue(self, queueName):
+    def setup_queue(self, queue):
         args = {'x-max-priority': 3, 'x-message-ttl': 600000}
-        print "setting up queue", queueName
-        self.on_connection_open()
+        print "setting up queue: queueName", queue
+        # for queue in self.queueNames:
+        self.channel.queue_declare(self.on_queue_declareok(queue , None), queue , arguments=args)
 
-    def on_queue_declareok(self, method_frame):
-        print "queue all good"
-        self.channel.queue_bind(self.on_bindok, self.queueName,
-                                 self.EXCHANGE, )
+    def on_queue_declareok(self, queue,method_frame):
+        print "queue all good for quote"
+        # for queue in self.queueNames:
+        self.start_publishing()
+
+        # self.channel.queue_bind(self.on_bindok, queue, self.EXCHANGE)
 
     def on_bindok(self, unused_frame):
-        print "bind all good"
+        print "bind all good for quote"
         # Queue bound
         self.start_publishing()
 
+
     def start_publishing(self):
-        print "start Publishing"
+        print "start Publishing for Quote"
         # self.enable_delivery_confirmations()
         self.schedule_next_message()
 
     def schedule_next_message(self):
         """If we are not closing our connection to RabbitMQ, schedule another
         message to be delivered in PUBLISH_INTERVAL seconds.
-
         """
-        print "schedule next msg"
-        if self.stopping:
-            return
-
-        self.connection.add_timeout(self.PUBLISH_INTERVAL,
-                                     self.sendMessage)
+        print "schedule next msg for Quote"
+        print "Quote queue size:", self.requestQueue.qsize()
+        # if self.stopping:
+        #     return
+        # LOGGER.info('Scheduling next message for %0.1f seconds',
+        #             self.PUBLISH_INTERVAL)
+        self.connection.add_timeout(self.PUBLISH_INTERVAL,self.send)
 
 
     def close_connection(self):
@@ -171,56 +185,43 @@ class RabbitQuoteClient():
         self.connection.close()
 
 
-    def send(self , blank_connection=None):
-        print "try sending"
-        notEmpty = True
-        while(notEmpty):
+    def send(self):
+        print "try sending from QuoteServer"
+        print self.channel
+        print self.connection.event_state
+        print self.connection.write_buffer
+        print self.connection._channels
+
+        while(True):
             try:
-                payload  = self.requestQueue.get(False)
+                # print "getting request"
+                payload  = self.requestQueue.get()
                 if payload:
-                    print "payload size =", len(payload)
-                    if len(payload) == 2:
-                        requestBody = payload[0]
-                        self.queueName = payload[1]
-                        priority = 2
+                    worderId = payload[1]
+                    requestBody = payload[0]
+                    priority = 2
 
-                    else:
-                        requestBody = payload
-                        priority = 2
-                    #     set up queue on the fly
-                    args = {'x-max-priority': 3, 'x-message-ttl': 600000}
-                    print "setting up queue",  self.queueName
-                    self.request = requestBody
-                    self.priority = priority
-                    # self.channel.queue_declare(self.sendMessage ,self.queueName, arguments=args)
-                    self.on_connection_open()
+                    print "sending", requestBody, "to", worderId, "with priority", priority
+                    print "queue size:",   self.requestQueue.qsize()
+
+                    print
+
+                    transactionClient = RabbitMQClient(worderId)
+                    transactionClient.send(requestBody)
+                    transactionClient.close()
 
 
-
-            except:
-                pass
-                # notEmpty = False
-                # print "failed in send"
-
-    def sendMessage(self ):
-        print "sending", self.request, "to", self.queueName, "with priority", self.priority
-        properties = pika.BasicProperties(
-            content_type='application/json',
-            priority=self.priority,
-        )
-        self.channel.basic_publish(
-            exchange=self.EXCHANGE,
-            routing_key=self.queueName,
-            properties=properties,
-            body=json.dumps(self.request),
-
-        )
-        # print "schedule next msg"
-        self.send
+            except Exception as e:
+                print e
+                print "had troubles sending into rabbit"
+                self.schedule_next_message()
 
 
-def close(self):
+
+    def close(self):
         self.connection.close()
+
+
 
 
 def createQuoteRequest(userId, stockSymbol, lineNum, args):
@@ -310,11 +311,11 @@ class getQuoteThread(Thread):
         )
         # print "built request: ",requestBody
         auditQueue.put(requestBody)
-        # transQueue.put((payload, self.transServer))
+        transQueue.put((payload, self.transServer))
 
         # self.cacheLock.acquire()
         quoteServer.quoteCache[self.symbol] = newQuote
-        del quoteServer.inflight[quoteServer.inflight.index(self.symbol)]
+        # del quoteServer.inflight[quoteServer.inflight.index(self.symbol)]
         quoteServer.threadCount -= 1
 
         print "thread terminating"
@@ -326,7 +327,7 @@ class Quotes():
     def __init__(self, cacheExpire=60, ):
         self.cacheExpire = cacheExpire
         self.quoteCache = {}
-        self.inflight = []
+        # self.inflight = []
         self.pool = {}
         self.threadCount = 0
         self.maxthread = 300
@@ -345,8 +346,8 @@ class Quotes():
     def hitQuoteServerAndCache(self, symbol, user, transactionNum , transactionServerID):
         # run new quote thread
         # poolHandler()
-        if symbol in self.inflight:
-            return
+        # if symbol in self.inflight:
+        #     return
         # loop while there are no threads left
         while(quoteServer.maxthread <= quoteServer.threadCount):
             pass
@@ -354,7 +355,7 @@ class Quotes():
         print "making new thread"
         quoteServer.threadCount += 1
         print "current thread count = ",quoteServer.threadCount
-        self.inflight.append(symbol)
+        # self.inflight.append(symbol)
 
     def quoteStringToDictionary(self, quoteString):
         # "quote, sym, userId, timeStamp, cryptokey\n"
@@ -405,9 +406,9 @@ def on_request(ch, method, props, payload):
     print "return from quote cache: ", quote
 #     go in pool
     if quote is None:
-        quoteServer.addRequestToPool(payload)
+        "thread gone to quote server"
         return
-
+# ***
     # print "quote: ", quote
 
     payload["quote"] = quote["value"]
@@ -430,11 +431,18 @@ if __name__ == '__main__':
     quoteServer = Quotes()
     poolHandler()
 
+    # print "create publisher"
+    # transQueue = multiprocessing.Queue()
+    # trans_producer_process = Process(target=RabbitQuoteClient, args=([transQueue]))
+    # trans_producer_process.start()
+    # print "created publisher"
     print "create publisher"
     transQueue = multiprocessing.Queue()
-    trans_producer_process = Process(target=RabbitQuoteClient, args=([transQueue]))
-    trans_producer_process.start()
+    producer_process = Process(target=RabbitMultiClient,
+                               args=( RabbitMQBase.TRANSACTION,transQueue))
+    producer_process.start()
     print "created publisher"
+
 
     # print "create publisher"
     auditQueue = multiprocessing.Queue()

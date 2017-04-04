@@ -68,7 +68,7 @@ class RabbitMQClient(RabbitMQBase):
 class RabbitMQAyscClient(RabbitMQBase):
     def __init__(self, queueName , requestQueue ):
         self.queueName = queueName
-        self.param = pika.ConnectionParameters('142.104.91.142',44429)
+        self.param = pika.ConnectionParameters('142.104.91.142',44429,heartbeat_interval=0)
         self.connection = pika.SelectConnection(self.param,self.on_connection_open,stop_ioloop_on_close=False)
         self.channel = None
         self.closing = False
@@ -224,13 +224,13 @@ class RabbitMQAyscClient(RabbitMQBase):
 
 
     def send(self):
-        print "try sending"
+        # print "try sending"
         notEmpty = True
         while(notEmpty):
             try:
                 payload  = self.requestQueue.get(False)
                 if payload:
-                    print "payload size =", len(payload)
+                    # print "payload size =", len(payload)
                     if len(payload) == 2:
                         requestBody = payload[0]
                         self.queueName = payload[1]
@@ -244,7 +244,7 @@ class RabbitMQAyscClient(RabbitMQBase):
                         requestBody = payload
                         priority = 2
 
-                    print "sending", requestBody, "to", self.queueName, "with priority", priority
+                    # print "sending", requestBody, "to", self.queueName, "with priority", priority
                     properties = pika.BasicProperties(
                         content_type='application/json',
                         priority=priority,
@@ -275,7 +275,7 @@ class RabbitMQAyscClient(RabbitMQBase):
 class RabbitMQAyscReciever(RabbitMQBase):
     def __init__(self, queueName , rabbitPQueue1 , rabbitPQueue2=None , rabbitPQueue3=None ):
         self.queueName = queueName
-        self.param = pika.ConnectionParameters('142.104.91.142',44429)
+        self.param = pika.ConnectionParameters('142.104.91.142',44429,heartbeat_interval=0)
         self.connection = pika.SelectConnection(self.param, self.on_connection_open, stop_ioloop_on_close=False)
         self.channel = None
         self.closing = False
@@ -321,37 +321,33 @@ class RabbitMQAyscReciever(RabbitMQBase):
         """
 
         print "on Closed connection"
-        self._channel = None
-        if self.closing:
-            self.connection.ioloop.stop()
-        else:
+        # self.channel = None
+        # if self.closing:
+        #     self.connection.ioloop.stop()
+        # else:
             # LOGGER.warning('Connection closed, reopening in 5 seconds: (%s) %s',
             #                reply_code, reply_text)
-            self.connection.add_timeout(5, self.reconnect)
+        self.connection.add_timeout(5, self.reconnect)
 
     def reconnect(self):
         """Will be invoked by the IOLoop timer if the connection is
         closed. See the on_connection_closed method.
 
         """
-        print "reconnecting"
-        self.deliveries = []
-        self.acked = 0
-        self.nacked = 0
-        self.message_number = 0
         self.connection.ioloop.stop()
 
-        if not self.closing:
+        # if not self.closing:
             # This is the old connection IOLoop instance, stop its ioloop
 
-            # Create a new connection
-            self.connection = self.connect()
+        # Create a new connection
+        self.connection = self.connect()
 
-            # There is now a new connection, needs a new ioloop to run
-            self.connection.ioloop.start()
+        # There is now a new connection, needs a new ioloop to run
+        self.connection.ioloop.start()
 
     def open_channel(self):
         print "open Channel"
+
         self.connection.channel(on_open_callback=self.on_channel_open)
 
     def on_channel_open(self , channel):
