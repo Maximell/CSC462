@@ -7,7 +7,7 @@ from flask import Flask, request, render_template, url_for, redirect
 from flask_mail import Mail
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import logout_user
-from flask_user import login_required, current_user, UserManager, UserMixin, SQLAlchemyAdapter
+from flask_user import login_required, current_user, roles_required, UserManager, UserMixin, SQLAlchemyAdapter
 from rabbitMQSetups import RabbitMQClient, RabbitMQReceiver, RabbitMQAyscClient, RabbitMQAyscReciever
 import multiprocessing
 from multiprocessing import Process
@@ -108,6 +108,21 @@ class User(db.Model, UserMixin):
     first_name = db.Column(db.String(100), nullable=False, server_default='')
     last_name = db.Column(db.String(100), nullable=False, server_default='')
 
+    # User roles
+    roles = db.relationship('Role', secondary='user_roles',
+                            backref=db.backref('users', lazy='dynamic'))
+
+# Define Role model
+class Role(db.Model):
+    id = db.Column(db.Integer(), primary_key=True)
+    name = db.Column(db.String(50), unique=True)
+
+# Define UserRoles model
+class UserRoles(db.Model):
+    id = db.Column(db.Integer(), primary_key=True)
+    user_id = db.Column(db.Integer(), db.ForeignKey('user.id', ondelete='CASCADE'))
+    role_id = db.Column(db.Integer(), db.ForeignKey('role.id', ondelete='CASCADE'))
+
 # Create all database tables
 db.create_all()
 
@@ -115,11 +130,28 @@ db.create_all()
 db_adapter = SQLAlchemyAdapter(db, User) # Register the User Model
 user_manager = UserManager(db_adapter, app) # Initialize Flask-User
 
+# Create an admin user and role if not already created
+if not User.query.filter(User.username=='admin').first():
+    adminUser = User(username='admin',
+                     email='seng462group22017@gmail.com',
+                     is_enabled=True,
+                     password=user_manager.hash_password('group2Password')
+                 )
+    adminRole = Role(name='admin')
+
+    # Bind user to role
+    adminUser.roles.append(adminRole)
+
+    # Add user to db
+    db.session.add(adminUser)
+    db.session.commit()
+
 def negativeCash(cash):
     return cash < 0
 
 def checkQuoteSymbol(symbol):
     return symbol.isalpha() and len(symbol) == 3
+
 
 #Home
 @app.route('/', methods=['GET'])
@@ -132,6 +164,11 @@ def index():
 def logout():
     logout_user()
     return redirect(url_for('user.login'))
+
+@app.route("/admin")
+@roles_required('admin')
+def admin_page():
+    return render_template('result.html', result="You are an admin user, congrats.")
 
 # Add methods
 def doAdd(userId, cash, lineNum):
