@@ -191,7 +191,7 @@ class RabbitMultiClient(RabbitMQBase):
 
 
     def send(self):
-        print "try sending"
+        print "try sending from QuoteServer"
         noDump = True
         while(noDump):
             try:

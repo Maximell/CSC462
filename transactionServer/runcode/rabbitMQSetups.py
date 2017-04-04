@@ -224,13 +224,13 @@ class RabbitMQAyscClient(RabbitMQBase):
 
 
     def send(self):
-        print "try sending"
+        # print "try sending"
         notEmpty = True
         while(notEmpty):
             try:
                 payload  = self.requestQueue.get(False)
                 if payload:
-                    print "payload size =", len(payload)
+                    # print "payload size =", len(payload)
                     if len(payload) == 2:
                         requestBody = payload[0]
                         self.queueName = payload[1]
@@ -244,7 +244,7 @@ class RabbitMQAyscClient(RabbitMQBase):
                         requestBody = payload
                         priority = 2
 
-                    print "sending", requestBody, "to", self.queueName, "with priority", priority
+                    # print "sending", requestBody, "to", self.queueName, "with priority", priority
                     properties = pika.BasicProperties(
                         content_type='application/json',
                         priority=priority,
