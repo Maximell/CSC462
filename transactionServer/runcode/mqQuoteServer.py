@@ -79,14 +79,14 @@ class RabbitQuoteClient():
         self.open_channel()
 
     def open_channel(self):
-        print "open Channel"
+        print "open Channel for quotes"
         self.connection.channel(on_open_callback=self.on_channel_open)
 
-    def on_channel_open(self , channel):
-        print "on open channel"
-        self.channel = channel
+    def on_channel_open(self):
+        print "on open channel for quotes"
+        self.channel = self.connection.channel()
         self.add_on_channel_close_callback()
-        self.setup_exchange(self.EXCHANGE)
+        self.setup_exchange(self.queueName)
 
     def add_on_channel_close_callback(self):
 
@@ -170,6 +170,22 @@ class RabbitQuoteClient():
         self.closing = True
         self.connection.close()
 
+    def sendMessage(self ):
+        print "sending", self.request, "to", self.queueName, "with priority", self.priority
+        properties = pika.BasicProperties(
+            content_type='application/json',
+            priority=self.priority,
+        )
+        self.channel.basic_publish(
+            exchange=self.EXCHANGE,
+            routing_key=self.queueName,
+            properties=properties,
+            body=json.dumps(self.request),
+
+        )
+        # print "schedule next msg"
+        self.send()
+
 
     def send(self , blank_connection=None):
         print "try sending"
@@ -202,21 +218,6 @@ class RabbitQuoteClient():
                 # notEmpty = False
                 # print "failed in send"
 
-    def sendMessage(self ):
-        print "sending", self.request, "to", self.queueName, "with priority", self.priority
-        properties = pika.BasicProperties(
-            content_type='application/json',
-            priority=self.priority,
-        )
-        self.channel.basic_publish(
-            exchange=self.EXCHANGE,
-            routing_key=self.queueName,
-            properties=properties,
-            body=json.dumps(self.request),
-
-        )
-        # print "schedule next msg"
-        self.send
 
 
 def close(self):
