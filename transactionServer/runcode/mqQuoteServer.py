@@ -33,7 +33,7 @@ class RabbitMultiClient(RabbitMQBase):
                                 ,"transactionIn193830553497929"
                                 ,"transactionIn193860618727760"
                                 ,"transactionIn8796760983851" ]  #b132
-
+        self.queueName = None
         self.param = pika.ConnectionParameters('142.104.91.142',44429)
         self.connection = pika.SelectConnection(self.param,self.on_connection_open,stop_ioloop_on_close=False)
         self.channel = None
@@ -131,6 +131,8 @@ class RabbitMultiClient(RabbitMQBase):
     def setup_exchange(self, exchange_name):
         print "setup exchange for Quote"
         for queue in self.queueNames:
+            self.queueName = queue
+            print queue
             self.channel.exchange_declare(self.on_exchange_declareok,queue,)
 
     def on_exchange_declareok(self, unused_frame):
@@ -140,24 +142,24 @@ class RabbitMultiClient(RabbitMQBase):
         :param pika.Frame.Method unused_frame: Exchange.DeclareOk response frame
 
         """
-        # print "exchange all good"
+        print "exchange all good for Quote"
         # LOGGER.info('Exchange declared')
         for queue in self.queueNames:
             self.setup_queue(queue)
 
     def setup_queue(self, queueName):
         args = {'x-max-priority': 3, 'x-message-ttl': 600000}
-        # print "setting up queue"
+        print "setting up queue: queueName", queueName
         for queue in self.queueNames:
             self.channel.queue_declare(self.on_queue_declareok, queue , arguments=args)
 
     def on_queue_declareok(self, method_frame):
-        # print "queue all good"
+        print "queue all good for quote"
         for queue in self.queueNames:
             self.channel.queue_bind(self.on_bindok, queue, self.EXCHANGE, queue)
 
     def on_bindok(self, unused_frame):
-        # print "bind all good"
+        print "bind all good for quote"
         # Queue bound
         self.start_publishing()
 
