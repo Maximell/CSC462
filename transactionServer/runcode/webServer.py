@@ -36,7 +36,7 @@ def sendAndReceive(data, host='142.104.91.142',port=44429, queueName=None):
     startTime = time.time()
     while result is None:
         currentTime = time.time()
-        if startTime + 10 < currentTime:
+        if startTime + 15 < currentTime:
             result = "401_timed_out... Resend Command"
             break
         try:

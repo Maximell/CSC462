@@ -141,7 +141,7 @@ class RabbitMQAyscClient(RabbitMQBase):
         # LOGGER.warning('Channel was closed: (%s) %s', reply_code, reply_text)
         if not self.closing:
             self.connection.close()
-
+    # TODO take out and test all these loops: don't them except for the first.
     def setup_exchange(self, exchange_name):
         print "setup exchange"
         for queue in self.queueNames:

@@ -75,13 +75,7 @@ class RabbitMultiClient(RabbitMQBase):
     def reconnect(self):
         """Will be invoked by the IOLoop timer if the connection is
         closed. See the on_connection_closed method.
-
         """
-        print "reconnecting"
-        self._deliveries = []
-        self._acked = 0
-        self._nacked = 0
-        self._message_number = 0
 
         # This is the old connection IOLoop instance, stop its ioloop
         self.connection.ioloop.stop()
@@ -193,6 +187,11 @@ class RabbitMultiClient(RabbitMQBase):
 
     def send(self):
         print "try sending from QuoteServer"
+        print self.channel
+        print self.connection.event_state
+        print self.connection.write_buffer
+        print self.connection._channels
+
         while(True):
             try:
                 # print "getting request"
@@ -204,6 +203,8 @@ class RabbitMultiClient(RabbitMQBase):
 
                     print "sending", requestBody, "to", worderId, "with priority", priority
                     print "queue size:",   self.requestQueue.qsize()
+
+                    print self.channel
                     properties = pika.BasicProperties(
                         content_type='application/json',
                         priority=priority,
