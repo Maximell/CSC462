@@ -154,12 +154,15 @@ class RabbitMultiClient(RabbitMQBase):
     def on_queue_declareok(self, queue,method_frame):
         print "queue all good for quote"
         # for queue in self.queueNames:
-        self.channel.queue_bind(self.on_bindok, queue, self.EXCHANGE)
+        self.start_publishing()
+
+        # self.channel.queue_bind(self.on_bindok, queue, self.EXCHANGE)
 
     def on_bindok(self, unused_frame):
         print "bind all good for quote"
         # Queue bound
         self.start_publishing()
+
 
     def start_publishing(self):
         print "start Publishing for Quote"
