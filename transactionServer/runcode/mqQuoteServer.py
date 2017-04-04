@@ -195,8 +195,8 @@ class RabbitMultiClient(RabbitMQBase):
         print "try sending from QuoteServer"
         while(True):
             try:
-                print "getting request"
-                payload  = self.requestQueue.get(False)
+                # print "getting request"
+                payload  = self.requestQueue.get()
                 if payload:
                     worderId = payload[0]
                     requestBody = payload[1]
