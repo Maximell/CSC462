@@ -457,8 +457,14 @@ def doDumplog(userId, filename, lineNum):
 @login_required
 def apiDumpLog():
     try:
+        if current_user.username != "admin":
+            return "unauthorized request. dumplog only for admin users"
         userId = current_user.username
         fileName = request.form['fileName']
+        if not fileName.isalnum():
+            return "filename is must be alpha numeric"
+        fileName = "./" + fileName
+
         return doDumplog(userId, fileName, getRandomRequestLineNum())
     except:
         return "something went wrong parsing the data."
