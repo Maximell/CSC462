@@ -61,7 +61,7 @@ def sendAndReceive(data, host='142.104.91.142',port=44429, queueName=None):
     # channel.close()
 
     # consumer.closing = True
-    return json.loads(result)
+    return result
 
 def getRandomRequestLineNum(start=-100000, stop=-1, step=1):
     print "in get random"
