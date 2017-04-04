@@ -6,25 +6,222 @@ from random import randint
 import pika
 from threading import Thread
 import threading
-from rabbitMQSetups import  RabbitMQAyscClient, RabbitMQAyscReciever, quoteMacMap
+from rabbitMQSetups import RabbitMQClient, RabbitMQAyscClient, RabbitMQAyscReciever, quoteMacMap, RabbitMQBase
 from mqAuditServer import auditFunctions
 import Queue
 
 import multiprocessing
 from multiprocessing import Process
 from uuid import getnode as get_mac
-#
-# class rabbitConsumer():
-#     def __init__(self, queueName,Q2):
-#         self.rabbitPQueue2 = Q2
-#         print "initialize queues"
-#         self.connection = RabbitMQReceiver(self.consume, queueName)
-#         print "connectionb done"
-#
-#     def consume(self, ch, method, props, body):
-#         payload = json.loads(body)
-#         print "Received :", payload
-#         self.rabbitPQueue2.put((2, payload))
+
+
+class RabbitMultiClient(RabbitMQBase):
+    def __init__(self,   queueName , requestQueue ):
+        self.queueNames =     ["transactionIn193596476298033"
+                                ,"transactionIn193596744799041"
+                                ,"transactionIn193597013300049"
+                                ,"transactionIn193597281801057"
+                                ,"transactionIn193597550302065"
+                                ,"transactionIn193597818803073"
+                                ,"transactionIn193598087304081"
+                                ,"transactionIn193601473895188"
+                                ,"transactionIn193601742334740"
+                                ,"transactionIn193605068330289"
+                                ,"transactionIn193809078333764"
+                                ,"transactionIn193821963432263"
+                                ,"transactionIn193826241687624"
+                                ,"transactionIn193830553497929"
+                                ,"transactionIn193860618727760"
+                                ,"transactionIn8796760983851" ]  #b132
+        self.queueName = None
+        self.param = pika.ConnectionParameters('142.104.91.142',44429,heartbeat_interval=0)
+        self.connection = pika.SelectConnection(self.param,self.on_connection_open,stop_ioloop_on_close=False)
+        self.channel = None
+        self.closing = False
+        self.stopping = False
+        self.PUBLISH_INTERVAL = 1
+        self.requestQueue = requestQueue
+        self.EXCHANGE = queueName
+        print "set up Publisher"
+
+        self.connection.ioloop.start()
+
+    def on_connection_open(self , blank_connection):
+        print "on open connection"
+        self.add_on_connection_close_callback()
+        self.open_channel()
+
+    def add_on_connection_close_callback(self):
+        print "on closed connection do callback"
+        self.connection.add_on_close_callback(self.on_connection_closed)
+
+    def on_connection_closed(self, connection, reply_code, reply_text):
+
+
+        """This method is invoked by pika when the connection to RabbitMQ is
+        closed unexpectedly. Since it is unexpected, we will reconnect to
+        RabbitMQ if it disconnects.
+        """
+        print "on Closed connection"
+        # self.channel = None
+        if self.closing:
+            print "closing connection as self.closing is True"
+        #     self.connection.ioloop.stop()
+        # else:
+        #     # LOGGER.warning('Connection closed, reopening in 5 seconds: (%s) %s',
+        #     #                reply_code, reply_text)
+        self.connection.add_timeout(5, self.reconnect)
+
+    def reconnect(self):
+        """Will be invoked by the IOLoop timer if the connection is
+        closed. See the on_connection_closed method.
+        """
+
+        # This is the old connection IOLoop instance, stop its ioloop
+        self.connection.ioloop.stop()
+
+        # Create a new connection
+        self.connection = pika.SelectConnection(self.param,self.on_connection_open,stop_ioloop_on_close=False)
+
+        # There is now a new connection, needs a new ioloop to run
+        self.connection.ioloop.start()
+
+    def open_channel(self):
+        print "open Channel"
+        self.connection.channel(on_open_callback=self.on_channel_open)
+
+    def on_channel_open(self , channel):
+        print "on open channel"
+        self.channel = channel
+        self.add_on_channel_close_callback()
+        self.setup_exchange(self.EXCHANGE)
+
+    def add_on_channel_close_callback(self):
+
+        """This method tells pika to call the on_channel_closed method if
+        RabbitMQ unexpectedly closes the channel.
+        """
+        print "add callback for after channel is closed"
+        self.channel.add_on_close_callback(self.on_channel_closed)
+
+    def on_channel_closed(self, channel, reply_code, reply_text):
+        """Invoked by pika when RabbitMQ unexpectedly closes the channel.
+        Channels are usually closed if you attempt to do something that
+        violates the protocol, such as re-declare an exchange or queue with
+        different parameters. In this case, we'll close the connection
+        to shutdown the object.
+
+        :param pika.channel.Channel: The closed channel
+        :param int reply_code: The numeric reason the channel was closed
+        :param str reply_text: The text reason the channel was closed
+
+        """
+        print "channel closed for Quote"
+        # LOGGER.warning('Channel was closed: (%s) %s', reply_code, reply_text)
+        # if not self.closing:
+        #     self.connection.close()
+        self.reconnect()
+
+    def setup_exchange(self, exchange_name):
+        print "setup exchange for Quote"
+        for queue in self.queueNames:
+            self.channel.exchange_declare(self.on_exchange_declareok(queue , None),queue,)
+
+    def on_exchange_declareok(self, queue, unused_frame):
+
+        """Invoked by pika when RabbitMQ has finished the Exchange.Declare RPC
+        command.
+        :param pika.Frame.Method unused_frame: Exchange.DeclareOk response frame
+
+        """
+        print "exchange all good for Quote"
+        # LOGGER.info('Exchange declared')
+        # for queue in self.queueNames:
+        self.setup_queue(queue)
+
+    def setup_queue(self, queue):
+        args = {'x-max-priority': 3, 'x-message-ttl': 600000}
+        print "setting up queue: queueName", queue
+        # for queue in self.queueNames:
+        self.channel.queue_declare(self.on_queue_declareok(queue , None), queue , arguments=args)
+
+    def on_queue_declareok(self, queue,method_frame):
+        print "queue all good for quote"
+        # for queue in self.queueNames:
+        self.start_publishing()
+
+        # self.channel.queue_bind(self.on_bindok, queue, self.EXCHANGE)
+
+    def on_bindok(self, unused_frame):
+        print "bind all good for quote"
+        # Queue bound
+        self.start_publishing()
+
+
+    def start_publishing(self):
+        print "start Publishing for Quote"
+        # self.enable_delivery_confirmations()
+        self.schedule_next_message()
+
+    def schedule_next_message(self):
+        """If we are not closing our connection to RabbitMQ, schedule another
+        message to be delivered in PUBLISH_INTERVAL seconds.
+        """
+        print "schedule next msg for Quote"
+        print "Quote queue size:", self.requestQueue.qsize()
+        # if self.stopping:
+        #     return
+        # LOGGER.info('Scheduling next message for %0.1f seconds',
+        #             self.PUBLISH_INTERVAL)
+        self.connection.add_timeout(self.PUBLISH_INTERVAL,self.send)
+
+
+    def close_connection(self):
+
+        """This method closes the connection to RabbitMQ."""
+        # LOGGER.info('Closing connection')
+        print "closing connection... done"
+        self.closing = True
+        self.connection.close()
+
+
+    def send(self):
+        print "try sending from QuoteServer"
+        print self.channel
+        print self.connection.event_state
+        print self.connection.write_buffer
+        print self.connection._channels
+
+        while(True):
+            try:
+                # print "getting request"
+                payload  = self.requestQueue.get()
+                if payload:
+                    worderId = payload[1]
+                    requestBody = payload[0]
+                    priority = 2
+
+                    print "sending", requestBody, "to", worderId, "with priority", priority
+                    print "queue size:",   self.requestQueue.qsize()
+
+                    print
+
+                    transactionClient = RabbitMQClient(worderId)
+                    transactionClient.send(requestBody)
+                    transactionClient.close()
+
+
+            except Exception as e:
+                print e
+                print "had troubles sending into rabbit"
+                self.schedule_next_message()
+
+
+
+    def close(self):
+        self.connection.close()
+
+
 
 
 def createQuoteRequest(userId, stockSymbol, lineNum, args):
@@ -35,36 +232,50 @@ class poolHandler(Thread):
     def __init__(self):
         Thread.__init__(self)
         self.daemon = True
-        self.curCacheSize = len(quoteServer.quoteCache)
         self.start()
 
     def run(self):
         # print "starting thread for poolhandler"
+        #         look between pool of requests
+        #          and the cache size.
         while(True):
-#         look between pool of requests
-#          and the cache size.
-            if len(quoteServer.quoteCache) != self.curCacheSize:
-                self.curCacheSize = len(quoteServer.quoteCache)
-                for sym in quoteServer.pool:
-                    quote = quoteServer.quoteCache.get(sym)
-                    if quote is not None:
-                        for payload in quoteServer.pool[sym]:
-                            # print "found a match for: ", sym
-                            # if payload sym in cache
-                            payload["quote"] = quote["value"]
-                            payload["cryptoKey"] = quote["cryptoKey"]
-                            payload["quoteRetrieved"] = quote["retrieved"]
+           for sym in quoteServer.pool.keys():
+                # print "things in pool:",sym
+                # print "pool size:",len(quoteServer.pool)
+                quote = quoteServer.quoteCache.get(sym)
+                # print "cache = ", quote
+                if quote is not None:
+                    for payload in quoteServer.pool[sym]:
+                        # payload = quoteServer.pool[sym][payloadKey]
+                        # print "found a match for: ", sym
+                        # if payload sym in cache
+                        payload["quote"] = quote["value"]
+                        payload["cryptoKey"] = quote["cryptoKey"]
+                        payload["quoteRetrieved"] = quote["retrieved"]
 
-                            # print "sending back form handler:", payload
-                            transactionServerID = payload["trans"]
-                            # Need to figure out which transaction server to send back to.
-                            transQueue.put((transactionServerID , payload))
+                        transactionServerID = payload["trans"]
+                        print "sending back form handler:", payload, "to",transactionServerID
 
-                        quoteServer.pool[sym] = []
+                        # Need to figure out which transaction server to send back to.
+                        # transactionClient = RabbitMQClient(transactionServerID)
+                        # transactionClient.send(payload)
+                        # transactionClient.close()
+                        # requestQueue = multiprocessing.Queue()
+                        # trans_producer_process = Process(target=RabbitMQAyscClient,
+                        #                                  args=(transactionServerID, requestQueue))
+                        # trans_producer_process.start()
+                        # requestQueue.put(payload)
+                        transQueue.put((payload , transactionServerID))
+                        # print "popping sym" ,  quoteServer.pool
+                        quoteServer.pool.pop(sym , None)
+                        # print "popped", quoteServer.pool
+                    print "not starting another handler"
+                    # poolHandler()
+
 
 
 class getQuoteThread(Thread):
-    def __init__(self , symbol , user , transactionNum):
+    def __init__(self , symbol , user , transactionNum , transactionServerID):
         Thread.__init__(self)
         self.cacheLock = threading.Lock()
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -73,6 +284,7 @@ class getQuoteThread(Thread):
         self.symbol = symbol
         self.userId = user
         self.transactionNum = transactionNum
+        self.transServer = transactionServerID
         # self.portNum  = portNum
         self.start()
 
@@ -86,7 +298,7 @@ class getQuoteThread(Thread):
 
         newQuote = quoteServer.quoteStringToDictionary(data)
         # newQuote = {"value": 10, "cryptoKey": 'abc', "retrieved": int(time.time())}
-        # print "got new quote from server: ", newQuote
+        print "got new quote from server: ", newQuote
         requestBody = auditFunctions.createQuoteServer(
             int(time.time() * 1000),
             "quoteServer",
@@ -99,14 +311,15 @@ class getQuoteThread(Thread):
         )
         # print "built request: ",requestBody
         auditQueue.put(requestBody)
+        transQueue.put((payload, self.transServer))
 
         # self.cacheLock.acquire()
         quoteServer.quoteCache[self.symbol] = newQuote
-        del quoteServer.inflight[quoteServer.inflight.index(self.symbol)]
+        # del quoteServer.inflight[quoteServer.inflight.index(self.symbol)]
         quoteServer.threadCount -= 1
-        # print "thread terminating"
-        # self.cacheLock.release()
 
+        print "thread terminating"
+        # self.cacheLock.release()
 
 
 # quote shape: symbol: {value: string, retrieved: epoch time, user: string, cryptoKey: string}
@@ -114,37 +327,35 @@ class Quotes():
     def __init__(self, cacheExpire=60, ):
         self.cacheExpire = cacheExpire
         self.quoteCache = {}
-        self.inflight = []
+        # self.inflight = []
         self.pool = {}
         self.threadCount = 0
         self.maxthread = 300
 
-
-    def getQuote(self, symbol , user , transactionNum):
+    def getQuote(self, symbol , user , transactionNum , transactionServerID):
         cache = self.quoteCache.get(symbol)
-        # print "checking quote cache: ", cache,  symbol
+        print "checking quote cache: ", cache,  symbol
         # print "current cache = ",self.quoteCache
         if cache:
             if self._cacheIsActive(cache):
-                # print "cache value is active"
+                print "cache value is active"
                 return cache
-        self.hitQuoteServerAndCache(symbol, user, transactionNum)
+        self.hitQuoteServerAndCache(symbol, user, transactionNum , transactionServerID)
         return
 
-    def hitQuoteServerAndCache(self, symbol, user, transactionNum):
+    def hitQuoteServerAndCache(self, symbol, user, transactionNum , transactionServerID):
         # run new quote thread
-
-        if symbol in self.inflight:
-            return
+        # poolHandler()
+        # if symbol in self.inflight:
+        #     return
+        # loop while there are no threads left
         while(quoteServer.maxthread <= quoteServer.threadCount):
             pass
-        getQuoteThread(symbol , user , transactionNum)
+        getQuoteThread(symbol , user , transactionNum , transactionServerID)
         print "making new thread"
         quoteServer.threadCount += 1
         print "current thread count = ",quoteServer.threadCount
-        self.inflight.append(symbol)
-
-
+        # self.inflight.append(symbol)
 
     def quoteStringToDictionary(self, quoteString):
         # "quote, sym, userId, timeStamp, cryptokey\n"
@@ -152,8 +363,8 @@ class Quotes():
         return {'value': float(split[0]), 'retrieved': int(split[3])/1000, 'serverTime': split[3], 'cryptoKey': split[4].strip("\n")}
 
     def _cacheIsActive(self, quote):
-        # print "_cacheIsActive", (int(quote.get('retrieved', 0)) + self.cacheExpire),  int(time.time())
-        # print "returning", (int(quote.get('retrieved', 0)) + self.cacheExpire) > int(time.time())
+        print "_cacheIsActive", (int(quote.get('retrieved', 0)) + self.cacheExpire),  int(time.time())
+        print "returning", (int(quote.get('retrieved', 0)) + self.cacheExpire) > int(time.time())
         return (int(quote.get('retrieved', 0)) + self.cacheExpire) > int(time.time())
 
     def _mockQuoteServer(self, queryString):
@@ -163,15 +374,17 @@ class Quotes():
         quoteArray = [randint(0, 50), symbol, user, int(time.time()), "cryptokey" + repr(randint(0, 50))]
         return ','.join(map(str, quoteArray))
 
-
     def _printQuoteCacheState(self):
         print self.quoteCache
+
     def addRequestToPool(self, payload):
+
         symbol = payload["stockSymbol"]
+        print "adding to pool", symbol
         if self.pool.get(symbol) is None:
             self.pool[symbol] = []
         self.pool[symbol].append(payload)
-
+        print "pool is now/:", self.pool
 
 
 
@@ -179,18 +392,23 @@ def on_request(ch, method, props, payload):
     # expected body: {symbol, userId, transactionNum}
     print "received payload", payload
 
+    # if payload.get("quoteRetrieved"):
+    #     transQueue.put((payload, payload["trans"]))
+    #     return
+
     symbol = payload["stockSymbol"]
     userId = payload["userId"]
     lineNum = payload["lineNum"]
+    transactionServerID = payload["trans"]
 
-    quote = quoteServer.getQuote(symbol, userId, lineNum)
+    quote = quoteServer.getQuote(symbol, userId, lineNum , transactionServerID)
     # quote = {"value": 10, "cryptoKey": 'abc', "retrieved": int(time.time())}
-    # print "return from quote cache: ", quote
+    print "return from quote cache: ", quote
 #     go in pool
     if quote is None:
-        quoteServer.addRequestToPool(payload)
+        "thread gone to quote server"
         return
-
+# ***
     # print "quote: ", quote
 
     payload["quote"] = quote["value"]
@@ -199,36 +417,39 @@ def on_request(ch, method, props, payload):
 
     # print "sending back from cache:", payload
     transactionServerID = payload["trans"]
-    # Need to figure out which transaction server to send back to.
-    # transactionClient = RabbitMQClient(transactionServerID)
-    # transactionClient.send(payload)
+    # Need to figure out which transaction or trigger server to send back to.
     print "adding payload to Queue",payload, transactionServerID
     transQueue.put((payload , transactionServerID))
+    # transactionClient = RabbitMQClient(transactionServerID)
+    # transactionClient.send(payload)
+    # transactionClient.close()
 
 
 if __name__ == '__main__':
     mac = str(get_mac())
     print "starting QuoteServer " + quoteMacMap[mac]
     quoteServer = Quotes()
-    poolHandler()
+    # poolHandler()
 
+    # print "create publisher"
+    # transQueue = multiprocessing.Queue()
+    # trans_producer_process = Process(target=RabbitQuoteClient, args=([transQueue]))
+    # trans_producer_process.start()
+    # print "created publisher"
     print "create publisher"
     transQueue = multiprocessing.Queue()
-    trans_producer_process = Process(target=RabbitMQAyscClient,
-                               args=("DummyQueue" , transQueue))
-    trans_producer_process.start()
+    producer_process = Process(target=RabbitMultiClient,
+                               args=( RabbitMQBase.TRANSACTION,transQueue))
+    producer_process.start()
     print "created publisher"
 
-    print "create publisher"
+
+    # print "create publisher"
     auditQueue = multiprocessing.Queue()
     audit_producer_process = Process(target=RabbitMQAyscClient,
                                args=(  RabbitMQAyscClient.AUDIT , auditQueue ))
     audit_producer_process.start()
     print "created publisher"
-    # for triggers next
-    # requestQueue = multiprocessing.Queue()
-    # producer_process = Process(target=RabbitMQAyscClient,
-    #                            args=(RabbitMQAyscClient.TRIGGERS, requestQueue))
 
 
     P1Q_rabbit = multiprocessing.Queue()
