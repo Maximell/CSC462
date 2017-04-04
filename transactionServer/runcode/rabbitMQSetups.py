@@ -307,7 +307,7 @@ class RabbitMQAyscReciever(RabbitMQBase):
     def add_on_connection_close_callback(self):
         print "on closed connection do callback"
         self.connection.add_on_close_callback(self.on_connection_closed)
-
+        self.connection.heartbeat(45)
     def on_connection_closed(self, connection, reply_code, reply_text):
 
 

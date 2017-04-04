@@ -192,7 +192,7 @@ def add():
         print "something went wrong parsing the data."
         return "something went wrong parsing the data."
     result = doAdd(userId, cash, getRandomRequestLineNum())
-    return render_template('result.html', result=result)
+    return render_template('result.html', result=json.loads(result))
 
 # Quote methods
 def doQuote(userId, stockSumbol, lineNum):
@@ -211,7 +211,7 @@ def quote():
         print "something went wrong parsing the data."
         return "something went wrong parsing the data."
     result = doQuote(userId, stockSymbol, getRandomRequestLineNum())
-    return render_template('result.html', result=result)
+    return render_template('result.html', result=json.loads(result))
 
 # Buy methods
 def doBuy(userId, stockSymbol, cash, lineNum):
@@ -233,7 +233,7 @@ def buy():
         print "something went wrong parsing the data."
         return "something went wrong parsing the data."
     result = doBuy(userId, stockSymbol, cash, getRandomRequestLineNum())
-    return render_template('result.html', result=result)
+    return render_template('result.html', result=json.loads(result))
 
 # Commit Buy methods
 def doCommitBuy(userId, lineNum):
@@ -249,7 +249,7 @@ def commitBuy():
         print "something went wrong parsing the data."
         return "something went wrong parsing the data."
     result = doCommitBuy(userId, getRandomRequestLineNum())
-    return render_template('result.html', result=result)
+    return render_template('result.html', result=json.loads(result))
 
 # Cancel Buy methods
 def doCancelBuy(userId, lineNum):
@@ -265,7 +265,7 @@ def cancelBuy():
         print "something went wrong parsing the data."
         return "something went wrong parsing the data."
     result = doCancelBuy(userId, getRandomRequestLineNum())
-    return render_template('result.html', result=result)
+    return render_template('result.html', result=json.loads(result))
 
 # Sell methods
 def doSell(userId, stockSymbol, cash, lineNum):
@@ -287,7 +287,7 @@ def sell():
         print "something went wrong parsing the data."
         return "something went wrong parsing the data."
     result = doSell(userId, stockSymbol, cash, getRandomRequestLineNum())
-    return render_template('result.html', result=result)
+    return render_template('result.html', result=json.loads(result))
 
 # Commit Sell methods
 def doCommitSell(userId, lineNum=0):
@@ -303,7 +303,7 @@ def commitSell():
         print "something went wrong parsing the data."
         return "something went wrong parsing the data."
     result = doCommitSell(userId)
-    return render_template('result.html', result=result)
+    return render_template('result.html', result=json.loads(result))
 
 # Cancel Sell methods
 def doCancelSell(userId, lineNum):
@@ -319,7 +319,7 @@ def cancelSell():
         print "something went wrong parsing the data."
         return "something went wrong parsing the data."
     result = doCancelSell(userId, getRandomRequestLineNum())
-    return render_template('result.html', result=result)
+    return render_template('result.html', result=json.loads(result))
 
 # Set Buy Amount methods
 def doSetBuyAmount(userId, stockSymbol, cash, lineNum):
@@ -341,7 +341,7 @@ def setBuyAmount():
         print "something went wrong parsing the data."
         return "something went wrong parsing the data."
     result = doSetBuyAmount(userId, stockSymbol, cash, getRandomRequestLineNum())
-    return render_template('result.html', result=result)
+    return render_template('result.html', result=json.loads(result))
 
 # Cancel Set Buy methods
 def doCancelSetBuy(userId, stockSymbol, lineNum):
@@ -360,7 +360,7 @@ def cancelSetBuy():
         print "something went wrong parsing the data."
         return "something went wrong parsing the data."
     result = doCancelSetBuy(userId, stockSymbol, getRandomRequestLineNum())
-    return render_template('result.html', result=result)
+    return render_template('result.html', result=json.loads(result))
 
 # Set Buy Trigger methods
 def doSetBuyTrigger(userId, stockSymbol, cash, lineNum):
@@ -382,7 +382,7 @@ def setBuyTrigger():
         print "something went wrong parsing the data."
         return "something went wrong parsing the data."
     result = doSetBuyTrigger(userId, stockSymbol, cash, getRandomRequestLineNum())
-    return render_template('result.html', result=result)
+    return render_template('result.html', result=json.loads(result))
 
 # Set Sell Amount methods
 def doSetSellAmount(userId, stockSymbol, cash, lineNum):
@@ -404,7 +404,7 @@ def setSellAmount():
         print "something went wrong parsing the data."
         return "something went wrong parsing the data."
     result = doSetSellAmount(userId, stockSymbol, cash, getRandomRequestLineNum())
-    return render_template('result.html', result=result)
+    return render_template('result.html', result=json.loads(result))
 
 # Set Sell Trigger methods
 def doSetSellTrigger(userId, stockSymbol, cash, lineNum):
@@ -426,7 +426,7 @@ def setSellTrigger():
         print "something went wrong parsing the data."
         return "something went wrong parsing the data."
     result = doSetSellTrigger(userId, stockSymbol, cash, getRandomRequestLineNum())
-    return render_template('result.html', result=result)
+    return render_template('result.html', result=json.loads(result))
 
 # Cancel Set Sell methods
 def doCancelSetSell(userId, stockSymbol, lineNum):
@@ -445,7 +445,7 @@ def cancelSetSell():
         print "something went wrong parsing the data."
         return "something went wrong parsing the data."
     result = doCancelSetSell(userId, stockSymbol, getRandomRequestLineNum())
-    return render_template('result.html', result=result)
+    return render_template('result.html', result=json.loads(result))
 
 # Dumplog methods
 def doDumplog(userId, lineNum):
@@ -472,7 +472,7 @@ def displaySummary():
         print "something went wrong parsing the data."
         return "something went wrong parsing the data."
     result = doDisplaySummary(userId, getRandomRequestLineNum())
-    return render_template('result.html', result=result)
+    return render_template('result.html', result=json.loads(result))
 
 
 if __name__ == '__main__':
