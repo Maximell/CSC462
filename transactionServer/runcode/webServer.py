@@ -447,8 +447,8 @@ def apiDumpLog():
         if not fileName.isalnum():
             return "filename is must be alpha numeric"
         fileName = "./" + fileName
-
-        return doDumplog(userId, fileName, getRandomRequestLineNum())
+        result = doDumplog(userId, fileName, getRandomRequestLineNum())
+        return render_template('result.html', result=result)
     except:
         return "something went wrong parsing the data."
 
