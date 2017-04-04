@@ -68,7 +68,7 @@ class RabbitMQClient(RabbitMQBase):
 class RabbitMQAyscClient(RabbitMQBase):
     def __init__(self, queueName , requestQueue ):
         self.queueName = queueName
-        self.param = pika.ConnectionParameters('142.104.91.142',44429 )
+        self.param = pika.ConnectionParameters('142.104.91.142',44429,heartbeat_interval=25)
         self.connection = pika.SelectConnection(self.param,self.on_connection_open,stop_ioloop_on_close=False)
         self.channel = None
         self.closing = False
