@@ -443,7 +443,7 @@ def apiDumpLog():
         if current_user.username != "admin":
             return "unauthorized request. dumplog only for admin users"
         userId = current_user.username
-        fileName = request.form['fileName']
+        fileName = request.form.getlist('fileName')[0]
         if not fileName.isalnum():
             return "filename is must be alpha numeric"
         fileName = "./" + fileName
@@ -462,7 +462,7 @@ def doUserDumplog(userId, forUser, filename, lineNum):
 def apiUserDumpLog():
     try:
         userId = current_user.username
-        fileName = request.form['fileName']
+        fileName = request.form.getlist('fileName')[0]
         if not fileName.isalnum():
             return "filename is must be alpha numeric"
         fileName = "./" + fileName
