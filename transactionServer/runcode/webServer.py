@@ -13,17 +13,12 @@ import multiprocessing
 from multiprocessing import Process
 
 
-
-
 def sendToQueue(data):
     print "sending the data",data
     requestQueue.put((data, RabbitMQAyscClient.TRANSACTION , 1))
 
 
 def sendAndReceive(data, host='142.104.91.142',port=44429, queueName=None):
-    producer_process = Process(target=RabbitMQAyscClient,
-                               args=(RabbitMQAyscClient.TRANSACTION, requestQueue))
-    producer_process.start()
     # if the queueName is None, set it to a default
     if queueName is None:
         try:
@@ -43,6 +38,9 @@ def sendAndReceive(data, host='142.104.91.142',port=44429, queueName=None):
         currentTime = time.time()
         if startTime + 15 < currentTime:
             result = "401_timed_out... Resend Command"
+            producer_process = Process(target=RabbitMQAyscClient,
+                                       args=(RabbitMQAyscClient.TRANSACTION, requestQueue))
+            producer_process.start()
             break
         try:
             # time.sleep(0.01)
@@ -56,8 +54,6 @@ def sendAndReceive(data, host='142.104.91.142',port=44429, queueName=None):
             pass
     print result
     consumer.terminate()
-    producer_process.terminate()
-
 
     print "from the trans server: ", result
     # close the channel
@@ -481,6 +477,10 @@ def displaySummary():
 
 if __name__ == '__main__':
     requestQueue = multiprocessing.Queue()
+    producer_process = Process(target=RabbitMQAyscClient,
+                               args=(RabbitMQAyscClient.TRANSACTION, requestQueue))
+    producer_process.start()
+
     P1Q_rabbit = multiprocessing.Queue()
     P2Q_rabbit = multiprocessing.Queue()
     P3Q_rabbit = multiprocessing.Queue()
