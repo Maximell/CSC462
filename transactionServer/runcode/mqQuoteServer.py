@@ -122,14 +122,14 @@ class RabbitMultiClient(RabbitMQBase):
         :param str reply_text: The text reason the channel was closed
 
         """
-        print "channel closed"
+        print "channel closed for Quote"
         # LOGGER.warning('Channel was closed: (%s) %s', reply_code, reply_text)
         # if not self.closing:
         #     self.connection.close()
         self.reconnect()
 
     def setup_exchange(self, exchange_name):
-        print "setup exchange"
+        print "setup exchange for Quote"
         for queue in self.queueNames:
             self.channel.exchange_declare(self.on_exchange_declareok,queue,)
 
@@ -160,10 +160,9 @@ class RabbitMultiClient(RabbitMQBase):
         # print "bind all good"
         # Queue bound
         self.start_publishing()
-        print "Finished Publishing"
 
     def start_publishing(self):
-        print "start Publishing"
+        print "start Publishing for Quote"
         # self.enable_delivery_confirmations()
         self.schedule_next_message()
 
@@ -171,7 +170,8 @@ class RabbitMultiClient(RabbitMQBase):
         """If we are not closing our connection to RabbitMQ, schedule another
         message to be delivered in PUBLISH_INTERVAL seconds.
         """
-        print "schedule next msg"
+        print "schedule next msg for Quote"
+        print "Quote queue size:", self.requestQueue.qsize()
         # if self.stopping:
         #     return
         # LOGGER.info('Scheduling next message for %0.1f seconds',
@@ -193,7 +193,7 @@ class RabbitMultiClient(RabbitMQBase):
         while(True):
             try:
                 print "getting request"
-                payload  = self.requestQueue.get()
+                payload  = self.requestQueue.get(False)
                 if payload:
                     worderId = payload[0]
                     requestBody = payload[1]
