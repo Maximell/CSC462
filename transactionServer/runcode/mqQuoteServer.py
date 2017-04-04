@@ -144,19 +144,19 @@ class RabbitMultiClient(RabbitMQBase):
         """
         print "exchange all good for Quote"
         # LOGGER.info('Exchange declared')
-        for queue in self.queueNames:
-            self.setup_queue(queue)
+        # for queue in self.queueNames:
+        self.setup_queue(self.queueName)
 
     def setup_queue(self, queueName):
         args = {'x-max-priority': 3, 'x-message-ttl': 600000}
         print "setting up queue: queueName", queueName
-        for queue in self.queueNames:
-            self.channel.queue_declare(self.on_queue_declareok, queue , arguments=args)
+        # for queue in self.queueNames:
+        self.channel.queue_declare(self.on_queue_declareok, queueName , arguments=args)
 
     def on_queue_declareok(self, method_frame):
         print "queue all good for quote"
-        for queue in self.queueNames:
-            self.channel.queue_bind(self.on_bindok, queue, self.EXCHANGE, queue)
+        # for queue in self.queueNames:
+        self.channel.queue_bind(self.on_bindok, self.queueName, self.EXCHANGE)
 
     def on_bindok(self, unused_frame):
         print "bind all good for quote"
