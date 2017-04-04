@@ -315,11 +315,11 @@ class getQuoteThread(Thread):
         )
         # print "built request: ",requestBody
         auditQueue.put(requestBody)
-        # transQueue.put((payload, self.transServer))
+        transQueue.put((payload, self.transServer))
 
         # self.cacheLock.acquire()
         quoteServer.quoteCache[self.symbol] = newQuote
-        del quoteServer.inflight[quoteServer.inflight.index(self.symbol)]
+        # del quoteServer.inflight[quoteServer.inflight.index(self.symbol)]
         quoteServer.threadCount -= 1
 
         print "thread terminating"
@@ -331,7 +331,7 @@ class Quotes():
     def __init__(self, cacheExpire=60, ):
         self.cacheExpire = cacheExpire
         self.quoteCache = {}
-        self.inflight = []
+        # self.inflight = []
         self.pool = {}
         self.threadCount = 0
         self.maxthread = 300
@@ -350,8 +350,8 @@ class Quotes():
     def hitQuoteServerAndCache(self, symbol, user, transactionNum , transactionServerID):
         # run new quote thread
         # poolHandler()
-        if symbol in self.inflight:
-            return
+        # if symbol in self.inflight:
+        #     return
         # loop while there are no threads left
         while(quoteServer.maxthread <= quoteServer.threadCount):
             pass
@@ -359,7 +359,7 @@ class Quotes():
         print "making new thread"
         quoteServer.threadCount += 1
         print "current thread count = ",quoteServer.threadCount
-        self.inflight.append(symbol)
+        # self.inflight.append(symbol)
 
     def quoteStringToDictionary(self, quoteString):
         # "quote, sym, userId, timeStamp, cryptokey\n"
@@ -410,7 +410,7 @@ def on_request(ch, method, props, payload):
     print "return from quote cache: ", quote
 #     go in pool
     if quote is None:
-        quoteServer.addRequestToPool(payload)
+        "thread gone to quote server"
         return
 # ***
     # print "quote: ", quote
@@ -435,17 +435,17 @@ if __name__ == '__main__':
     quoteServer = Quotes()
     poolHandler()
 
-    print "create publisher"
-    transQueue = multiprocessing.Queue()
-    trans_producer_process = Process(target=RabbitQuoteClient, args=([transQueue]))
-    trans_producer_process.start()
-    print "created publisher"
     # print "create publisher"
     # transQueue = multiprocessing.Queue()
-    # trans_producer_process = Process(target=RabbitMQAyscClient,
-    #                            args=(  RabbitMQAyscClient.TRANSACTION , transQueue ))
+    # trans_producer_process = Process(target=RabbitQuoteClient, args=([transQueue]))
     # trans_producer_process.start()
     # print "created publisher"
+    print "create publisher"
+    transQueue = multiprocessing.Queue()
+    trans_producer_process = Process(target=RabbitMQAyscClient,
+                               args=( RabbitMQAyscClient.TRANSACTION , transQueue ))
+    trans_producer_process.start()
+    print "created publisher"
 
 
     # print "create publisher"
