@@ -198,15 +198,15 @@ class RabbitMultiClient(RabbitMQBase):
                 # print "getting request"
                 payload  = self.requestQueue.get()
                 if payload:
-                    worderId = payload[0]
-                    requestBody = payload[1]
+                    worderId = payload[1]
+                    requestBody = payload[0]
                     priority = 2
 
                     print "sending", requestBody, "to", worderId, "with priority", priority
                     print "queue size:",   self.requestQueue.qsize()
                     self.channel.basic_publish(
                         exchange=self.EXCHANGE,
-                        routing_key=worderId,
+                        routing_key= worderId,
                         properties=priority,
                         body=json.dumps(requestBody),
                     )
