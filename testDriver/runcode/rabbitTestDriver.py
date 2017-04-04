@@ -160,16 +160,16 @@ class RabbitMQAyscClient(RabbitMQBase):
         for queue in self.queueNames:
             self.setup_queue(queue)
 
-    def setup_queue(self, queueName):
+    def setup_queue(self, queue):
         args = {'x-max-priority': 3, 'x-message-ttl': 600000}
         print "setting up queue"
-        for queue in self.queueNames:
-            self.channel.queue_declare(self.on_queue_declareok, queue , arguments=args)
+        # for queue in self.queueNames:
+        self.channel.queue_declare(self.on_queue_declareok(queue,None), queue , arguments=args)
 
-    def on_queue_declareok(self, method_frame):
+    def on_queue_declareok(self, queue,method_frame):
         print "queue all good"
-        for queue in self.queueNames:
-            self.channel.queue_bind(self.on_bindok, queue,
+        # for queue in self.queueNames:
+        self.channel.queue_bind(self.on_bindok, queue,
                                  self.EXCHANGE, )
 
     def on_bindok(self, unused_frame):
@@ -224,7 +224,6 @@ class RabbitMQAyscClient(RabbitMQBase):
                         routing_key=worderId,
                         properties=priority,
                         body=json.dumps(requestBody),
-
 
                     )
                     if requestBody["command"] == "DUMPLOG":
