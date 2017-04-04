@@ -43,7 +43,7 @@ class RabbitMQClient(RabbitMQBase):
             print "Error occurred initializing RabbitMQClient: ", e
 
     def send(self, requestBody , priority=2):
-        # print "sending", requestBody, "to", self.queueName, "with priority", priority
+        print "sending", requestBody, "to", self.queueName, "with priority", priority
         try:
             print "creating basic properties"
             properties = pika.BasicProperties(
@@ -244,7 +244,7 @@ class RabbitMQAyscClient(RabbitMQBase):
                         requestBody = payload
                         priority = 2
 
-                    # print "sending", requestBody, "to", self.queueName, "with priority", priority
+                    print "sending", requestBody, "to", self.queueName, "with priority", priority
                     properties = pika.BasicProperties(
                         content_type='application/json',
                         priority=priority,

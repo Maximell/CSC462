@@ -474,6 +474,9 @@ def apiUserDumpLog():
     try:
         userId = current_user.username
         fileName = request.form['fileName']
+        if not fileName.isalnum():
+            return "filename is must be alpha numeric"
+        fileName = "./" + fileName
         return doUserDumplog(userId, userId, fileName, getRandomRequestLineNum())
     except:
         return "something went wrong parsing the data."
