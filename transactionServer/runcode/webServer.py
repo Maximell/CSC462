@@ -134,23 +134,6 @@ db.create_all()
 db_adapter = SQLAlchemyAdapter(db, User) # Register the User Model
 user_manager = UserManager(db_adapter, app) # Initialize Flask-User
 
-# Create an admin user and role if not already created
-if not User.query.filter(User.username=='admin').first():
-    adminUser = User(username='admin',
-                     email='seng462group22017@gmail.com',
-                     active=True,
-                     password=user_manager.hash_password('group2Password'),
-                     first_name="admin_first_name",
-                     last_name="admin_last_name"
-                 )
-    adminRole = Role(name='admin')
-
-    # Bind user to role
-    adminUser.roles.append(adminRole)
-
-    # Add user to db
-    db.session.add(adminUser)
-    db.session.commit()
 
 def negativeCash(cash):
     return cash < 0

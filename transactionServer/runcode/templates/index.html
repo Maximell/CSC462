@@ -161,5 +161,16 @@
             <input class="btn btn-primary btn-submit" type="submit" value="Submit">
         </form>
     </li>
+    {% if current_user.username == 'admin' %}
+    <li>
+        <a>admin overall Dumplog</a>
+        <form action="/dumplog/" method="POST">
+            <p>file name</p>
+            <input type="text" name="fileName">
+            <br>
+            <input class="btn btn-primary btn-submit" type="submit" value="Submit">
+        </form>
+    </li>
+    {% endif %}
 </ul>
 {% endblock %}
