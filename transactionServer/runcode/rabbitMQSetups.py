@@ -52,6 +52,9 @@ class RabbitMQClient(RabbitMQBase):
 
         )
 
+    def close(self):
+        self.connection.close()
+
 # This is for the aysnc rabbitMQ Publisher
 class RabbitMQAyscClient(RabbitMQBase):
     def __init__(self, queueName , requestQueue ):
