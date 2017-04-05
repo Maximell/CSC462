@@ -203,9 +203,6 @@ class RabbitMultiClient(RabbitMQBase):
 
                     print "sending", requestBody, "to", worderId, "with priority", priority
                     print "queue size:",   self.requestQueue.qsize()
-
-                    print
-
                     transactionClient = RabbitMQClient(worderId)
                     transactionClient.send(requestBody)
                     transactionClient.close()
