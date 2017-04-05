@@ -268,6 +268,7 @@ class poolHandler(Thread):
                         # print "popped", quoteServer.pool
                     print "not starting another handler"
                     # poolHandler()
+        print "outofwhile"
 
 
 
@@ -403,7 +404,7 @@ def on_request(ch, method, props, payload):
     print "return from quote cache: ", quote
 #     go in pool
     if quote is None:
-        Quotes.addRequestToPool(payload)
+        quoteServer.addRequestToPool(payload)
         "thread gone to quote server"
         return
 # ***
