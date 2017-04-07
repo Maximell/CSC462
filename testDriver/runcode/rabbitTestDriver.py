@@ -50,7 +50,7 @@ class RabbitMQAyscClient(RabbitMQBase):
                                 ,"transactionIn193860618727760"
                                 ,"transactionIn8796760983851" ]  #b132
 
-        self.param = pika.ConnectionParameters('142.104.91.142',44429)
+        self.param = pika.ConnectionParameters('142.104.91.142',44429,heartbeat_interval=0)
         self.connection = pika.SelectConnection(self.param,self.on_connection_open,stop_ioloop_on_close=False)
         self.channel = None
         self.closing = False
@@ -160,16 +160,16 @@ class RabbitMQAyscClient(RabbitMQBase):
         for queue in self.queueNames:
             self.setup_queue(queue)
 
-    def setup_queue(self, queueName):
-        args = {'x-max-priority': 3, 'x-message-ttl': 600000}
+    def setup_queue(self, queue):
+        args = {'x-max-priority': 3 }
         print "setting up queue"
-        for queue in self.queueNames:
-            self.channel.queue_declare(self.on_queue_declareok, queue , arguments=args)
+        # for queue in self.queueNames:
+        self.channel.queue_declare(self.on_queue_declareok(queue,None), queue , arguments=args)
 
-    def on_queue_declareok(self, method_frame):
+    def on_queue_declareok(self, queue,method_frame):
         print "queue all good"
-        for queue in self.queueNames:
-            self.channel.queue_bind(self.on_bindok, queue,
+        # for queue in self.queueNames:
+        self.channel.queue_bind(self.on_bindok, queue,
                                  self.EXCHANGE, )
 
     def on_bindok(self, unused_frame):
