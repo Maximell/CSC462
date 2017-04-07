@@ -203,9 +203,22 @@ class RabbitMultiClient(RabbitMQBase):
 
                     print "sending", requestBody, "to", worderId, "with priority", priority
                     print "queue size:",   self.requestQueue.qsize()
-                    transactionClient = RabbitMQClient(worderId)
-                    transactionClient.send(requestBody)
-                    transactionClient.close()
+                    # transactionClient = RabbitMQClient(worderId)
+                    # transactionClient.send(requestBody)
+                    # transactionClient.close()
+
+                    # print "sending", requestBody, "to", self.queueName, "with priority", priority
+                    properties = pika.BasicProperties(
+                        content_type='application/json',
+                        priority=priority,
+                    )
+                    self.channel.basic_publish(
+                        exchange=self.EXCHANGE,
+                        routing_key=worderId,
+                        properties=properties,
+                        body=json.dumps(requestBody),
+
+                    )
 
 
             except Exception as e:
