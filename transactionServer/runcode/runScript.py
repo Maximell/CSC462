@@ -11,7 +11,7 @@ if __name__ == '__main__':
     # try:
     #     os.system("python -u webServer.py > webserverOutput.txt &")
     # except:
-    #     print "web server failed to start"
+    #     print  "web server failed to start"
     try:
         os.system("python -u mqTriggers.py > triggerOutput.txt &")
     except:
