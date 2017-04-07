@@ -169,8 +169,9 @@ class RabbitMQAyscClient(RabbitMQBase):
     def on_queue_declareok(self, queue,method_frame):
         print "queue all good"
         # for queue in self.queueNames:
-        self.channel.queue_bind(self.on_bindok, queue,
-                                 self.EXCHANGE, )
+        self.start_publishing()
+        # self.channel.queue_bind(self.on_bindok, queue,
+        #                          self.EXCHANGE, )
 
     def on_bindok(self, unused_frame):
         print "bind all good"
@@ -243,27 +244,14 @@ class RabbitMQAyscClient(RabbitMQBase):
         # print worderId
         print workerMap
         # sleep for five seconds before shutdown
-        time.sleep(5)
-        os.system("echo killall python...")
-        os.system("killall python")
+        # time.sleep(5)
+        # os.system("echo killall python...")
+        # os.system("killall python")
 
 
     def close(self):
         self.connection.close()
-# Worker machines via queues + mac
-# workerMap = [
-#     #  QueueName , [NumOfUsers , Number of Commands]
-#     [RabbitMQClient("transactionIn193596476298033"), [0 , 0]], #B01331331331
-#     [RabbitMQClient("transactionIn193596744799041"), [0 , 0]], #B01341341341
-#     [RabbitMQClient("transactionIn193601473895188"), [0 , 0]], #B0145B145B14
-#     [RabbitMQClient("transactionIn193601742334740"), [0 , 0]], #B0146B146B14
-#     [RabbitMQClient("transactionIn193809078333764"), [0 , 0]], #B044B144B144
-#     [RabbitMQClient("transactionIn193821963432263"), [0 , 0]], #B047B147B147
-#     [RabbitMQClient("transactionIn193826241687624"), [0 , 0]], # B048B048B048
-#     [RabbitMQClient("transactionIn193830553497929"), [0 , 0]], #B049B149B149
-#     [RabbitMQClient("transactionIn193860618727760"), [0 , 0]], #B050B150B150
-#     [RabbitMQClient("transactionIn8796760983851"), [0 , 0]] #B132
-# ]
+
 workerMap = [
     ["transactionIn193596476298033", [0, 0]],
     ["transactionIn193596744799041", [0, 0]],
