@@ -50,7 +50,7 @@ class RabbitMQAyscClient(RabbitMQBase):
                                 ,"transactionIn193860618727760"
                                 ,"transactionIn8796760983851" ]  #b132
 
-        self.param = pika.ConnectionParameters('142.104.91.142',44429,heartbeat_interval=0)
+        self.param = pika.ConnectionParameters('142.104.91.142',44429)
         self.connection = pika.SelectConnection(self.param,self.on_connection_open,stop_ioloop_on_close=False)
         self.channel = None
         self.closing = False
@@ -161,7 +161,7 @@ class RabbitMQAyscClient(RabbitMQBase):
             self.setup_queue(queue)
 
     def setup_queue(self, queue):
-        args = {'x-max-priority': 3, 'x-message-ttl': 600000}
+        args = {'x-max-priority': 3}
         print "setting up queue"
         # for queue in self.queueNames:
         self.channel.queue_declare(self.on_queue_declareok(queue,None), queue , arguments=args)
@@ -243,7 +243,8 @@ class RabbitMQAyscClient(RabbitMQBase):
         # print worderId
         print workerMap
         # sleep for five seconds before shutdown
-        # time.sleep(5)
+        time.sleep(5)
+        quit()
         # os.system("echo killall python...")
         # os.system("killall python")
 

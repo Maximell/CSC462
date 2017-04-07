@@ -140,7 +140,7 @@ class RabbitMultiClient(RabbitMQBase):
         self.setup_queue(queue)
 
     def setup_queue(self, queue):
-        args = {'x-max-priority': 3, 'x-message-ttl': 600000}
+        args = {'x-max-priority': 3}
         print "setting up queue: queueName", queue
         # for queue in self.queueNames:
         self.channel.queue_declare(self.on_queue_declareok(queue , None), queue , arguments=args)

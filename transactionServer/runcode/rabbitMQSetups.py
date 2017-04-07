@@ -36,7 +36,7 @@ class RabbitMQClient(RabbitMQBase):
         self.connection = pika.BlockingConnection(pika.ConnectionParameters('142.104.91.142', 44429))
         self.channel = self.connection.channel()
 
-        args = {'x-max-priority': 3 , 'x-message-ttl': 600000 }
+        args = {'x-max-priority': 3  }
         self.channel.queue_declare(queue=self.queueName, arguments=args)
 
     def send(self, requestBody , priority=2):
@@ -173,7 +173,7 @@ class RabbitMQAyscClient(RabbitMQBase):
         self.setup_queue(self.queueName)
 
     def setup_queue(self, queueName):
-        args = {'x-max-priority': 3, 'x-message-ttl': 600000}
+        args = {'x-max-priority': 3}
         print "setting up queue"
         self.channel.queue_declare(self.on_queue_declareok, queueName , arguments=args)
 
@@ -385,7 +385,7 @@ class RabbitMQAyscReciever(RabbitMQBase):
         self.setup_queue(self.queueName)
 
     def setup_queue(self, queueName):
-        args = {'x-max-priority': 3, 'x-message-ttl': 600000}
+        args = {'x-max-priority': 3}
         print "setting up queue"
         self.channel.queue_declare(self.on_queue_declareok, queueName , arguments=args)
 
@@ -472,7 +472,7 @@ class RabbitMQReceiver(RabbitMQBase):
         connection = pika.BlockingConnection(pika.ConnectionParameters('142.104.91.142',44429))
         channel = connection.channel()
 
-        args = {'x-max-priority': 3  , 'x-message-ttl': 600000}
+        args = {'x-max-priority': 3  }
         channel.queue_declare(queue=queueName, arguments=args)
 
         channel.basic_consume(callback, queue=queueName, no_ack=True , exclusive=True)
