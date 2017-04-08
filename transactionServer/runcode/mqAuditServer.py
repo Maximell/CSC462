@@ -466,7 +466,7 @@ if __name__ == '__main__':
 
     while (DumplogNotMade):
         try:
-            msg = P2Q_rabbit.get(False)
+            msg = P2Q_rabbit.get()
             if msg:
                 payload = msg[1]
                 props = msg[0]
