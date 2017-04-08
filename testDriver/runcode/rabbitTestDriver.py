@@ -446,12 +446,11 @@ if __name__ == '__main__':
         print('completed')
         workerMap = None
         userMap = None
-        gc.collect()
-        time.sleep(10)
+        # gc.collect()
+        # time.sleep(10)
         print "create publisher"
-        producer_process = Process(target=RabbitMQAyscClient,
-                                   args=(requestQueue, RabbitMQBase.TRANSACTION))
-        producer_process.start()
+        RabbitMQAyscClient(args=(requestQueue, RabbitMQBase.TRANSACTION))
+
         print "created publisher"
         while True:
             time.sleep(1)
