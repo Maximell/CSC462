@@ -404,26 +404,26 @@ if __name__ == '__main__':
     }
 
     # self.start() currently commented out in both threads
-    buyThread = BuyTriggerThread()
-    sellThread = SellTriggerThread()
+    # buyThread = BuyTriggerThread()
+    # sellThread = SellTriggerThread()
 
     # transactionClient = RabbitMQClient(RabbitMQClient.TRANSACTION)
 
     print("awaiting trigger requests")
 
 
-
-    print "create transaction publisher"
-    transQueue = multiprocessing.Queue()
-    quote_producer_process = Process(target=RabbitMQAyscClient,
-                                     args=( RabbitMQAyscClient.TRANSACTION , transQueue))
-    quote_producer_process.start()
-
-    print "create quote publisher"
-    quoteQueue = multiprocessing.Queue()
-    quote_producer_process = Process(target=RabbitMQAyscClient,
-                                     args=( RabbitMQAyscClient.QUOTE , quoteQueue ))
-    quote_producer_process.start()
+    #
+    # print "create transaction publisher"
+    # transQueue = multiprocessing.Queue()
+    # quote_producer_process = Process(target=RabbitMQAyscClient,
+    #                                  args=( RabbitMQAyscClient.TRANSACTION , transQueue))
+    # quote_producer_process.start()
+    #
+    # print "create quote publisher"
+    # quoteQueue = multiprocessing.Queue()
+    # quote_producer_process = Process(target=RabbitMQAyscClient,
+    #                                  args=( RabbitMQAyscClient.QUOTE , quoteQueue ))
+    # quote_producer_process.start()
 
     P1Q_rabbit = multiprocessing.Queue()
     P2Q_rabbit = multiprocessing.Queue()
