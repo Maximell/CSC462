@@ -6,6 +6,7 @@ import pika
 import multiprocessing
 from multiprocessing import Process
 from multiprocessing import Queue
+import gc
 class RabbitMQBase:
     TRANSACTION = 'transactionIn193596476298033'
 
@@ -445,6 +446,8 @@ if __name__ == '__main__':
         print('completed')
         workerMap = None
         userMap = None
+        gc.collect()
+        time.sleep(10)
         print "create publisher"
         producer_process = Process(target=RabbitMQAyscClient,
                                    args=(requestQueue, RabbitMQBase.TRANSACTION))
