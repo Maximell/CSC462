@@ -443,7 +443,8 @@ if __name__ == '__main__':
         pprint(workerMap)
         pprint(userMap.items())
         print('completed')
-
+        workerMap = None
+        userMap = None
         print "create publisher"
         producer_process = Process(target=RabbitMQAyscClient,
                                    args=(requestQueue, RabbitMQBase.TRANSACTION))
