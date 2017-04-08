@@ -232,7 +232,10 @@ class RabbitMQAyscClient(RabbitMQBase):
                     if requestBody["command"] == "DUMPLOG":
                         noDump = False
                         break
+                else:
+                    self.send()
                 # print "schedule next msg"
+
             except Exception as e:
                 print e
                 self.schedule_next_message()
