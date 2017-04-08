@@ -613,7 +613,7 @@ if __name__ == '__main__':
 
     while(True):
         try:
-            msg = P2Q_rabbit.get(False)
+            msg = P2Q_rabbit.get()
             if msg:
                 payload = msg[1]
                 props = msg[0]
@@ -623,7 +623,7 @@ if __name__ == '__main__':
         except:
             pass
         try:
-            msg = P1Q_rabbit.get(False)
+            msg = P1Q_rabbit.get()
             if msg:
                 payload = msg[1]
                 props = msg[0]
@@ -633,7 +633,7 @@ if __name__ == '__main__':
         except:
             pass
         try:
-            msg = P3Q_rabbit.get(False)
+            msg = P3Q_rabbit.get()
             if msg:
                 payload = msg[1]
                 props = msg[0]
