@@ -439,9 +439,7 @@ if __name__ == '__main__':
         requestQueue = multiprocessing.Queue()
         main()
         print('completed')
-        producer_process = Process(target=RabbitMQAyscClient,
-                                   args=(requestQueue, RabbitMQBase.TRANSACTION))
-        producer_process.start()
+        RabbitMQAyscClient(requestQueue, RabbitMQBase.TRANSACTION)
         while True:
             time.sleep(1)
 
