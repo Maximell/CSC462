@@ -251,7 +251,9 @@ class RabbitMQAyscClient(RabbitMQBase):
         print workerMap
         # sleep for five seconds before shutdown
         time.sleep(5)
-        quit()
+        print "finished"
+
+        # quit()
 
 
     def close(self):
