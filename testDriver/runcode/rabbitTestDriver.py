@@ -50,12 +50,12 @@ class RabbitMQAyscClient(RabbitMQBase):
                                 ,"transactionIn193860618727760"
                                 ,"transactionIn8796760983851" ]  #b132
 
-        self.param = pika.ConnectionParameters('142.104.91.142',44429 , heartbeat_interval=0)
+        self.param = pika.ConnectionParameters('142.104.91.142',44429 )
         self.connection = pika.SelectConnection(self.param,self.on_connection_open,stop_ioloop_on_close=False)
         self.channel = None
         self.closing = False
         self.stopping = False
-        self.PUBLISH_INTERVAL = 2
+        self.PUBLISH_INTERVAL = 1
         self.requestQueue = requestQueue
         self.EXCHANGE = queueName
         print "set up Publisher"
@@ -229,10 +229,11 @@ class RabbitMQAyscClient(RabbitMQBase):
                         noDump = False
                         break
                 # print "schedule next msg"
-                self.schedule_next_message()
             except Exception as e:
                 print e
                 print "had troubles sending into rabbit"
+                self.schedule_next_message()
+
                 # notEmpty = False
                 # print "failed in send"
 
