@@ -239,13 +239,12 @@ class RabbitMQAyscClient(RabbitMQBase):
 
         # exit after dumplog has been sent
         print "sentDumplog"
-        # print payload
-        # print worderId
+        print payload
         print workerMap
         # sleep for five seconds before shutdown
         print "seen Dump log and sent it"
         time.sleep(25)
-        os.system("killall python")
+        quit()
 
 
     def close(self):
