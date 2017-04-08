@@ -455,6 +455,5 @@ if __name__ == '__main__':
 
         print "created publisher"
         while True:
-            print requestQueue.qsize()
             time.sleep(1)
 
