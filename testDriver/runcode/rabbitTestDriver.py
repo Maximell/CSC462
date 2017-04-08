@@ -168,8 +168,8 @@ class RabbitMQAyscClient(RabbitMQBase):
     def setup_queue(self, queueName):
         args = {'x-max-priority': 3, 'x-message-ttl': 600000}
         # print "setting up queue"
-        for queue in self.queueNames:
-            self.channel.queue_declare(self.on_queue_declareok, queue , arguments=args)
+        # for queue in self.queueNames:
+        self.channel.queue_declare(self.on_queue_declareok, queueName , arguments=args)
 
     def on_queue_declareok(self, method_frame):
         # print "queue all good"
@@ -215,7 +215,7 @@ class RabbitMQAyscClient(RabbitMQBase):
         noDump = True
         while(noDump):
             try:
-                payload  = self.requestQueue.get(False)
+                payload  = self.requestQueue.get()
                 if payload:
                     worderId = payload[0]
                     requestBody = payload[1]
@@ -446,12 +446,13 @@ if __name__ == '__main__':
         print('completed')
         workerMap = None
         userMap = None
-        # gc.collect()
+        gc.collect()
         # time.sleep(10)
         print "create publisher"
         RabbitMQAyscClient(requestQueue, RabbitMQBase.TRANSACTION)
 
         print "created publisher"
         while True:
+            print requestQueue.qsize()
             time.sleep(1)
 
