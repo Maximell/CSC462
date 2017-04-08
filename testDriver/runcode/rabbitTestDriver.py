@@ -426,7 +426,7 @@ def main():
                 for user in userMap:
                     if workerQueue == userMap[user]:
                         args[0] = user
-
+            print lineNumber
             send(command, args, lineNumber)
 
 
@@ -438,15 +438,18 @@ if __name__ == '__main__':
         print(sys.argv)
     else:
         DUMPFLAG = False
-        print "create publisher"
         requestQueue = multiprocessing.Queue()
-        producer_process = Process(target=RabbitMQAyscClient,
-                                   args=( requestQueue , RabbitMQBase.TRANSACTION))
-        producer_process.start()
-        print "created publisher"
 
         main()
         pprint(workerMap)
         pprint(userMap.items())
         print('completed')
+
+        print "create publisher"
+        producer_process = Process(target=RabbitMQAyscClient,
+                                   args=(requestQueue, RabbitMQBase.TRANSACTION))
+        producer_process.start()
+        print "created publisher"
+        while True:
+            time.sleep(1)
 
