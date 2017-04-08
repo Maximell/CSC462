@@ -24,6 +24,7 @@ class TriggerFunctions:
     ACTIVATE_SELL = 5
     CANCEL_SELL = 6
     GET_SELL = 7
+    QUOTE = 8
 
     @classmethod
     def createAddBuyRequest(cls, command, userId, stockSymbol, amount, lineNum):
@@ -127,14 +128,14 @@ class Triggers:
     def addBuyTrigger(self, userId, sym, cashReserved, transactionNum):
         if sym not in self.buyTriggers:
             self.buyTriggers[sym] = {}
-        trigger = {"cashReserved": cashReserved, "active": False, "buyAt": 0, "transId": transactionNum}
+        trigger = {"cashReserved": cashReserved, "active": False, "buyAt": 0, "transactionNum": transactionNum}
         self.buyTriggers[sym][userId] = trigger
         return trigger
 
     def addSellTrigger(self, userId, sym, maxSellAmount, transactionNum):
         if sym not in self.sellTriggers:
             self.sellTriggers[sym] = {}
-        trigger = {"maxSellAmount": maxSellAmount, "active": False, "sellAt": 0, "transId": transactionNum}
+        trigger = {"maxSellAmount": maxSellAmount, "active": False, "sellAt": 0, "transactionNum": transactionNum}
         self.sellTriggers[sym][userId] = trigger
         return trigger
 
@@ -188,13 +189,33 @@ class Triggers:
         return bool(triggers.get(symbol, {}).get(userId))
 
 
+# quote shape: symbol: {value: string, retrieved: epoch time, user: string, cryptoKey: string}
+class Quotes():
+    def __init__(self, cacheExpire=60):
+        self.cacheExpire = cacheExpire
+        self.quoteCache = {}
+
+    def getQuote(self, symbol):
+        cache = self.quoteCache.get(symbol)
+        if cache:
+            if self._cacheIsActive(cache):
+                return cache
+        return None
+
+    def cacheQuote(self, symbol, retrieved, value):
+        self.quoteCache[symbol] = {"retrieved": retrieved, "value": value}
+
+    def _cacheIsActive(self, quote):
+        return (int(quote.get('retrieved', 0)) + self.cacheExpire) > int(time.time())
+
+
 class BuyTriggerThread(Thread):
     def __init__(self):
         Thread.__init__(self)
         self.buyLock = threading.Lock()
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.daemon = True
-        # self.start()
+        self.start()
 
     def run(self):
         while True:
@@ -204,12 +225,24 @@ class BuyTriggerThread(Thread):
                 if len(triggers.buyTriggers[symbol]):
                     # get the id of someone for the request to the quote server
                     someonesUserId = triggers.buyTriggers[symbol].itervalues().next()
-                    transId = triggers.buyTriggers[symbol][someonesUserId]["transId"]
-                    quoteQueue.put(
-                        createQuoteRequest(someonesUserId, symbol, transId)
-                    )
+                    transactionNum = triggers.buyTriggers[symbol][someonesUserId]["transactionNum"]
 
-                    # need to block for quote here
+                    # essentially a stop and wait RPC
+                    quote = quotesCache.getQuote(symbol)
+                    if quote is None:
+                        # tells quote client where to return to
+                        args = {"trans": RabbitMQAyscClient.TRIGGERS}
+
+                        i = sum([ord(c) for c in symbol]) % 3
+                        quoteQueues[i].put(
+                            createQuoteRequest(someonesUserId, symbol, transactionNum, args)
+                        )
+                        print "sending quote request to ",quoteQueues[i] , symbol
+                        while quote is None:
+                            # .1 is a guess? better interval to sleep?
+                            time.sleep(0.1)
+                            quote = quotesCache.getQuote(symbol)
+                        print "got quote back",quote
                     quoteValue = quote["value"]
                     for userId in triggers.buyTriggers[symbol]:
                         trigger = triggers.buyTriggers[symbol][userId]
@@ -218,10 +251,20 @@ class BuyTriggerThread(Thread):
                                 portfolioAmount = math.floor(trigger["cashReserved"] / quoteValue)
                                 cashCommitAmount = portfolioAmount * quoteValue
                                 cashReleaseAmount = trigger["cashReserved"] - cashCommitAmount
-                                request = databaseFunctions.createBuyTriggerRequest(userId, cashCommitAmount, cashReleaseAmount, portfolioAmount, symbol)
-                                db_rpc.call(request)
 
-            time.sleep(15)
+                                # TODO update this to new style
+                                databaseQueue.put(
+                                    databaseFunctions.createBuyTriggerRequest(
+                                        userId,
+                                        cashCommitAmount,
+                                        cashReleaseAmount,
+                                        portfolioAmount,
+                                        symbol
+                                    )
+                                )
+                                triggers.cancelBuyTrigger(userId, symbol)
+
+            time.sleep(50)
 
 
 class SellTriggerThread(Thread):
@@ -230,7 +273,7 @@ class SellTriggerThread(Thread):
         self.sellLock = threading.Lock()
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.daemon = True
-        # self.start()
+        self.start()
 
     def run(self):
         # offset buy and sell triggers by 5 seconds
@@ -242,11 +285,26 @@ class SellTriggerThread(Thread):
                 if len(triggers.buyTriggers[symbol]):
                     # get the id of someone for the request to the quote server
                     someonesUserId = triggers.sellTriggers[symbol].itervalues().next()
-                    transId = triggers.sellTriggers[symbol][someonesUserId]["transId"]
-                    quoteQueue.put(
-                        createQuoteRequest(someonesUserId, symbol, transId)
-                    )
-                    # need to block for quote here
+                    transactionNum = triggers.sellTriggers[symbol][someonesUserId]["transactionNum"]
+
+                    # essentially a stop and wait RPC
+                    quote = quotesCache.getQuote(symbol)
+                    if quote is None:
+                        # tells quote client where to return to
+                        args = {"trans": RabbitMQAyscClient.TRIGGERS}
+
+
+                        i = sum([ord(c) for c in symbol]) % 3
+                        quoteQueues[i].put(
+                            createQuoteRequest(userId, symbol, transactionNum, args)
+                        )
+                        print "sending quote request to ",quoteQueues[i] , symbol
+
+                        while quote is None:
+                            # .1 is a guess? better interval to sleep?
+                            time.sleep(.1)
+                            quote = quotesCache.getQuote(symbol)
+                        print "got quote back",quote
 
                     quoteValue = quote["value"]
                     for userId in triggers.sellTriggers[symbol]:
@@ -255,17 +313,20 @@ class SellTriggerThread(Thread):
                             if quoteValue >= trigger["sellAt"]:
                                 portfolioCommitAmount = math.floor(trigger["maxSellAmount"] / quoteValue)
                                 portfolioReleaseAmount = math.floor(trigger["maxSellAmount"] / trigger["sellAt"]) - portfolioCommitAmount
-                                request = databaseFunctions.createSellTriggerRequest(
-                                    userId,
-                                    quoteValue,
-                                    portfolioCommitAmount,
-                                    portfolioReleaseAmount,
-                                    symbol
+                                # TODO use new style
+                                databaseQueue.put(
+                                    databaseFunctions.createSellTriggerRequest(
+                                        userId,
+                                        quoteValue,
+                                        portfolioCommitAmount,
+                                        portfolioReleaseAmount,
+                                        symbol
+                                    )
                                 )
 
-                                db_rpc.call(request)
+                                triggers.cancelSellTrigger(userId, symbol)
 
-            time.sleep(15)
+            time.sleep(50)
 
 
 def handleAddBuy(payload):
@@ -371,6 +432,18 @@ def handleGetSell(payload):
         payload['errorString'] = "trigger doesnt exist"
     return payload
 
+def handleQuote(payload):
+    print "quote payload:", payload
+
+    symbol = payload["stockSymbol"]
+    quoteVal = payload["quote"]
+    retrieved = payload["quoteRetrieved"]
+
+    quotesCache.cacheQuote(symbol, retrieved, quoteVal)
+
+    return DONT_RETURN_TO_TRANSACTION
+
+
 
 def on_request(ch, method, props, payload):
     print "payload: ", payload
@@ -383,6 +456,7 @@ def on_request(ch, method, props, payload):
         payload['errorString'] = "function not found"
         response = payload
 
+    if response != DONT_RETURN_TO_TRANSACTION:
         transQueue.put(response)
 
 
@@ -391,7 +465,10 @@ def create_error_response(status, response):
 
 
 if __name__ == '__main__':
+    DONT_RETURN_TO_TRANSACTION = "dontReturn"
+
     triggers = Triggers()
+    quotesCache = Quotes()
 
     handleFunctionSwitch = {
         TriggerFunctions.BUY: handleAddBuy,
@@ -400,17 +477,22 @@ if __name__ == '__main__':
         TriggerFunctions.SELL: handleAddSell,
         TriggerFunctions.ACTIVATE_SELL: handleSetSellActive,
         TriggerFunctions.CANCEL_SELL: handleCancelSell,
-        TriggerFunctions.GET_SELL: handleGetSell
+        TriggerFunctions.GET_SELL: handleGetSell,
+        TriggerFunctions.QUOTE: handleQuote,
     }
 
     # self.start() currently commented out in both threads
     buyThread = BuyTriggerThread()
     sellThread = SellTriggerThread()
 
-    # transactionClient = RabbitMQClient(RabbitMQClient.TRANSACTION)
+
 
     print("awaiting trigger requests")
-
+    print "create transaction publisher"
+    databaseQueue = multiprocessing.Queue()
+    database_producer_process = Process(target=RabbitMQAyscClient,
+                                     args=(RabbitMQAyscClient.DATABASE, databaseQueue))
+    database_producer_process.start()
 
 
     print "create transaction publisher"
@@ -419,11 +501,31 @@ if __name__ == '__main__':
                                      args=( RabbitMQAyscClient.TRANSACTION , transQueue))
     quote_producer_process.start()
 
-    print "create quote publisher"
-    quoteQueue = multiprocessing.Queue()
-    quote_producer_process = Process(target=RabbitMQAyscClient,
-                                     args=( RabbitMQAyscClient.QUOTE , quoteQueue ))
-    quote_producer_process.start()
+    print "create Quotepublisher1"
+    quoteQueue1 = multiprocessing.Queue()
+    quote_producer_process1 = Process(
+        target=RabbitMQAyscClient,
+        args=(RabbitMQAyscClient.QUOTE1, quoteQueue1)
+    )
+    quote_producer_process1.start()
+
+    print "create Quotepublisher2"
+    quoteQueue2 = multiprocessing.Queue()
+    quote_producer_process2 = Process(
+        target=RabbitMQAyscClient,
+        args=(RabbitMQAyscClient.QUOTE2, quoteQueue2)
+    )
+    quote_producer_process2.start()
+
+    print "create Quotepublisher3"
+    quoteQueue3 = multiprocessing.Queue()
+    quote_producer_process3 = Process(
+        target=RabbitMQAyscClient,
+        args=(RabbitMQAyscClient.QUOTE3, quoteQueue3)
+    )
+    quote_producer_process3.start()
+
+    quoteQueues = [quoteQueue1, quoteQueue2, quoteQueue3]
 
     P1Q_rabbit = multiprocessing.Queue()
     P2Q_rabbit = multiprocessing.Queue()
@@ -434,14 +536,14 @@ if __name__ == '__main__':
                                args=(RabbitMQAyscReciever.TRIGGERS, P1Q_rabbit, P2Q_rabbit, P3Q_rabbit))
     consumer_process.start()
 
-    while (True):
+    while(True):
         try:
             msg = P2Q_rabbit.get(False)
             if msg:
                 payload = msg[1]
                 props = msg[0]
                 print "queue size: ", P2Q_rabbit.qsize()
-                # on_request(None, None, props, payload)
+                on_request(None, None, props, payload)
                 continue
         except:
             pass

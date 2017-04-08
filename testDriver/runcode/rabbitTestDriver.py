@@ -6,6 +6,7 @@ import pika
 import multiprocessing
 from multiprocessing import Process
 from multiprocessing import Queue
+import os
 class RabbitMQBase:
     TRANSACTION = 'transactionIn193596476298033'
 
@@ -49,12 +50,12 @@ class RabbitMQAyscClient(RabbitMQBase):
                                 ,"transactionIn193860618727760"
                                 ,"transactionIn8796760983851" ]  #b132
 
-        self.param = pika.ConnectionParameters('142.104.91.142',44429)
+        self.param = pika.ConnectionParameters('142.104.91.142',44429 , heartbeat_interval=0)
         self.connection = pika.SelectConnection(self.param,self.on_connection_open,stop_ioloop_on_close=False)
         self.channel = None
         self.closing = False
         self.stopping = False
-        self.PUBLISH_INTERVAL = 1
+        self.PUBLISH_INTERVAL = 2
         self.requestQueue = requestQueue
         self.EXCHANGE = queueName
         print "set up Publisher"
@@ -62,12 +63,12 @@ class RabbitMQAyscClient(RabbitMQBase):
         self.connection.ioloop.start()
 
     def on_connection_open(self , blank_connection):
-        # print "on open connection"
+        print "on open connection"
         self.add_on_connection_close_callback()
         self.open_channel()
 
     def add_on_connection_close_callback(self):
-        # print "on closed connection do callback"
+        print "on closed connection do callback"
         self.connection.add_on_close_callback(self.on_connection_closed)
 
     def on_connection_closed(self, connection, reply_code, reply_text):
@@ -76,13 +77,8 @@ class RabbitMQAyscClient(RabbitMQBase):
         """This method is invoked by pika when the connection to RabbitMQ is
         closed unexpectedly. Since it is unexpected, we will reconnect to
         RabbitMQ if it disconnects.
-
-        :param pika.connection.Connection connection: The closed connection obj
-        :param int reply_code: The server provided reply_code if given
-        :param str reply_text: The server provided reply_text if given
-
         """
-        # print "on Closed connection"
+        print "on Closed connection"
         self._channel = None
         if self.closing:
             self.connection.ioloop.stop()
@@ -96,7 +92,7 @@ class RabbitMQAyscClient(RabbitMQBase):
         closed. See the on_connection_closed method.
 
         """
-        # print "reconnecting"
+        print "reconnecting"
         self._deliveries = []
         self._acked = 0
         self._nacked = 0
@@ -112,11 +108,11 @@ class RabbitMQAyscClient(RabbitMQBase):
         self.connection.ioloop.start()
 
     def open_channel(self):
-        # print "open Channel"
+        print "open Channel"
         self.connection.channel(on_open_callback=self.on_channel_open)
 
     def on_channel_open(self , channel):
-        # print "on open channel"
+        print "on open channel"
         self.channel = channel
         self.add_on_channel_close_callback()
         self.setup_exchange(self.EXCHANGE)
@@ -126,7 +122,7 @@ class RabbitMQAyscClient(RabbitMQBase):
         """This method tells pika to call the on_channel_closed method if
         RabbitMQ unexpectedly closes the channel.
         """
-        # print "callback after channel closed"
+        print "callback after channel closed"
         self.channel.add_on_close_callback(self.on_channel_closed)
 
     def on_channel_closed(self, channel, reply_code, reply_text):
@@ -141,13 +137,13 @@ class RabbitMQAyscClient(RabbitMQBase):
         :param str reply_text: The text reason the channel was closed
 
         """
-        # print "channel closed"
+        print "channel closed"
         # LOGGER.warning('Channel was closed: (%s) %s', reply_code, reply_text)
         if not self.closing:
             self.connection.close()
 
     def setup_exchange(self, exchange_name):
-        # print "setup exchange"
+        print "setup exchange"
         for queue in self.queueNames:
             self.channel.exchange_declare(self.on_exchange_declareok,
                                        queue,)
@@ -159,30 +155,30 @@ class RabbitMQAyscClient(RabbitMQBase):
         :param pika.Frame.Method unused_frame: Exchange.DeclareOk response frame
 
         """
-        # print "exchange all good"
+        print "exchange all good"
         # LOGGER.info('Exchange declared')
         for queue in self.queueNames:
             self.setup_queue(queue)
 
     def setup_queue(self, queueName):
         args = {'x-max-priority': 3, 'x-message-ttl': 600000}
-        # print "setting up queue"
+        print "setting up queue"
         for queue in self.queueNames:
             self.channel.queue_declare(self.on_queue_declareok, queue , arguments=args)
 
     def on_queue_declareok(self, method_frame):
-        # print "queue all good"
+        print "queue all good"
         for queue in self.queueNames:
             self.channel.queue_bind(self.on_bindok, queue,
                                  self.EXCHANGE, )
 
     def on_bindok(self, unused_frame):
-        # print "bind all good"
+        print "bind all good"
         # Queue bound
         self.start_publishing()
 
     def start_publishing(self):
-        # print "start Publishing"
+        print "start Publishing"
         # self.enable_delivery_confirmations()
         self.schedule_next_message()
 
@@ -191,7 +187,7 @@ class RabbitMQAyscClient(RabbitMQBase):
         message to be delivered in PUBLISH_INTERVAL seconds.
 
         """
-        # print "scheduale next msg"
+        print "schedule next msg"
         if self.stopping:
             return
         # LOGGER.info('Scheduling next message for %0.1f seconds',
@@ -210,7 +206,7 @@ class RabbitMQAyscClient(RabbitMQBase):
 
 
     def send(self):
-        # print "try sending"
+        print "try sending"
         noDump = True
         while(noDump):
             try:
@@ -220,7 +216,7 @@ class RabbitMQAyscClient(RabbitMQBase):
                     requestBody = payload[1]
                     priority = payload[2]
 
-                    # print "sending", requestBody, "to", worderId, "with priority", priority
+                    print "sending", requestBody, "to", worderId, "with priority", priority
 
                     self.channel.basic_publish(
                         exchange=self.EXCHANGE,
@@ -234,19 +230,21 @@ class RabbitMQAyscClient(RabbitMQBase):
                         break
                 # print "schedule next msg"
                 self.schedule_next_message()
-            except:
-                pass
+            except Exception as e:
+                print e
+                print "had troubles sending into rabbit"
                 # notEmpty = False
                 # print "failed in send"
 
         # exit after dumplog has been sent
         print "sentDumplog"
-        print payload
-        print worderId
+        # print payload
+        # print worderId
         print workerMap
         # sleep for five seconds before shutdown
-        time.sleep(5)
-        quit()
+        print "seen Dump log and sent it"
+        time.sleep(25)
+        os.system("killall python")
 
 
     def close(self):
@@ -292,108 +290,109 @@ userMap = {}
 
 
 def send(command, args, lineNum):
-    DUMPFLAG = False
-    # print "--------------------"
-    # print "command", command
-    # print "args", args
-    # print "line", lineNum
-    user = args[0]
-    properties = pika.BasicProperties(priority=1)
+    try:
+        DUMPFLAG = False
+        # print "--------------------"
+        # print "command", command
+        # print "args", args
+        # print "line", lineNum
+        user = args[0]
+        properties = pika.BasicProperties(priority=1)
 
-    # get or put into userMap
-    if user in userMap:
-        client = userMap[user]
-        for x in workerMap:
-            # update the ammount in the current Worker
-            if x[0] == client:
-                x[1][1] += 1
-                break
+        # get or put into userMap
+        if user in userMap:
+            client = userMap[user]
+            for x in workerMap:
+                # update the ammount in the current Worker
+                if x[0] == client:
+                    x[1][1] += 1
+                    break
 
-        # print("In dict already")
-    else:
-        # just need a number in the workerMap
-        minUser = workerMap[0][1][0]
-        index = 0
-        sendto = None
-        # find the worker with the fewest users
-        for x in range(0, len(workerMap)):
-            currentWorker = workerMap[x]
-            currentAmount = currentWorker[1][1]
-
-            if currentWorker[1][0] <= minUser:
-                sendto = currentWorker
-                index = x
-                # print "found fewest users"
-                minUser = currentWorker[1][0]
-                minAmount = currentAmount
-        # find the worker with fewest users and commands.
-        for x in range(0 , len(workerMap)):
-            currentWorker = workerMap[x]
-            # if user amount is greater than minUser skip
-            if currentWorker[1][0] > minUser:
-                continue
-            else:
-                # SAme amount of user so check amount
-                if currentWorker[1][1] < minAmount:
-                    index = x
-                    minAmount = currentWorker[1][1]
-                    # print "found fewest Commands"
-                    sendto = currentWorker
-        if sendto != None:
-            # print("adding User to map")
-            userMap[user] = sendto[0]
-            client = sendto[0]
-            workerMap[index][1][1] += 1
-            workerMap[index][1][0] += 1
+            # print("In dict already")
         else:
-            print("problem setting user map")
+            # just need a number in the workerMap
+            minUser = workerMap[0][1][0]
+            index = 0
+            sendto = None
+            # find the worker with the fewest users
+            for x in range(0, len(workerMap)):
+                currentWorker = workerMap[x]
+                currentAmount = currentWorker[1][1]
 
-    # setup args to push into rabbit
-    if len(args) > 2:
-        args = {
-            'userId': args[0],
-            'stockSymbol': args[1],
-            'cash': args[2]
-        }
-    elif len(args) == 2 and command in ['ADD']:
-        args = {
-            'userId': args[0],
-            'cash': args[1]
-        }
-    elif len(args) == 2:
-        args = {
-            'userId': args[0],
-            'stockSymbol': args[1]
-        }
-    elif len(args) == 1 and command in ['DUMPLOG']:
-        args = {
-            'userId': "./testLOG"
-        }
-        properties = pika.BasicProperties(priority=3)
-        DUMPFLAG = True
-        # return  # dont bother sending a dumplog
-    elif len(args) == 1:
-        args = {
-            'userId': args[0]
-        }
+                if currentWorker[1][0] <= minUser:
+                    sendto = currentWorker
+                    index = x
+                    # print "found fewest users"
+                    minUser = currentWorker[1][0]
+                    minAmount = currentAmount
+            # find the worker with fewest users and commands.
+            for x in range(0 , len(workerMap)):
+                currentWorker = workerMap[x]
+                # if user amount is greater than minUser skip
+                if currentWorker[1][0] > minUser:
+                    continue
+                else:
+                    # SAme amount of user so check amount
+                    if currentWorker[1][1] < minAmount:
+                        index = x
+                        minAmount = currentWorker[1][1]
+                        # print "found fewest Commands"
+                        sendto = currentWorker
+            if sendto != None:
+                # print("adding User to map")
+                userMap[user] = sendto[0]
+                client = sendto[0]
+                workerMap[index][1][1] += 1
+                workerMap[index][1][0] += 1
+            else:
+                print("problem setting user map")
 
-    args["command"] = command
-    args["lineNum"] = lineNum
+        # setup args to push into rabbit
+        if len(args) > 2:
+            args = {
+                'userId': args[0],
+                'stockSymbol': args[1],
+                'cash': args[2]
+            }
+        elif len(args) == 2 and command in ['ADD']:
+            args = {
+                'userId': args[0],
+                'cash': args[1]
+            }
+        elif len(args) == 2:
+            args = {
+                'userId': args[0],
+                'stockSymbol': args[1]
+            }
+        elif len(args) == 1 and command in ['DUMPLOG']:
+            args = {
+                'userId': "./testLOG"
+            }
+            properties = pika.BasicProperties(priority=3)
+            DUMPFLAG = True
+            # return  # dont bother sending a dumplog
+        elif len(args) == 1:
+            args = {
+                'userId': args[0]
+            }
 
-    if args.get("cash"):
-        try:
-            float(args["cash"])
-        except:
-            args["cash"] = -1
+        args["command"] = command
+        args["lineNum"] = lineNum
 
-    # print "sending:", args
-    # push into rabbitK
-    requestQueue.put((client ,args , properties ))
-    if DUMPFLAG:
-        # time.sleep()
-        print requestQueue.qsize()
-        print workerMap
-        quit()
+        if args.get("cash"):
+            try:
+                float(args["cash"])
+            except:
+                args["cash"] = -1
+
+        # print "sending to queue:", args
+        # push into rabbitK
+        requestQueue.put((client ,args , properties ))
+        if DUMPFLAG:
+            print workerMap
+    except Exception as e:
+        print e
+        print "Couldn't Send() or put()"
 
 
 def main():
@@ -442,7 +441,10 @@ if __name__ == '__main__':
         print "created publisher"
 
         main()
-        pprint(workerMap)
-        pprint(userMap.items())
-        print('completed')
+        while True:
+            time.sleep(10)
+            requestQueue.qsize()
+        # pprint(workerMap)
+        # pprint(userMap.items())
+        # print('completed')
 
