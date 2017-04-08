@@ -233,7 +233,7 @@ class RabbitMQAyscClient(RabbitMQBase):
                         noDump = False
                         break
                 else:
-                    self.send()
+                    self.schedule_next_message()
                 # print "schedule next msg"
 
             except Exception as e:
