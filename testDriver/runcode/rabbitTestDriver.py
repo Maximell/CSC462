@@ -167,8 +167,8 @@ class RabbitMQAyscClient(RabbitMQBase):
     def setup_queue(self, queueName):
         args = {'x-max-priority': 3, 'x-message-ttl': 600000}
         # print "setting up queue"
-        for queue in self.queueNames:
-            self.channel.queue_declare(self.on_queue_declareok, queue , arguments=args)
+        # for queue in self.queueNames:
+        self.channel.queue_declare(self.on_queue_declareok, queueName , arguments=args)
 
     def on_queue_declareok(self, method_frame):
         # print "queue all good"
@@ -220,8 +220,7 @@ class RabbitMQAyscClient(RabbitMQBase):
                     requestBody = payload[1]
                     priority = payload[2]
 
-                    # print "sending", requestBody, "to", worderId, "with priority", priority
-
+                    print requestQueue.qsize()
                     self.channel.basic_publish(
                         exchange=self.EXCHANGE,
                         routing_key=worderId,
@@ -243,7 +242,6 @@ class RabbitMQAyscClient(RabbitMQBase):
         print "sentDumplog"
         print payload
         print worderId
-        print workerMap
         # sleep for five seconds before shutdown
         time.sleep(5)
         print "finished"
@@ -436,14 +434,14 @@ if __name__ == '__main__':
     else:
         DUMPFLAG = False
         print "create publisher"
-        requestQueue = multiprocessing.Queue()
-        producer_process = Process(target=RabbitMQAyscClient,
-                                   args=( requestQueue , RabbitMQBase.TRANSACTION))
-        producer_process.start()
-        print "created publisher"
 
+        print "created publisher"
+        requestQueue = multiprocessing.Queue()
         main()
-        pprint(workerMap)
-        pprint(userMap.items())
         print('completed')
+        producer_process = Process(target=RabbitMQAyscClient,
+                                   args=(requestQueue, RabbitMQBase.TRANSACTION))
+        producer_process.start()
+        while True:
+            time.sleep(1)
 
