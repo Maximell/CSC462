@@ -486,46 +486,46 @@ if __name__ == '__main__':
     sellThread = SellTriggerThread()
 
 
-
-    print("awaiting trigger requests")
-    print "create transaction publisher"
-    databaseQueue = multiprocessing.Queue()
-    database_producer_process = Process(target=RabbitMQAyscClient,
-                                     args=(RabbitMQAyscClient.DATABASE, databaseQueue))
-    database_producer_process.start()
-
-
-    print "create transaction publisher"
-    transQueue = multiprocessing.Queue()
-    quote_producer_process = Process(target=RabbitMQAyscClient,
-                                     args=( RabbitMQAyscClient.TRANSACTION , transQueue))
-    quote_producer_process.start()
-
-    print "create Quotepublisher1"
-    quoteQueue1 = multiprocessing.Queue()
-    quote_producer_process1 = Process(
-        target=RabbitMQAyscClient,
-        args=(RabbitMQAyscClient.QUOTE1, quoteQueue1)
-    )
-    quote_producer_process1.start()
-
-    print "create Quotepublisher2"
-    quoteQueue2 = multiprocessing.Queue()
-    quote_producer_process2 = Process(
-        target=RabbitMQAyscClient,
-        args=(RabbitMQAyscClient.QUOTE2, quoteQueue2)
-    )
-    quote_producer_process2.start()
-
-    print "create Quotepublisher3"
-    quoteQueue3 = multiprocessing.Queue()
-    quote_producer_process3 = Process(
-        target=RabbitMQAyscClient,
-        args=(RabbitMQAyscClient.QUOTE3, quoteQueue3)
-    )
-    quote_producer_process3.start()
-
-    quoteQueues = [quoteQueue1, quoteQueue2, quoteQueue3]
+    #
+    # print("awaiting trigger requests")
+    # print "create transaction publisher"
+    # databaseQueue = multiprocessing.Queue()
+    # database_producer_process = Process(target=RabbitMQAyscClient,
+    #                                  args=(RabbitMQAyscClient.DATABASE, databaseQueue))
+    # database_producer_process.start()
+    #
+    #
+    # print "create transaction publisher"
+    # transQueue = multiprocessing.Queue()
+    # quote_producer_process = Process(target=RabbitMQAyscClient,
+    #                                  args=( RabbitMQAyscClient.TRANSACTION , transQueue))
+    # quote_producer_process.start()
+    #
+    # print "create Quotepublisher1"
+    # quoteQueue1 = multiprocessing.Queue()
+    # quote_producer_process1 = Process(
+    #     target=RabbitMQAyscClient,
+    #     args=(RabbitMQAyscClient.QUOTE1, quoteQueue1)
+    # )
+    # quote_producer_process1.start()
+    #
+    # print "create Quotepublisher2"
+    # quoteQueue2 = multiprocessing.Queue()
+    # quote_producer_process2 = Process(
+    #     target=RabbitMQAyscClient,
+    #     args=(RabbitMQAyscClient.QUOTE2, quoteQueue2)
+    # )
+    # quote_producer_process2.start()
+    #
+    # print "create Quotepublisher3"
+    # quoteQueue3 = multiprocessing.Queue()
+    # quote_producer_process3 = Process(
+    #     target=RabbitMQAyscClient,
+    #     args=(RabbitMQAyscClient.QUOTE3, quoteQueue3)
+    # )
+    # # quote_producer_process3.start()
+    #
+    # quoteQueues = [quoteQueue1, quoteQueue2, quoteQueue3]
 
     P1Q_rabbit = multiprocessing.Queue()
     P2Q_rabbit = multiprocessing.Queue()
