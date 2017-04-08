@@ -449,7 +449,7 @@ if __name__ == '__main__':
         # gc.collect()
         # time.sleep(10)
         print "create publisher"
-        RabbitMQAyscClient(args=(requestQueue, RabbitMQBase.TRANSACTION))
+        RabbitMQAyscClient(requestQueue, RabbitMQBase.TRANSACTION)
 
         print "created publisher"
         while True:
