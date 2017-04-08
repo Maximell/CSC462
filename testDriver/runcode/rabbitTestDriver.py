@@ -397,7 +397,6 @@ def send(command, args, lineNum):
         # time.sleep()
         print requestQueue.qsize()
         print workerMap
-        quit()
 
 
 def main():
