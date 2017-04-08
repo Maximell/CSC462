@@ -214,13 +214,13 @@ class RabbitMQAyscClient(RabbitMQBase):
         noDump = True
         while(noDump):
             try:
-                payload  = self.requestQueue.get()
+                payload  = self.requestQueue.get(False)
                 if payload:
                     worderId = payload[0]
                     requestBody = payload[1]
                     priority = payload[2]
 
-                    print "sending", requestBody, "to", worderId, "with priority", priority
+                    # print "sending", requestBody, "to", worderId, "with priority", priority
                     print self.requestQueue.qsize()
                     self.channel.basic_publish(
                         exchange=self.EXCHANGE,
@@ -237,6 +237,7 @@ class RabbitMQAyscClient(RabbitMQBase):
 
             except Exception as e:
                 print e
+                print "exception in sending"
                 self.schedule_next_message()
                 pass
                 # notEmpty = False
