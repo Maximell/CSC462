@@ -479,8 +479,8 @@ if __name__ == '__main__':
                     DumpLogProps = props
                     continue
 
-                # Thread(target=on_request(None,None,props , payload)).setDaemon(True)
-                on_request(None, None, props, payload)
+                Thread(target=on_request(None,None,props , payload)).setDaemon(True)
+                # on_request(None, None, props, payload)
                 countDown = time.time()
                 continue
         except:
